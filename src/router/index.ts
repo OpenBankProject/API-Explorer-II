@@ -26,7 +26,7 @@ const router = createRouter({
         preview: PreviewView
       }
     },
-    { path: '/:pathMatch(.*)*', name: 'notFound', component: NotFoundView },
+    { path: '/:pathMatch(.*)*', name: 'notFound', component: NotFoundView }
   ]
 })
 
