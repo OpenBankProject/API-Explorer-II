@@ -1,0 +1,29 @@
+@import './base.css';
+@import './header.css';
+@import './search-nav.css';
+@import './preview.css';
+@import './element-plus-override.css';
+
+#app {
+  height: 100vh;
+}
+
+.main {
+  height: 100%;
+}
+
+.menu {
+  height: 40px;
+  line-height: 40px;
+  display: table;
+  border-bottom: solid 1px var(--el-menu-border-color);
+}
+
+.menu-left {
+  vertical-align: middle;
+}
+
+.menu-right {
+  vertical-align: middle;
+  text-align: right;
+}

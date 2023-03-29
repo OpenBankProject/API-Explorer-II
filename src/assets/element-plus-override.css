@@ -1,0 +1,20 @@
+.el-collapse-item__header {
+  border-bottom: none !important;
+}
+
+.el-collapse-item__wrap {
+  border-bottom: none !important;
+}
+
+.el-main {
+  --el-main-padding: padding 0px !important;
+}
+
+.el-collapse-item__header {
+  background-color: transparent !important;
+}
+
+.el-collapse {
+  border-bottom: none !important;
+  --el-collapse-content-bg-color: transparent !important;
+}
