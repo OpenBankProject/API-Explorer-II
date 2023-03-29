@@ -1,4 +1,4 @@
-Welcome to the OBP API Explorer 2
+Welcome to the OBP API Explorer II
 =================================
 
 # ABOUT
