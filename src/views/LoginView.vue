@@ -1,7 +1,5 @@
-<template>
-  <div class="login">
-    <h1>This is a login page</h1>
-  </div>
-</template>
+<script setup lang="ts"></script>
 
-<style></style>
+<template>
+  <main>Login</main>
+</template>

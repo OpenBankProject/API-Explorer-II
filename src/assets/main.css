@@ -4,6 +4,10 @@
 @import './preview.css';
 @import './element-plus-override.css';
 
+main {
+  height: inherit;
+}
+
 #app {
   height: 100vh;
 }

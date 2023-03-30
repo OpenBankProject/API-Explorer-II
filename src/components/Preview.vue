@@ -1,7 +1,8 @@
 <script setup lang="ts"></script>
 
 <template>
-  <div>
-    <h1></h1>
-  </div>
+  <main>
+    Preview
+    {{ $route.params.id }}
+  </main>
 </template>

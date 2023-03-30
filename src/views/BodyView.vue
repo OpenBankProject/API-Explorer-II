@@ -17,12 +17,12 @@ import Menu from '../components/Menu.vue'
         <el-container>
           <el-aside width="50%">
             Middle
-            <RouterView />
+            <RouterView name="body" />
           </el-aside>
           <el-aside class="preview" width="50%">
             <!--Right -->
             Right
-            <RouterView class="" name="preview" />
+            <RouterView class="preview" name="preview" />
           </el-aside>
         </el-container>
       </el-container>

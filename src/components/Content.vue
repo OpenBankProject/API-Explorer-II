@@ -2,6 +2,7 @@
 
 <template>
   <main>
+    Content
     {{ $route.params.id }}
   </main>
 </template>

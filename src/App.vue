@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import HeaderNav from './components/HeaderNav.vue'
-import BodyView from './views/BodyView.vue'
 </script>
 
 <template>
@@ -10,7 +9,7 @@ import BodyView from './views/BodyView.vue'
         <!--Header-->
         <HeaderNav />
       </el-header>
-      <BodyView />
+      <RouterView />
       <el-footer>Footer</el-footer>
     </el-container>
   </div>
