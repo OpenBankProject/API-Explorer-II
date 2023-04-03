@@ -10,7 +10,6 @@ import HeaderNav from './components/HeaderNav.vue'
         <HeaderNav />
       </el-header>
       <RouterView />
-      <el-footer>Footer</el-footer>
     </el-container>
   </div>
 </template>

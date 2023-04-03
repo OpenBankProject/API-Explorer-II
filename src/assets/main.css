@@ -1,7 +1,4 @@
 @import './base.css';
-@import './header.css';
-@import './search-nav.css';
-@import './preview.css';
 @import './element-plus-override.css';
 
 main {

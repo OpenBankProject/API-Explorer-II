@@ -5,7 +5,7 @@ import Menu from '../components/Menu.vue'
 
 <template>
   <el-container>
-    <el-aside class="search-nav" width="15%">
+    <el-aside class="search-nav" width="20%">
       <!--Left-->
       <SearchNav />
     </el-aside>
@@ -16,7 +16,7 @@ import Menu from '../components/Menu.vue'
         </el-header>
         <el-container>
           <el-aside width="50%">
-            Middle
+            Center
             <RouterView name="body" />
           </el-aside>
           <el-aside class="preview" width="50%">
@@ -25,7 +25,15 @@ import Menu from '../components/Menu.vue'
             <RouterView class="preview" name="preview" />
           </el-aside>
         </el-container>
+        <el-footer>Footer</el-footer>
       </el-container>
     </el-main>
   </el-container>
 </template>
+
+<style>
+.preview {
+  color: white;
+  background-color: #151d30;
+}
+</style>
