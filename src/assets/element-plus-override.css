@@ -1,20 +1,51 @@
+.el-main {
+  --el-main-padding: padding 0px !important;
+}
+
 .el-collapse-item__header {
   border-bottom: none !important;
+  height: 30px !important;
+  font-family: 'Roboto' !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
 }
 
 .el-collapse-item__wrap {
   border-bottom: none !important;
 }
 
-.el-main {
-  --el-main-padding: padding 0px !important;
-}
-
 .el-collapse-item__header {
   background-color: transparent !important;
+  white-space: nowrap !important;
 }
 
 .el-collapse {
+  margin-top: 5px;
+  margin-right: -8px;
+  max-height: 900px;
+  min-height: 800px;
+  overflow-y: auto !important;
+  border-top: none !important;
   border-bottom: none !important;
   --el-collapse-content-bg-color: transparent !important;
+}
+
+.el-collapse-item__content {
+  overflow-x: auto !important;
+  white-space: nowrap !important;
+  line-height: 30px !important;
+  padding-bottom: 0px !important;
+}
+
+.el-tabs--right {
+  display: inline-block !important;
+}
+
+.el-dropdown-link {
+  margin-top: -4px;
+  font-family: Roboto;
+}
+
+.el-dropdown-menu__item {
+  font-family: Roboto;
 }
