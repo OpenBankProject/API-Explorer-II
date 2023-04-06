@@ -16,16 +16,18 @@ import Menu from '../components/Menu.vue'
         </el-header>
         <el-container>
           <el-aside width="50%">
-            Center
+            <!--Middle -->
             <RouterView name="body" />
           </el-aside>
           <el-aside class="preview" width="50%">
-            <!--Right -->
-            Right
+            <!--right -->
             <RouterView class="preview" name="preview" />
           </el-aside>
         </el-container>
-        <el-footer>Footer</el-footer>
+        <el-footer>
+          <!--Bottom -->
+          Footer
+        </el-footer>
       </el-container>
     </el-main>
   </el-container>

@@ -1,0 +1,11 @@
+{
+  "header": {
+    "portal_home": "Portal de inicio",
+    "api_explorer": "Explorador de API",
+    "api_manager": "Administrador de API",
+    "glossary": "Glosario",
+    "more": "Mas",
+    "spaces": "Espacio",
+    "login": "Iniciar sesión"
+  }
+}
