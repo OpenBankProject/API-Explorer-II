@@ -19,9 +19,6 @@ const clearActiveTab = () => {
   const active = document.querySelector('.active-api-router-tab')
   if (active) {
     const child = active.firstChild
-    if (child.style) {
-      child.style.color = '#39455f'
-    }
     active.classList.remove('active-api-router-tab')
   }
 }
@@ -31,7 +28,6 @@ const setActive = (event) => {
   const target = event.target
   if (target.tagName === 'A') {
     target.classList.add('active-api-router-link')
-    target.style.color = '#52b165'
     target.parentElement.classList.add('active-api-router-tab')
   }
 }
