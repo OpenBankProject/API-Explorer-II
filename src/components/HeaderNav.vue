@@ -1,27 +1,56 @@
 <script setup lang="ts">
 import { ArrowDown } from '@element-plus/icons-vue'
+
+const clearActiveTab = () => {
+  const activeLinks = document.querySelectorAll('#header-nav')
+  for (const active of activeLinks) {
+    active.style.backgroundColor = 'transparent'
+  }
+}
+
+const setActive = (event) => {
+  clearActiveTab()
+  const target = event.target
+  target.style.backgroundColor = '#eef0f4'
+}
 </script>
 
 <template>
   <img alt="OBP logo" class="logo" src="@/assets/logo2x-1.png" />
-  <nav>
-    <RouterLink class="router-link" to="/">Portal Home</RouterLink>
-    <RouterLink class="router-link" to="/api">API Explorer</RouterLink>
-    <RouterLink class="router-link" to="/glossary">Glossary</RouterLink>
-    <RouterLink class="router-link" to="/">API Manager</RouterLink>
-    <span class="el-dropdown-link">
-      <RouterLink class="router-link" to="/">More</RouterLink>
-      <el-icon class="el-icon--right">
-        <arrow-down />
-      </el-icon>
-    </span>
-    <span class="el-dropdown-link">
-      <RouterLink class="router-link" to="/">Spaces</RouterLink>
-      <el-icon class="el-icon--right">
-        <arrow-down />
-      </el-icon>
-    </span>
-    <RouterLink class="login-button router-link" to="/login">Login</RouterLink>
+  <nav id="nav">
+    <RouterView name="header">
+      <RouterLink class="router-link" active="true" id="header-nav" to="/" @click="setActive">{{
+        $t('header.portal_home')
+      }}</RouterLink>
+      <RouterLink class="router-link" id="header-nav" to="/api" @click="setActive">{{
+        $t('header.api_explorer')
+      }}</RouterLink>
+      <RouterLink class="router-link" id="header-nav" to="/glossary" @click="setActive">{{
+        $t('header.glossary')
+      }}</RouterLink>
+      <RouterLink class="router-link" id="header-nav" to="/api_manager" @click="setActive">{{
+        $t('header.api_manager')
+      }}</RouterLink>
+      <span class="el-dropdown-link">
+        <RouterLink class="router-link" id="header-nav" to="/more" @click="setActive">{{
+          $t('header.more')
+        }}</RouterLink>
+        <el-icon class="el-icon--right">
+          <arrow-down />
+        </el-icon>
+      </span>
+      <span class="el-dropdown-link">
+        <RouterLink class="router-link" id="header-nav" to="/spaces" @click="setActive">{{
+          $t('header.spaces')
+        }}</RouterLink>
+        <el-icon class="el-icon--right">
+          <arrow-down />
+        </el-icon>
+      </span>
+      <RouterLink class="login-button router-link" to="/login" @click="setActive">{{
+        $t('header.login')
+      }}</RouterLink>
+    </RouterView>
   </nav>
 </template>
 
@@ -57,6 +86,7 @@ nav {
 
 .router-link {
   padding: 9px;
+  margin: 3px;
   color: #39455f;
   font-family: 'Roboto';
   font-size: 14px;
@@ -65,7 +95,7 @@ nav {
 }
 
 .router-link:hover {
-  background-color: #eef0f4;
+  background-color: #eef0f4 !important;
 }
 
 .logo {
