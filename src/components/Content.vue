@@ -25,6 +25,34 @@ onBeforeRouteUpdate((to) => {
 <template>
   <main>
     <span>{{ summary }}</span>
-    <div v-html="description"></div>
+    <div v-html="description" class="content"></div>
   </main>
 </template>
+
+<style scoped>
+main {
+  margin: 25px;
+  color: #39455f;
+  font-family: 'Roboto';
+}
+span {
+  font-size: 28px;
+}
+div {
+  font-size: 14px;
+}
+.content :deep(strong) {
+  font-family: 'Roboto';
+}
+.content :deep(p a) {
+  text-decoration: none;
+  padding: 5px;
+  margin: 3px;
+  color: #39455f;
+  font-family: 'Roboto';
+  font-size: 14px;
+  text-decoration: none;
+  border-radius: 5px;
+  background-color: #eef0f4;
+}
+</style>

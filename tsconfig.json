@@ -1,6 +1,19 @@
 {
-  "resolveJsonModule": true,
   "files": [],
+  "compilerOptions": {
+    "module": "commonjs",
+    "esModuleInterop": true,
+    "target": "ES6",
+    "outDir": "dist",
+    "baseUrl": "src",
+    "resolveJsonModule": true,
+    "paths": {
+      "*": ["node_modules/*"]
+    },
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowJs": true
+  },
   "references": [
     {
       "path": "./tsconfig.node.json"

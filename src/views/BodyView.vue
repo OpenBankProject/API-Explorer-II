@@ -33,9 +33,4 @@ import Menu from '../components/Menu.vue'
   </el-container>
 </template>
 
-<style>
-.preview {
-  color: white;
-  background-color: #151d30;
-}
-</style>
+<style></style>

@@ -45,6 +45,11 @@ const router = createRouter({
         }
       ]
     },
+    {
+      path: '/callback',
+      name: 'callback',
+      component: BodyView
+    },
     { path: '/:pathMatch(.*)*', name: 'notFound', component: NotFoundView }
   ]
 })

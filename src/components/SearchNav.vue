@@ -15,10 +15,27 @@ onBeforeMount(() => {
   sortedKeys.value = activeKeys.value.sort()
 })
 
+const sortLinks = (items: any) => {
+  const uniqueLinks = {}
+  for (const { summary, operation_id } of items) {
+    if (!Object.keys(uniqueLinks).includes(summary)) uniqueLinks[summary.trim()] = operation_id
+  }
+  return Object.fromEntries(
+    Object.entries(uniqueLinks).sort((a, b) => {
+      if (a[0] < b[0]) {
+        return -1
+      }
+      if (a[0] > b[0]) {
+        return 1
+      }
+      return 0
+    })
+  )
+}
+
 const clearActiveTab = () => {
   const active = document.querySelector('.active-api-router-tab')
   if (active) {
-    const child = active.firstChild
     active.classList.remove('active-api-router-tab')
   }
 }
@@ -41,12 +58,15 @@ const setActive = (event) => {
     <el-collapse-item title="My Collections" name="1"> </el-collapse-item>
     <el-collapse-item v-for="key in sortedKeys" :title="key" :key="key" :name="key">
       <div class="el-tabs--right">
-        <div v-for="item in groups[key]" :key="item" class="api-router-tab" @click="setActive">
-          <RouterLink
-            class="api-router-link"
-            :to="{ name: 'api', params: { id: item.operation_id } }"
-            >{{ item.summary }}</RouterLink
-          >
+        <div
+          v-for="(value, key) of sortLinks(groups[key])"
+          :key="value"
+          class="api-router-tab"
+          @click="setActive"
+        >
+          <RouterLink class="api-router-link" :to="{ name: 'api', params: { id: value } }">{{
+            key
+          }}</RouterLink>
         </div>
       </div>
     </el-collapse-item>

@@ -47,9 +47,9 @@ const setActive = (event) => {
           <arrow-down />
         </el-icon>
       </span>
-      <RouterLink class="login-button router-link" to="/login" @click="setActive">{{
-        $t('header.login')
-      }}</RouterLink>
+      <a v-bind:href="'/api/connect'" class="login-button router-link">
+        {{ $t('header.login') }}
+      </a>
     </RouterView>
   </nav>
 </template>

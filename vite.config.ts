@@ -7,6 +7,7 @@ import vueJsx from '@vitejs/plugin-vue-jsx'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
+import { nodePolyfills } from 'vite-plugin-node-polyfills'
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -17,6 +18,9 @@ export default defineConfig({
     }),
     Components({
       resolvers: [ElementPlusResolver()],
+    }),
+    nodePolyfills({
+      protocolImports: true,
     }),
   ],
   resolve: {
@@ -29,5 +33,19 @@ export default defineConfig({
     __VUE_I18N_FULL_INSTALL__: true,
     __VUE_I18N_LEGACY_API__: false,
     __INTLIFY_PROD_DEVTOOLS__: false,
-  }
+  },
+  server:{
+    proxy: {
+      //'^/api/v1': {
+      //  target: 'http://localhost:8085/api',
+      //  changeOrigin: true,
+      //  rewrite: (path) => path.replace(/^\/api\/v1/, ''),
+      //},
+      '^/api': {
+        target: 'http://localhost:8085/api',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+    },
+  },
 })
