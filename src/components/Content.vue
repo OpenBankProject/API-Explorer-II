@@ -45,6 +45,7 @@ div {
   font-family: 'Roboto';
 }
 .content :deep(p a) {
+  line-height: 28px;
   text-decoration: none;
   padding: 5px;
   margin: 3px;

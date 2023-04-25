@@ -22,7 +22,7 @@ const setActive = (event) => {
       <RouterLink class="router-link" active="true" id="header-nav" to="/" @click="setActive">{{
         $t('header.portal_home')
       }}</RouterLink>
-      <RouterLink class="router-link" id="header-nav" to="/api" @click="setActive">{{
+      <RouterLink class="router-link" id="header-nav" to="/tags" @click="setActive">{{
         $t('header.api_explorer')
       }}</RouterLink>
       <RouterLink class="router-link" id="header-nav" to="/glossary" @click="setActive">{{

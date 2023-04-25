@@ -2,6 +2,7 @@
 import { reactive, ref, onBeforeMount, inject } from 'vue'
 import { Search } from '@element-plus/icons-vue'
 
+const docs = ref({})
 const groups = ref({})
 const sortedKeys = ref([])
 const activeKeys = ref([])
@@ -9,8 +10,9 @@ const form = reactive({
   search: ''
 })
 
-onBeforeMount(() => {
-  groups.value = inject('OBP-GroupedResourceDocs')!
+onBeforeMount(async () => {
+  docs.value = inject('OBP-GroupedResourceDocs')!
+  groups.value = JSON.parse(JSON.stringify(docs.value))
   activeKeys.value = Object.keys(groups.value)
   sortedKeys.value = activeKeys.value.sort()
 })
@@ -48,11 +50,37 @@ const setActive = (event) => {
     target.parentElement.classList.add('active-api-router-tab')
   }
 }
+
+const filterKeys = (keys, key) => {
+  return keys.filter((title) => {
+    const isGroupFound = title.toLowerCase().includes(key.toLowerCase())
+    const items = docs.value[title].filter((item) =>
+      item.summary.toLowerCase().includes(key.toLowerCase())
+    )
+    groups.value[title] = items
+    return isGroupFound || items.length > 0
+  })
+}
+
+const searchEvent = (event) => {
+  if (event) {
+    sortedKeys.value = filterKeys(activeKeys.value, event)
+  } else {
+    groups.value = JSON.parse(JSON.stringify(docs.value))
+    sortedKeys.value = Object.keys(groups.value).sort()
+  }
+}
 </script>
 
 <template>
   <el-form :model="form" label-width="120px">
-    <el-input v-model="form.search" class="w-50 m-1" placeholder="Search" :prefix-icon="Search" />
+    <el-input
+      v-model="form.search"
+      class="w-50 m-1"
+      placeholder="Search"
+      :prefix-icon="Search"
+      @input="searchEvent"
+    />
   </el-form>
   <el-collapse v-model="activeKeys">
     <el-collapse-item title="My Collections" name="1"> </el-collapse-item>

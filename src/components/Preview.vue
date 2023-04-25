@@ -2,6 +2,7 @@
 import { ref, inject, onBeforeMount } from 'vue'
 import { onBeforeRouteUpdate, useRoute } from 'vue-router'
 import { getOperationDetails } from '../obp/resource-docs'
+import { get } from '../obp'
 
 const url = ref('')
 const method = ref('')
@@ -20,7 +21,10 @@ const setOperationDetails = (id: string): void => {
   roles.value = operation.roles
 }
 
-onBeforeMount(() => {
+const submit = async () => {
+  successResponseBody.value = await get(url.value)
+}
+onBeforeMount(async () => {
   const route = useRoute()
   setOperationDetails(route.params.id)
 })
@@ -33,7 +37,7 @@ onBeforeRouteUpdate((to) => {
   <main>
     <div class="flex-preview-panel">
       <input type="text" v-model="url" id="search-input" />
-      <el-button type="primary" id="search-button">{{ method }}</el-button>
+      <el-button type="primary" id="search-button" @click="submit">{{ method }}</el-button>
     </div>
     <div class="flex-preview-panel">
       <input

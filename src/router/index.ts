@@ -8,7 +8,7 @@ import Preview from '../components/Preview.vue'
 import NotFoundView from '../views/NotFoundView.vue'
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHistory(),
   routes: [
     {
       path: '/',
@@ -26,12 +26,12 @@ const router = createRouter({
       component: GlossaryView
     },
     {
-      path: '/api',
+      path: '/tags',
       name: 'api-home',
       component: BodyView
     },
     {
-      path: '/api/:id',
+      path: '/tags/:id',
       name: 'api-parent',
       component: BodyView,
       children: [

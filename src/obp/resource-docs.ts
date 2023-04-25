@@ -1,18 +1,15 @@
-import docs from './resource-docs.json'
 import { Any, GetAny } from 'obp-typescript/src/api/any'
-import { Version, API, get as getOBP } from 'obp-typescript/src/api/client'
-import type { APIClientConfig, DirectLoginAuthentication } from 'obp-typescript/src/api/client'
+import { Version, API, get } from 'obp-typescript/src/api/client'
+import type { APIClientConfig } from 'obp-typescript/src/api/client'
 
 const clientConfig: APIClientConfig = {
   baseUri: 'https://apisandbox.openbankproject.com',
   version: Version.v510
-  //oauthConfig: oauthConfig
 }
 
 // Get Resource Docs
 export async function getOBPResourceDocs(): Promise<any> {
-  //return await get<API.Any>(clientConfig, Any)(GetAny)(`/resource-docs/${VERSION}/obp`)
-  return docs
+  return await get<API.Any>(clientConfig, Any)(GetAny)(`/resource-docs/${Version.v510}/obp`)
 }
 
 export async function getGroupedResourceDocs(docs: any): Promise<any> {
