@@ -3,21 +3,30 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "dev": "vite",
+    "dev": "vite & ts-node server/app.ts",
     "build": "run-p build-only",
     "preview": "vite preview",
     "test:unit": "vitest",
     "build-only": "vite build",
     "type-check": "vue-tsc --noEmit -p tsconfig.vitest.json --composite false",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
-    "format": "prettier --write src/"
+    "format": "prettier --write src/ server/"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.1.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.0",
+    "dotenv": "^16.0.3",
     "element-plus": "^2.3.0",
+    "express": "^4.18.2",
+    "express-session": "^1.17.3",
+    "oauth": "^0.10.0",
     "pinia": "^2.0.32",
+    "reflect-metadata": "^0.1.13",
+    "routing-controllers": "^0.10.3",
+    "typedi": "^0.10.0",
     "vue": "^3.2.47",
-    "vue-i18n": "9",
+    "vue-i18n": "^9.2.2",
     "vue-router": "^4.1.6"
   },
   "devDependencies": {
@@ -35,10 +44,12 @@
     "jsdom": "^21.1.0",
     "npm-run-all": "^4.1.5",
     "prettier": "^2.8.4",
+    "ts-node": "^10.9.1",
     "typescript": "~4.8.4",
     "unplugin-auto-import": "^0.15.1",
     "unplugin-vue-components": "^0.24.1",
     "vite": "^4.1.4",
+    "vite-plugin-node-polyfills": "^0.8.1",
     "vitest": "^0.29.1",
     "vue-tsc": "^1.2.0"
   }

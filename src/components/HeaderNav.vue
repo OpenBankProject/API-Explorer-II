@@ -22,7 +22,7 @@ const setActive = (event) => {
       <RouterLink class="router-link" active="true" id="header-nav" to="/" @click="setActive">{{
         $t('header.portal_home')
       }}</RouterLink>
-      <RouterLink class="router-link" id="header-nav" to="/api" @click="setActive">{{
+      <RouterLink class="router-link" id="header-nav" to="/tags" @click="setActive">{{
         $t('header.api_explorer')
       }}</RouterLink>
       <RouterLink class="router-link" id="header-nav" to="/glossary" @click="setActive">{{
@@ -47,9 +47,9 @@ const setActive = (event) => {
           <arrow-down />
         </el-icon>
       </span>
-      <RouterLink class="login-button router-link" to="/login" @click="setActive">{{
-        $t('header.login')
-      }}</RouterLink>
+      <a v-bind:href="'/api/connect'" class="login-button router-link">
+        {{ $t('header.login') }}
+      </a>
     </RouterView>
   </nav>
 </template>

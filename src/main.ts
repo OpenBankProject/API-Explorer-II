@@ -17,6 +17,7 @@ import './assets/main.css'
   const groupedDocs = await getGroupedResourceDocs(docs)
   app.provide('OBP-ResourceDocs', docs)
   app.provide('OBP-GroupedResourceDocs', groupedDocs)
+  app.provide('OBP-API-Host', import.meta.env.VITE_API_HOST)
 
   const messages = Object.assign(languages)
   const i18n = createI18n({
