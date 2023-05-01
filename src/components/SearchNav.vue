@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, ref, onBeforeMount, inject } from 'vue'
+import { reactive, ref, onBeforeMount, onMounted, inject } from 'vue'
 import { Search } from '@element-plus/icons-vue'
 
 const docs = ref({})
@@ -10,11 +10,16 @@ const form = reactive({
   search: ''
 })
 
-onBeforeMount(async () => {
+onBeforeMount(() => {
   docs.value = inject('OBP-GroupedResourceDocs')!
   groups.value = JSON.parse(JSON.stringify(docs.value))
   activeKeys.value = Object.keys(groups.value)
   sortedKeys.value = activeKeys.value.sort()
+})
+
+onMounted(() => {
+  const element = document.getElementsByClassName('api-router-link').item(0)
+  element.click()
 })
 
 const sortLinks = (items: any) => {
@@ -45,8 +50,7 @@ const clearActiveTab = () => {
 const setActive = (event) => {
   clearActiveTab()
   const target = event.target
-  if (target.tagName === 'A') {
-    target.classList.add('active-api-router-link')
+  if (target.tagName.toLowerCase() === 'a') {
     target.parentElement.classList.add('active-api-router-tab')
   }
 }
@@ -92,9 +96,12 @@ const searchEvent = (event) => {
           class="api-router-tab"
           @click="setActive"
         >
-          <RouterLink class="api-router-link" :to="{ name: 'api', params: { id: value } }">{{
-            key
-          }}</RouterLink>
+          <RouterLink
+            active-class="active-api-router-link"
+            class="api-router-link"
+            :to="{ name: 'api', params: { id: value } }"
+            >{{ key }}</RouterLink
+          >
         </div>
       </div>
     </el-collapse-item>

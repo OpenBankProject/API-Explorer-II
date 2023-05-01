@@ -1,5 +1,4 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
 import GlossaryView from '../views/GlossaryView.vue'
 import LoginView from '../views/LoginView.vue'
 import BodyView from '../views/BodyView.vue'
@@ -9,11 +8,11 @@ import NotFoundView from '../views/NotFoundView.vue'
 
 const router = createRouter({
   history: createWebHistory(),
+  mode: 'history',
   routes: [
     {
       path: '/',
-      name: 'home',
-      component: HomeView
+      redirect: '/tags'
     },
     {
       path: '/login',
@@ -27,12 +26,12 @@ const router = createRouter({
     },
     {
       path: '/tags',
-      name: 'api-home',
+      name: 'tags',
       component: BodyView
     },
     {
       path: '/tags/:id',
-      name: 'api-parent',
+      name: 'tags-path',
       component: BodyView,
       children: [
         {

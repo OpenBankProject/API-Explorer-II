@@ -3,8 +3,9 @@ import { Version, API, get } from 'obp-typescript/src/api/client'
 import type { APIClientConfig } from 'obp-typescript/src/api/client'
 
 const clientConfig: APIClientConfig = {
-  baseUri: 'https://apisandbox.openbankproject.com',
-  version: Version.v510
+  baseUri: import.meta.env.VITE_OBP_API_HOST,
+  version: Version.v510,
+  withFixedVersion: true
 }
 
 // Get Resource Docs

@@ -21,7 +21,7 @@ export default class OauthAccessTokenMiddleware implements ExpressMiddlewareInte
           response.status(500).send('Error getting OAuth access token: ' + error)
         } else {
           response.redirect(
-            `${process.env.VITE_HOST}?key=${oauthTokenKey}&secret=${oauthTokenSecret}`
+            `${process.env.VITE_OBP_HOST}?key=${oauthTokenKey}&secret=${oauthTokenSecret}`
           )
         }
       }

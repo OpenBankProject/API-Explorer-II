@@ -1,5 +1,6 @@
 @import './base.css';
 @import './element-plus-override.css';
+@import './highlightjs-override.css';
 
 main {
   height: inherit;

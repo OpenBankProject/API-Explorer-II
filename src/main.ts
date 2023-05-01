@@ -13,11 +13,19 @@ import './assets/main.css'
 ;(async () => {
   const app = createApp(App)
 
-  const docs = await getOBPResourceDocs()
+  const cache = await caches.open('obp-resource-docs-cache')
+  const response = await cache.match('/tags')
+  let docs
+  if (response) {
+    docs = await response.json()
+  } else {
+    docs = await getOBPResourceDocs()
+    await cache.put('/tags', new Response(JSON.stringify(docs)))
+  }
   const groupedDocs = await getGroupedResourceDocs(docs)
   app.provide('OBP-ResourceDocs', docs)
   app.provide('OBP-GroupedResourceDocs', groupedDocs)
-  app.provide('OBP-API-Host', import.meta.env.VITE_API_HOST)
+  app.provide('OBP-API-Host', import.meta.env.VITE_OBP_API_HOST)
 
   const messages = Object.assign(languages)
   const i18n = createI18n({
