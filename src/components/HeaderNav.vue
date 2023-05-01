@@ -21,7 +21,7 @@ const setActive = (target) => {
 
 watchEffect(() => {
   const path = route.name
-  if (path) {
+  if (path && route.params && !route.params.id) {
     setActive(document.getElementById('header-nav-' + path))
   } else {
     setActive(document.getElementById('header-nav-tags'))

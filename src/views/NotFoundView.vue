@@ -1,5 +1,5 @@
 <script setup lang="ts"></script>
 
 <template>
-  <main>Home</main>
+  <main>404 | Page Not Found</main>
 </template>
