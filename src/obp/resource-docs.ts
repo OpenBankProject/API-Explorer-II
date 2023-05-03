@@ -1,6 +1,5 @@
-import { Any, GetAny } from 'obp-typescript/src/api/any'
-import { Version, API, get } from 'obp-typescript/src/api/client'
-import type { APIClientConfig } from 'obp-typescript/src/api/client'
+import { Any, GetAny, Version, API, get } from 'obp-typescript'
+import type { APIClientConfig } from 'obp-typescript'
 
 const clientConfig: APIClientConfig = {
   baseUri: import.meta.env.VITE_OBP_API_HOST,

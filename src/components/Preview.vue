@@ -2,7 +2,7 @@
 import { ref, inject, onBeforeMount } from 'vue'
 import { onBeforeRouteUpdate, useRoute } from 'vue-router'
 import { getOperationDetails } from '../obp/resource-docs'
-import { get } from '../obp'
+import { get, create, update, discard } from '../obp'
 
 const url = ref('')
 const method = ref('')
@@ -29,6 +29,10 @@ const setType = (method) => {
       type.value = 'success'
       break
     }
+    case 'PUT': {
+      type.value = 'warning'
+      break
+    }
     case 'DELETE': {
       type.value = 'danger'
       break
@@ -40,7 +44,24 @@ const setType = (method) => {
   }
 }
 const submit = async () => {
-  highlightCode(await get(url.value))
+  switch (method.value) {
+    case 'POST': {
+      highlightCode(await create(url.value, exampleRequestBody.value))
+      break
+    }
+    case 'PUT': {
+      highlightCode(await update(url.value, exampleRequestBody.value))
+      break
+    }
+    case 'DELETE': {
+      highlightCode(await discard(url.value))
+      break
+    }
+    default: {
+      highlightCode(await get(url.value))
+      break
+    }
+  }
 }
 const highlightCode = (json) => {
   if (json) {
@@ -106,6 +127,10 @@ onBeforeRouteUpdate((to) => {
 </template>
 
 <style scoped>
+template {
+  overflow: auto;
+  max-height: 900px;
+}
 main {
   margin: 25px;
   color: #fffff;
@@ -142,7 +167,7 @@ input[type='text'] {
 input[type='text']:focus {
   outline: none;
 }
-.content deep(p a::after) {
+.content p a::after {
   content: '';
   position: absolute;
   left: 0;

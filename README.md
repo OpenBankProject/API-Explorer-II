@@ -7,7 +7,7 @@ This application is used to explore OBP APIs and interact with the data and serv
 
 
 
-## Project Setup
+## Development Project Setup
 
   * Setup your .env (see .env.example)
   * Symlink OBP-TypeScript (see https://github.com/OpenBankProject/OBP-TypeScript)
