@@ -2,10 +2,14 @@ import { ExpressMiddlewareInterface } from 'routing-controllers'
 import { Response, Request } from 'express'
 import { Service } from 'typedi'
 import OauthInjectedService from '../services/OauthInjectedService'
+import OBPClientService from '../services/OBPClientService'
 
 @Service()
 export default class OauthAccessTokenMiddleware implements ExpressMiddlewareInterface {
-  constructor(private oauthInjectedService: OauthInjectedService) {}
+  constructor(
+    private obpClientService: OBPClientService,
+    private oauthInjectedService: OauthInjectedService
+  ) {}
 
   use(request: Request, response: Response): any {
     const oauthService = this.oauthInjectedService
@@ -20,8 +24,10 @@ export default class OauthAccessTokenMiddleware implements ExpressMiddlewareInte
           console.log(error)
           response.status(500).send('Error getting OAuth access token: ' + error)
         } else {
+          this.obpClientService.setAccessToken(oauthTokenKey, oauthTokenSecret)
           response.redirect(
-            `${process.env.VITE_HOST}?key=${oauthTokenKey}&secret=${oauthTokenSecret}`
+            //`${process.env.VITE_OBP_HOST}?key=${oauthTokenKey}&secret=${oauthTokenSecret}`
+            `${process.env.VITE_OBP_HOST}`
           )
         }
       }

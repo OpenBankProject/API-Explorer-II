@@ -1,38 +1,60 @@
 <script setup lang="ts">
+import { watchEffect } from 'vue'
 import { ArrowDown } from '@element-plus/icons-vue'
+import { useRoute } from 'vue-router'
+
+const route = useRoute()
 
 const clearActiveTab = () => {
-  const activeLinks = document.querySelectorAll('#header-nav')
+  const activeLinks = document.querySelectorAll('.router-link')
   for (const active of activeLinks) {
-    active.style.backgroundColor = 'transparent'
+    if (active.id) active.style.backgroundColor = 'transparent'
   }
 }
 
-const setActive = (event) => {
-  clearActiveTab()
-  const target = event.target
-  target.style.backgroundColor = '#eef0f4'
+const setActive = (target) => {
+  if (target) {
+    clearActiveTab()
+    target.style.backgroundColor = '#eef0f4'
+  }
 }
+
+watchEffect(() => {
+  const path = route.name
+  if (path && route.params && !route.params.id) {
+    setActive(document.getElementById('header-nav-' + path))
+  } else {
+    setActive(document.getElementById('header-nav-tags'))
+  }
+})
 </script>
 
 <template>
   <img alt="OBP logo" class="logo" src="@/assets/logo2x-1.png" />
   <nav id="nav">
     <RouterView name="header">
-      <RouterLink class="router-link" active="true" id="header-nav" to="/" @click="setActive">{{
-        $t('header.portal_home')
-      }}</RouterLink>
-      <RouterLink class="router-link" id="header-nav" to="/tags" @click="setActive">{{
+      <a
+        v-bind:href="'https://apisandbox.openbankproject.com/'"
+        class="router-link"
+        id="header-nav-home"
+      >
+        {{ $t('header.portal_home') }}
+      </a>
+      <RouterLink class="router-link" id="header-nav-tags" to="/tags">{{
         $t('header.api_explorer')
       }}</RouterLink>
-      <RouterLink class="router-link" id="header-nav" to="/glossary" @click="setActive">{{
+      <RouterLink class="router-link" id="header-nav-glossary" to="/glossary">{{
         $t('header.glossary')
       }}</RouterLink>
-      <RouterLink class="router-link" id="header-nav" to="/api_manager" @click="setActive">{{
-        $t('header.api_manager')
-      }}</RouterLink>
+      <a
+        v-bind:href="'https://apimanagersandbox.openbankproject.com'"
+        class="router-link"
+        id="header-nav-api-manager"
+      >
+        {{ $t('header.api_manager') }}
+      </a>
       <span class="el-dropdown-link">
-        <RouterLink class="router-link" id="header-nav" to="/more" @click="setActive">{{
+        <RouterLink class="router-link" id="header-nav-more" to="/">{{
           $t('header.more')
         }}</RouterLink>
         <el-icon class="el-icon--right">
@@ -40,7 +62,7 @@ const setActive = (event) => {
         </el-icon>
       </span>
       <span class="el-dropdown-link">
-        <RouterLink class="router-link" id="header-nav" to="/spaces" @click="setActive">{{
+        <RouterLink class="router-link" id="header-nav-spaces" to="/spaces">{{
           $t('header.spaces')
         }}</RouterLink>
         <el-icon class="el-icon--right">

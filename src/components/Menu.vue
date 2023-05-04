@@ -13,7 +13,13 @@ const handleLocale = (command: string) => {
   <el-row>
     <el-col :span="12" class="menu-left"></el-col>
     <el-col :span="12" class="menu-right">
-      <span class="host">{{ host }}</span> &nbsp;&nbsp;&nbsp;&nbsp;
+      <span class="host"
+        >API Host:
+        <a :href="host">
+          {{ host }}
+        </a>
+      </span>
+      &nbsp;&nbsp;&nbsp;&nbsp;
       <el-dropdown class="menu-right" @command="handleLocale">
         <span class="el-dropdown-link">
           {{ $i18n.locale }}
@@ -37,6 +43,15 @@ const handleLocale = (command: string) => {
 </template>
 
 <style scoped>
+a {
+  font-size: 14px;
+  font-family: 'Roboto';
+  color: #7787a6;
+  text-decoration: none;
+}
+a:hover {
+  color: #52b165;
+}
 .host {
   font-size: 14px;
   font-family: 'Roboto';

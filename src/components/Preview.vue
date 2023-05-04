@@ -2,7 +2,7 @@
 import { ref, inject, onBeforeMount } from 'vue'
 import { onBeforeRouteUpdate, useRoute } from 'vue-router'
 import { getOperationDetails } from '../obp/resource-docs'
-import { get } from '../obp'
+import { get, create, update, discard } from '../obp'
 
 const url = ref('')
 const method = ref('')
@@ -10,19 +10,67 @@ const header = ref('')
 const successResponseBody = ref('')
 const exampleRequestBody = ref('')
 const roles = ref('')
+const type = ref('')
 const docs = inject('OBP-ResourceDocs')
 
 const setOperationDetails = (id: string): void => {
   const operation = getOperationDetails(docs, id)
   url.value = operation.specified_url
   method.value = operation.request_verb
-  successResponseBody.value = JSON.stringify(operation.success_response_body, null, 4)
   exampleRequestBody.value = JSON.stringify(operation.example_request_body)
   roles.value = operation.roles
+  highlightCode(operation.success_response_body)
+  setType(method.value)
 }
 
+const setType = (method) => {
+  switch (method) {
+    case 'POST': {
+      type.value = 'success'
+      break
+    }
+    case 'PUT': {
+      type.value = 'warning'
+      break
+    }
+    case 'DELETE': {
+      type.value = 'danger'
+      break
+    }
+    default: {
+      type.value = 'primary'
+      break
+    }
+  }
+}
 const submit = async () => {
-  successResponseBody.value = await get(url.value)
+  switch (method.value) {
+    case 'POST': {
+      highlightCode(await create(url.value, exampleRequestBody.value))
+      break
+    }
+    case 'PUT': {
+      highlightCode(await update(url.value, exampleRequestBody.value))
+      break
+    }
+    case 'DELETE': {
+      highlightCode(await discard(url.value))
+      break
+    }
+    default: {
+      highlightCode(await get(url.value))
+      break
+    }
+  }
+}
+const highlightCode = (json) => {
+  if (json) {
+    successResponseBody.value = hljs.lineNumbersValue(
+      hljs.highlightAuto(JSON.stringify(json, null, 4), ['JSON']).value
+    )
+  } else {
+    successResponseBody.value = ''
+  }
 }
 onBeforeMount(async () => {
   const route = useRoute()
@@ -37,7 +85,7 @@ onBeforeRouteUpdate((to) => {
   <main>
     <div class="flex-preview-panel">
       <input type="text" v-model="url" id="search-input" />
-      <el-button type="primary" id="search-button" @click="submit">{{ method }}</el-button>
+      <el-button :type="type" id="search-button" @click="submit">{{ method }}</el-button>
     </div>
     <div class="flex-preview-panel">
       <input
@@ -50,8 +98,10 @@ onBeforeRouteUpdate((to) => {
       <input type="text" v-model="exampleRequestBody" />
     </div>
     <div>
-      <p>TYPICAL SUCCESSFUL RESPONSE:</p>
-      <pre>{{ successResponseBody }} </pre>
+      <pre>
+        TYPICAL SUCCESSFUL RESPONSE:
+        <code><div id="code" v-html="successResponseBody"></div></code>
+      </pre>
     </div>
     <div>
       <p>REQUIRED ROLES:</p>
@@ -77,6 +127,10 @@ onBeforeRouteUpdate((to) => {
 </template>
 
 <style scoped>
+template {
+  overflow: auto;
+  max-height: 900px;
+}
 main {
   margin: 25px;
   color: #fffff;
@@ -87,8 +141,10 @@ span {
   font-size: 28px;
 }
 pre {
-  max-height: 300px;
-  overflow: auto;
+  margin-left: -25px;
+  margin-right: -25px;
+  padding: 30px 30px 10px 30px;
+  max-height: 340px;
   background-color: #253047;
   font-size: 14px;
   font-family: 'Roboto';
@@ -111,7 +167,7 @@ input[type='text'] {
 input[type='text']:focus {
   outline: none;
 }
-.content deep(p a::after) {
+.content p a::after {
   content: '';
   position: absolute;
   left: 0;

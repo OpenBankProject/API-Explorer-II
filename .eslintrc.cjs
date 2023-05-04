@@ -2,6 +2,9 @@
 require('@rushstack/eslint-patch/modern-module-resolution')
 
 module.exports = {
+  globals:{
+    hljs: true
+  },
   root: true,
   'extends': [
     'plugin:vue/vue3-essential',
@@ -10,7 +13,7 @@ module.exports = {
     '@vue/eslint-config-prettier/skip-formatting'
   ],
   parserOptions: {
-    ecmaVersion: 'latest'
+    ecmaVersion: 'latest',
   },
   rules: { 'vue/multi-word-component-names': 0 }
 }

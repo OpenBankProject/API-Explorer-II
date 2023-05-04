@@ -1,0 +1,15 @@
+.hljs-ln-numbers {
+  color: #888a;
+}
+.hljs-punctuation {
+  color: #888a;
+}
+pre code table {
+  background: #253047;
+  max-height: 290px;
+  table-layout: fixed;
+  width: 100%;
+  display: inline-block;
+  position: inherit;
+  overflow: auto;
+}

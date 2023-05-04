@@ -30,6 +30,10 @@ onBeforeRouteUpdate((to) => {
 </template>
 
 <style scoped>
+template {
+  overflow: auto;
+  max-height: 900px;
+}
 main {
   margin: 25px;
   color: #39455f;

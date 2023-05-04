@@ -8,7 +8,7 @@ export default class OauthRequestTokenMiddleware implements ExpressMiddlewareInt
   constructor(private oauthInjectedService: OauthInjectedService) {}
 
   use(request: Request, response: Response): any {
-    const apiHost = process.env.VITE_API_HOST
+    const apiHost = process.env.VITE_OBP_API_HOST
     const oauthService = this.oauthInjectedService
     const consumer = oauthService.getConsumer()
     consumer.getOAuthRequestToken((error: any, oauthTokenKey: string, oauthTokenSecret: string) => {
