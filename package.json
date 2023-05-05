@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "vite & ts-node server/app.ts",
     "build": "run-p build-only",
+    "build-server": "tsc --project tsconfig.server.json",
     "preview": "vite preview",
     "test:unit": "vitest",
     "build-only": "vite build",
