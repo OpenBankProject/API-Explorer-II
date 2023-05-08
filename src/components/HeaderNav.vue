@@ -40,7 +40,7 @@ watchEffect(() => {
       >
         {{ $t('header.portal_home') }}
       </a>
-      <RouterLink class="router-link" id="header-nav-tags" to="/tags">{{
+      <RouterLink class="router-link" id="header-nav-tags" to="/operationid">{{
         $t('header.api_explorer')
       }}</RouterLink>
       <RouterLink class="router-link" id="header-nav-glossary" to="/glossary">{{

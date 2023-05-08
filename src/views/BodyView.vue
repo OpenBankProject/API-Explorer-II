@@ -24,10 +24,10 @@ import Menu from '../components/Menu.vue'
             <RouterView class="preview" name="preview" />
           </el-aside>
         </el-container>
-        <el-footer>
-          <!--Bottom -->
-          Footer
-        </el-footer>
+        <!--<el-footer> -->
+        <!--Bottom -->
+        <!--Footer
+        </el-footer>-->
       </el-container>
     </el-main>
   </el-container>

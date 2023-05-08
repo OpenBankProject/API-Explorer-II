@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { reactive, ref, onBeforeMount, onMounted, inject } from 'vue'
 import { Search } from '@element-plus/icons-vue'
+import { useRoute } from 'vue-router'
 
+const route = useRoute()
 const docs = ref({})
 const groups = ref({})
 const sortedKeys = ref([])
@@ -18,8 +20,20 @@ onBeforeMount(() => {
 })
 
 onMounted(() => {
-  const element = document.getElementsByClassName('api-router-link').item(0)
-  element.click()
+  let element
+  const elements = document.getElementsByClassName('api-router-link')
+  const id = route.params.id
+  for (const el of elements) {
+    if (el.id === id) {
+      element = el
+      break
+    }
+  }
+  if (element) {
+    element.click()
+  } else {
+    elements.item(0).click()
+  }
 })
 
 const sortLinks = (items: any) => {
@@ -99,6 +113,7 @@ const searchEvent = (event) => {
           <RouterLink
             active-class="active-api-router-link"
             class="api-router-link"
+            :id="value"
             :to="{ name: 'api', params: { id: value } }"
             >{{ key }}</RouterLink
           >
