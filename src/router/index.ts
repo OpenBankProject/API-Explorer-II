@@ -12,7 +12,7 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      redirect: '/tags'
+      redirect: '/operationid'
     },
     {
       path: '/login',
@@ -25,13 +25,13 @@ const router = createRouter({
       component: GlossaryView
     },
     {
-      path: '/tags',
-      name: 'tags',
+      path: '/operationid',
+      name: 'operationid',
       component: BodyView
     },
     {
-      path: '/tags/:id',
-      name: 'tags-path',
+      path: '/operationid/:id',
+      name: 'operationid-path',
       component: BodyView,
       children: [
         {

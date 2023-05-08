@@ -10,17 +10,20 @@ import { getOBPResourceDocs, getGroupedResourceDocs } from './obp/resource-docs'
 
 import 'element-plus/dist/index.css'
 import './assets/main.css'
+import '@fontsource/roboto/300.css'
+import '@fontsource/roboto/400.css'
+import '@fontsource/roboto/700.css'
 ;(async () => {
   const app = createApp(App)
 
   const cache = await caches.open('obp-resource-docs-cache')
-  const response = await cache.match('/tags')
+  const response = await cache.match('/operationid')
   let docs
   if (response) {
     docs = await response.json()
   } else {
     docs = await getOBPResourceDocs()
-    await cache.put('/tags', new Response(JSON.stringify(docs)))
+    await cache.put('/operationid', new Response(JSON.stringify(docs)))
   }
   const groupedDocs = await getGroupedResourceDocs(docs)
   app.provide('OBP-ResourceDocs', docs)

@@ -20,13 +20,19 @@ onBeforeMount(() => {
 })
 
 onMounted(() => {
+  let element
   const elements = document.getElementsByClassName('api-router-link')
   const id = route.params.id
-  for (const element of elements) {
-    if (element.id === id) {
-      element.click()
+  for (const el of elements) {
+    if (el.id === id) {
+      element = el
       break
     }
+  }
+  if (element) {
+    element.click()
+  } else {
+    elements.item(0).click()
   }
 })
 

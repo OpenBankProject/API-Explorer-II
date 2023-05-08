@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.1.0",
+    "@fontsource/roboto": "^4.5.8",
     "@highlightjs/vue-plugin": "^2.1.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
