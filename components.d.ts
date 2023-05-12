@@ -26,6 +26,7 @@ declare module '@vue/runtime-core' {
     ElInput: typeof import('element-plus/es')['ElInput']
     ElMain: typeof import('element-plus/es')['ElMain']
     ElRow: typeof import('element-plus/es')['ElRow']
+    GlossarySearchNav: typeof import('./src/components/GlossarySearchNav.vue')['default']
     HeaderNav: typeof import('./src/components/HeaderNav.vue')['default']
     Menu: typeof import('./src/components/Menu.vue')['default']
     Preview: typeof import('./src/components/Preview.vue')['default']
