@@ -62,6 +62,7 @@ onBeforeRouteUpdate((to) => {
         <div v-html="description" class="content"></div>
       </el-main>
       <el-footer class="footer">
+        <el-divider />
         <el-row>
           <el-col :span="12" class="pager-left">
             <el-icon v-show="displayPrev"><ArrowLeftBold /></el-icon>
