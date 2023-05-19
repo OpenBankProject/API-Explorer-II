@@ -4,144 +4,114 @@ import { Search } from '@element-plus/icons-vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
-const docs = ref({})
+const glossaryKeys = ref([])
+const alphabet = ref([])
+const form = reactive({
+  search: ''
+})
+
+const alphabetCharCodes = Array.from(Array(26)).map((e, i) => i + 65)
+alphabet.value = alphabetCharCodes.map((x) => String.fromCharCode(x))
 
 onBeforeMount(() => {
-  docs.value = inject('OBP-GroupedResourceDocs')!
+  const glossary = inject('OBP-Glossary')!
+  for (const item of glossary.glossary_items) {
+    glossaryKeys.value.push(item.title)
+  }
 })
 
-onMounted(() => {
-  //let element
-  //const elements = document.getElementsByClassName('api-router-link')
-  //const id = route.params.id
-  //for (const el of elements) {
-  //  if (el.id === id) {
-  //    element = el
-  //    break
-  //  }
-  //}
-  //if (element) {
-  //  element.click()
-  //} else {
-  //  elements.item(0).click()
-  //}
-})
-
-const sortLinks = (items: any) => {
-  return items
-  //const uniqueLinks = {}
-  //for (const { summary, operation_id } of items) {
-  //  if (!Object.keys(uniqueLinks).includes(summary)) uniqueLinks[summary.trim()] = operation_id
-  //}
-  //return Object.fromEntries(
-  //  Object.entries(uniqueLinks).sort((a, b) => {
-  //    if (a[0] < b[0]) {
-  //      return -1
-  //    }
-  //    if (a[0] > b[0]) {
-  //      return 1
-  //    }
-  //    return 0
-  //  })
-  //)
-}
-
-//const clearActiveTab = () => {
-//  const active = document.querySelector('.active-api-router-tab')
-//  if (active) {
-//    active.classList.remove('active-api-router-tab')
-//  }
-//}
-//
-//const setActive = (event) => {
-//  clearActiveTab()
-//  const target = event.target
-//  if (target.tagName.toLowerCase() === 'a') {
-//    target.parentElement.classList.add('active-api-router-tab')
-//  }
-//}
-//
-//const filterKeys = (keys, key) => {
-//  return keys.filter((title) => {
-//    const isGroupFound = title.toLowerCase().includes(key.toLowerCase())
-//    const items = docs.value[title].filter((item) =>
-//      item.summary.toLowerCase().includes(key.toLowerCase())
-//    )
-//    groups.value[title] = items
-//    return isGroupFound || items.length > 0
-//  })
-//}
-//
-//const searchEvent = (event) => {
-//  if (event) {
-//    sortedKeys.value = filterKeys(activeKeys.value, event)
-//  } else {
-//    groups.value = JSON.parse(JSON.stringify(docs.value))
-//    sortedKeys.value = Object.keys(groups.value).sort()
-//  }
-//}
+onMounted(() => {})
 </script>
 
 <template>
   <el-form :model="form" label-width="120px">
-    <el-input
-      v-model="form.search"
-      class="w-50 m-1"
-      placeholder="Search"
-      :prefix-icon="Search"
-      @input="searchEvent"
-    />
+    <el-input v-model="form.search" class="w-50 m-1" placeholder="Search" :prefix-icon="Search" />
   </el-form>
-  <el-collapse v-model="activeKeys">
-    <el-collapse-item title="My Collections" name="1"> </el-collapse-item>
-    <el-collapse-item v-for="key in sortedKeys" :title="key" :key="key" :name="key">
-      <div class="el-tabs--right">
-        <div
-          v-for="(value, key) of sortLinks(groups[key])"
-          :key="value"
-          class="api-router-tab"
-          @click="setActive"
+  <div class="tabs">
+    <div class="alphabet">
+      <div v-for="value of alphabet" :key="value">
+        <a
+          :id="value"
+          class="alphabet-router-link"
+          v-bind:href="`#${value.toLowerCase()}-quick-nav`"
         >
-          <RouterLink
-            active-class="active-api-router-link"
-            class="api-router-link"
-            :id="value"
-            :to="{ name: 'api', params: { id: value } }"
-            >{{ key }}</RouterLink
+          <div class="alphabet-link">
+            {{ value }}
+          </div>
+        </a>
+      </div>
+    </div>
+    <div class="tab-items">
+      <div class="el-tabs--right">
+        <div v-for="value of glossaryKeys" :key="value" class="glossary-router-tab">
+          <a
+            class="glossary-router-link"
+            :id="`${value.charAt(0).toLowerCase()}-quick-nav`"
+            v-bind:href="`#${value}`"
           >
+            {{ value }}
+          </a>
         </div>
       </div>
-    </el-collapse-item>
-  </el-collapse>
+    </div>
+  </div>
 </template>
 
 <style>
+.tabs {
+  display: flex;
+}
+.alphabet {
+  padding: 10px 5px 5px 5px;
+  min-width: 25px;
+}
+.alphabet-link {
+  padding: 5px 0px 5px 0px;
+  width: 100%;
+  text-align: center;
+  cursor: pointer;
+}
+.alphabet-router-link {
+  font-size: 13px;
+  font-family: 'Roboto';
+  color: #39455f;
+  text-decoration: none;
+}
 .search-nav {
   background-color: #f8f9fb;
   padding: 8px;
   border-right: solid 1px var(--el-menu-border-color);
 }
 
-.api-router-link {
-  width: 100%;
+.glossary-router-link {
   margin-left: 15px;
+  font-size: 13px;
   font-family: 'Roboto';
   text-decoration: none;
   color: #39455f;
   display: inline-block;
 }
 
-.api-router-tab {
+.glossary-router-tab {
   border-left: 2px solid var(--el-menu-border-color);
+  line-height: 30px;
 }
 
-.api-router-tab:hover,
-.active-api-router-tab {
+.glossary-router-tab:hover,
+.active-glossary-router-tab {
   border-left: 2px solid #52b165;
 }
 
-.api-router-tab:hover .api-router-link,
-.active-api-router-link {
+.glossary-router-tab:hover .glossary-router-link,
+.active-glossary-router-link,
+.alphabet-router-link:hover,
+.alphabet-link:hover .alphabet-router-link {
   color: #52b165;
+}
+.tab-items {
+  overflow: auto;
+  max-height: 100vh;
+  margin-top: 10px;
+  margin-right: -8px;
 }
 </style>

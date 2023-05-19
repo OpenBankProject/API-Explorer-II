@@ -8,15 +8,19 @@ const glossary = ref(inject('OBP-Glossary')!.glossary_items)
 <template>
   <el-container>
     <el-aside class="search-nav" width="20%">
-      <!--Left
-      <SearchNav />-->
+      <SearchNav />
     </el-aside>
     <el-main>
       <el-container class="main">
         <el-container>
           <main>
+            <el-backtop :right="100" :bottom="100" target="main" />
             <div v-for="(value, key) of glossary" :key="value">
-              <span>{{ value.title }}</span>
+              <span>
+                <a v-bind:href="`#${value.title}`" :id="value.title">
+                  {{ value.title }}
+                </a>
+              </span>
               <div v-html="value.description.html" class="content"></div>
             </div>
           </main>
@@ -27,16 +31,9 @@ const glossary = ref(inject('OBP-Glossary')!.glossary_items)
 </template>
 
 <style scoped>
-/**main {
-  margin-top: -60px;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  color: #39455f;
-  font-family: 'Roboto';
-  font-size: 30px;
-}*/
+.main {
+  max-height: 95vh;
+}
 template {
   overflow: auto;
   max-height: 900px;
@@ -54,6 +51,10 @@ div {
 }
 .content :deep(strong) {
   font-family: 'Roboto';
+}
+a {
+  text-decoration: none;
+  color: #39455f;
 }
 .content :deep(a) {
   text-decoration: none;

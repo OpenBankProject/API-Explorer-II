@@ -128,6 +128,7 @@ const searchEvent = (event) => {
   background-color: #f8f9fb;
   padding: 8px;
   border-right: solid 1px var(--el-menu-border-color);
+  overflow: unset !important;
 }
 
 .api-router-link {

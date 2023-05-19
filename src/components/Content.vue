@@ -62,7 +62,7 @@ onBeforeRouteUpdate((to) => {
         <div v-html="description" class="content"></div>
       </el-main>
       <el-footer class="footer">
-        <el-divider />
+        <el-divider class="divider" />
         <el-row>
           <el-col :span="12" class="pager-left">
             <el-icon v-show="displayPrev"><ArrowLeftBold /></el-icon>
@@ -89,10 +89,6 @@ onBeforeRouteUpdate((to) => {
 </template>
 
 <style scoped>
-template {
-  overflow: auto;
-  max-height: 900px;
-}
 main {
   margin: 25px;
   color: #39455f;
@@ -133,7 +129,10 @@ div {
   align-items: center;
 }
 .footer {
-  max-height: 20px;
+  max-height: 30px;
+}
+.divider {
+  margin-top: -15px;
 }
 .pager-router-link {
   font-family: 'Roboto';

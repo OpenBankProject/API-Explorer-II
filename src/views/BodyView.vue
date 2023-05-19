@@ -4,7 +4,7 @@ import Menu from '../components/Menu.vue'
 </script>
 
 <template>
-  <el-container>
+  <el-container class="root">
     <el-aside class="search-nav" width="20%">
       <!--Left-->
       <SearchNav />
@@ -14,8 +14,8 @@ import Menu from '../components/Menu.vue'
         <el-header class="menu">
           <Menu />
         </el-header>
-        <el-container>
-          <el-aside width="50%">
+        <el-container class="middle">
+          <el-aside class="summary" width="50%">
             <!--Middle -->
             <RouterView name="body" />
           </el-aside>
@@ -33,4 +33,20 @@ import Menu from '../components/Menu.vue'
   </el-container>
 </template>
 
-<style></style>
+<style>
+.root {
+  min-height: 100vh;
+  overflow: unset;
+}
+.middle {
+  max-height: 95vh;
+}
+.summary {
+  max-height: 95vh;
+}
+.preview {
+  color: white;
+  background-color: #151d30;
+  max-height: 100vh;
+}
+</style>
