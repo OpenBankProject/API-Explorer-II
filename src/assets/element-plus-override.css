@@ -49,3 +49,11 @@
 .el-dropdown-menu__item {
   font-family: Roboto;
 }
+
+.el-dropdown-menu__item:hover {
+  color: #52b165 !important;
+}
+
+.el-icon {
+  color: #52b165 !important;
+}

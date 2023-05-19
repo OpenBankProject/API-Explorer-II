@@ -32,7 +32,7 @@ const glossary = ref(inject('OBP-Glossary')!.glossary_items)
 
 <style scoped>
 .main {
-  max-height: 95vh;
+  max-height: 90vh;
 }
 template {
   overflow: auto;

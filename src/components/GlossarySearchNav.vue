@@ -60,6 +60,7 @@ onMounted(() => {})
 <style>
 .tabs {
   display: flex;
+  max-height: 90vh;
 }
 .alphabet {
   padding: 10px 5px 5px 5px;
