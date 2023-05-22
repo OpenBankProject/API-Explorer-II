@@ -58,7 +58,15 @@ onBeforeRouteUpdate((to) => {
   <main>
     <el-container>
       <el-main>
-        <span>{{ summary }}</span>
+        <el-row>
+          <el-col :span="22">
+            <span>{{ summary }}</span>
+          </el-col>
+          <el-col :span="2">
+            <span class="favorite favoriteButton">★</span>
+            <!--<el-button text>★</el-button>-->
+          </el-col>
+        </el-row>
         <div v-html="description" class="content"></div>
       </el-main>
       <el-footer class="footer">
@@ -143,5 +151,9 @@ div {
 .pager-left:hover,
 .pager-right:hover {
   color: #52b165;
+}
+.favorite {
+  cursor: pointer;
+  line-height: 1;
 }
 </style>

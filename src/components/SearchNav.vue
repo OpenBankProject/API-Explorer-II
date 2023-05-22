@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { reactive, ref, onBeforeMount, onMounted, inject } from 'vue'
-import { Search } from '@element-plus/icons-vue'
+import { Search, Star } from '@element-plus/icons-vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
@@ -91,15 +91,19 @@ const searchEvent = (event) => {
 </script>
 
 <template>
-  <el-form :model="form" label-width="120px">
-    <el-input
-      v-model="form.search"
-      class="w-50 m-1"
-      placeholder="Search"
-      :prefix-icon="Search"
-      @input="searchEvent"
-    />
-  </el-form>
+  <el-row>
+    <el-col :span="21">
+      <el-input
+        v-model="form.search"
+        placeholder="Search"
+        :prefix-icon="Search"
+        @input="searchEvent"
+      />
+    </el-col>
+    <el-col :span="1">
+      <span class="favoriteButton favorite">★</span>
+    </el-col>
+  </el-row>
   <el-collapse v-model="activeKeys">
     <el-collapse-item title="My Collections" name="1"> </el-collapse-item>
     <el-collapse-item v-for="key in sortedKeys" :title="key" :key="key" :name="key">
@@ -123,7 +127,7 @@ const searchEvent = (event) => {
   </el-collapse>
 </template>
 
-<style>
+<style scoped>
 .search-nav {
   background-color: #f8f9fb;
   padding: 8px;
@@ -152,5 +156,14 @@ const searchEvent = (event) => {
 .api-router-tab:hover .api-router-link,
 .active-api-router-link {
   color: #52b165;
+}
+.favorite {
+  cursor: pointer;
+  line-height: 2;
+  font-size: 18px;
+  vertical-align: middle;
+  text-align: center;
+  padding: 12px;
+  color: #39455f;
 }
 </style>

@@ -54,6 +54,10 @@
   color: #52b165 !important;
 }
 
+#searchFavoriteButton .el-icon svg {
+  /*color: white !important;*/
+}
+
 .el-icon {
-  color: #52b165 !important;
+  /*color: #52b165 !important;*/
 }

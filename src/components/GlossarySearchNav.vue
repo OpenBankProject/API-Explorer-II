@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { reactive, ref, onBeforeMount, onMounted, inject } from 'vue'
+import { reactive, ref, onBeforeMount, inject } from 'vue'
 import { Search } from '@element-plus/icons-vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
+const activeKeys = ref([])
 const glossaryKeys = ref([])
 const alphabet = ref([])
 const form = reactive({
@@ -16,17 +17,36 @@ alphabet.value = alphabetCharCodes.map((x) => String.fromCharCode(x))
 onBeforeMount(() => {
   const glossary = inject('OBP-Glossary')!
   for (const item of glossary.glossary_items) {
-    glossaryKeys.value.push(item.title)
+    if (!activeKeys.value.includes(item.title)) {
+      activeKeys.value.push(item.title)
+    }
   }
+  glossaryKeys.value = activeKeys.value
 })
 
-onMounted(() => {})
+const filterKeys = (keys, key) => {
+  return keys.filter((title) => {
+    return title.toLowerCase().includes(key.toLowerCase())
+  })
+}
+
+const searchEvent = (event) => {
+  if (event) {
+    glossaryKeys.value = filterKeys(activeKeys.value, event).sort()
+  } else {
+    glossaryKeys.value = activeKeys.value
+  }
+}
 </script>
 
 <template>
-  <el-form :model="form" label-width="120px">
-    <el-input v-model="form.search" class="w-50 m-1" placeholder="Search" :prefix-icon="Search" />
-  </el-form>
+  <el-input
+    v-model="form.search"
+    class="w-50 m-1"
+    placeholder="Search"
+    :prefix-icon="Search"
+    @input="searchEvent"
+  />
   <div class="tabs">
     <div class="alphabet">
       <div v-for="value of alphabet" :key="value">
