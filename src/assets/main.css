@@ -29,7 +29,7 @@ main {
   vertical-align: middle;
   text-align: right;
 }
-.preview {
-  color: white;
-  background-color: #151d30;
+
+.favoriteButton:hover {
+  color: #fcc406;
 }

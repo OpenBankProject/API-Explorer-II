@@ -54,21 +54,28 @@ watchEffect(() => {
         {{ $t('header.api_manager') }}
       </a>
       <span class="el-dropdown-link">
-        <RouterLink class="router-link" id="header-nav-more" to="/">{{
-          $t('header.more')
-        }}</RouterLink>
-        <el-icon class="el-icon--right">
-          <arrow-down />
-        </el-icon>
+        <el-dropdown class="menu-right router-link" id="header-nav-spaces">
+          <span class="el-dropdown-link">
+            {{ $t('header.more') }}
+            <el-icon class="el-icon--right">
+              <arrow-down />
+            </el-icon>
+          </span>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item key="messageDocs">Message Docs</el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
       </span>
-      <span class="el-dropdown-link">
+      <!--<span class="el-dropdown-link">
         <RouterLink class="router-link" id="header-nav-spaces" to="/spaces">{{
           $t('header.spaces')
         }}</RouterLink>
         <el-icon class="el-icon--right">
           <arrow-down />
         </el-icon>
-      </span>
+      </span>-->
       <a v-bind:href="'/api/connect'" class="login-button router-link">
         {{ $t('header.login') }}
       </a>

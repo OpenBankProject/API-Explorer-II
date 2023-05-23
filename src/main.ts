@@ -7,6 +7,7 @@ import { createI18n } from 'vue-i18n'
 import { languages, defaultLocale } from './language'
 
 import { getOBPResourceDocs, getGroupedResourceDocs } from './obp/resource-docs'
+import { getOBPGlossary } from './obp/glossary'
 
 import 'element-plus/dist/index.css'
 import './assets/main.css'
@@ -29,6 +30,8 @@ import '@fontsource/roboto/700.css'
   app.provide('OBP-ResourceDocs', docs)
   app.provide('OBP-GroupedResourceDocs', groupedDocs)
   app.provide('OBP-API-Host', import.meta.env.VITE_OBP_API_HOST)
+  const glossary = await getOBPGlossary()
+  app.provide('OBP-Glossary', glossary)
 
   const messages = Object.assign(languages)
   const i18n = createI18n({
