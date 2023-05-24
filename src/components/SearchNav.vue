@@ -92,16 +92,13 @@ const searchEvent = (event) => {
 
 <template>
   <el-row>
-    <el-col :span="21">
+    <el-col :span="24">
       <el-input
         v-model="form.search"
         placeholder="Search"
         :prefix-icon="Search"
         @input="searchEvent"
       />
-    </el-col>
-    <el-col :span="1">
-      <span class="favoriteButton favorite">★</span>
     </el-col>
   </el-row>
   <el-collapse v-model="activeKeys">

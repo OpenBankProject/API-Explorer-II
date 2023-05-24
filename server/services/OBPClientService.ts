@@ -26,12 +26,12 @@ export default class OBPClientService {
     }
     this.clientConfig = {
       baseUri: process.env.VITE_OBP_API_HOST,
-      version: Version.v510,
+      version: process.env.VITE_OBP_API_VERSION as Version.v510,
       oauthConfig: this.oauthConfig
     }
   }
   setAccessToken(key: string, secret: string): void {
-    if (!this.oauthConfig.accessToken) this.oauthConfig['accessToken'] = { key, secret }
+    this.oauthConfig['accessToken'] = { key, secret }
   }
   async get(path: string): Promise<any> {
     return await get<API.Any>(this.clientConfig, Any)(GetAny)(path)
@@ -44,5 +44,9 @@ export default class OBPClientService {
   }
   async discard(path: string): Promise<any> {
     return await discard<API.Any>(this.clientConfig, Any)(DiscardAny)(path)
+  }
+
+  getOBPVersion(): string {
+    return this.clientConfig.version
   }
 }

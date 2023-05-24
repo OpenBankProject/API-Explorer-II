@@ -13,8 +13,9 @@ export default class OauthRequestTokenMiddleware implements ExpressMiddlewareInt
     const consumer = oauthService.getConsumer()
     consumer.getOAuthRequestToken((error: any, oauthTokenKey: string, oauthTokenSecret: string) => {
       if (error) {
-        console.error(error)
-        response.status(500).send('Error getting OAuth request token: ' + error)
+        const errorStr = JSON.stringify(error)
+        console.error(errorStr)
+        response.status(500).send('Error getting OAuth request token: ' + errorStr)
       } else {
         oauthService.requestTokenKey = oauthTokenKey
         oauthService.requestTokenSecret = oauthTokenSecret

@@ -35,3 +35,11 @@ export async function discard(path: string): Promise<any> {
     return error
   }
 }
+
+export async function getCurrentUser(): Promise<any> {
+  try {
+    return (await superagent.get(`/api/user/current`)).body
+  } catch (error) {
+    console.log(error)
+  }
+}
