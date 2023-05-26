@@ -102,7 +102,10 @@ const searchEvent = (event) => {
     </el-col>
   </el-row>
   <el-collapse v-model="activeKeys">
-    <el-collapse-item title="My Collections" name="1"> </el-collapse-item>
+    <el-collapse-item title="My Collections" name="1">
+      <el-collapse-item class="child-collapse" title="Favorites" name="favorite1">
+      </el-collapse-item>
+    </el-collapse-item>
     <el-collapse-item v-for="key in sortedKeys" :title="key" :key="key" :name="key">
       <div class="el-tabs--right">
         <div
@@ -162,5 +165,8 @@ const searchEvent = (event) => {
   text-align: center;
   padding: 12px;
   color: #39455f;
+}
+.child-collapse {
+  margin-left: 15px;
 }
 </style>

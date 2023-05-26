@@ -24,7 +24,7 @@ const setPager = (id: string): void => {
   const prevElement = target.previousSibling
   const nextElement = target.nextSibling
   const active = document.querySelector('.active-api-router-tab')
-  active.classList.remove('active-api-router-tab')
+  if (active) active.classList.remove('active-api-router-tab')
   target.classList.add('active-api-router-tab')
   if (prevElement.className && prevElement.className.startsWith('api-router-tab')) {
     const prevItem = prevElement.children.item(0)

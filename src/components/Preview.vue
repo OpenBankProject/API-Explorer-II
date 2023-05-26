@@ -7,9 +7,17 @@ import { get, create, update, discard } from '../obp'
 const url = ref('')
 const method = ref('')
 const header = ref('')
+const responseHeaderTitle = ref('TYPICAL SUCCESSFUL RESPONSE')
 const successResponseBody = ref('')
 const exampleRequestBody = ref('')
-const roles = ref('')
+const requiredRoles = ref([])
+const validations = ref([])
+const possibleErrors = ref([])
+const connectorMethods = ref([])
+const showRequiredRoles = ref(true)
+const showValidations = ref(true)
+const showPossibleErrors = ref(true)
+const showConnectorMethods = ref(true)
 const type = ref('')
 const docs = inject('OBP-ResourceDocs')
 
@@ -18,7 +26,14 @@ const setOperationDetails = (id: string): void => {
   url.value = operation.specified_url
   method.value = operation.request_verb
   exampleRequestBody.value = JSON.stringify(operation.example_request_body)
-  roles.value = operation.roles
+  requiredRoles.value = operation.roles || []
+  possibleErrors.value = operation.error_response_bodies
+  connectorMethods.value = operation.connector_methods
+  showRequiredRoles.value = requiredRoles.value.some((role) => role.requires_bank_id)
+  showValidations.value = validations.value.length > 0
+  showPossibleErrors.value = possibleErrors.value.length > 0
+  showConnectorMethods.value = connectorMethods.value.length > 0
+
   highlightCode(operation.success_response_body)
   setType(method.value)
 }
@@ -62,6 +77,7 @@ const submit = async () => {
       break
     }
   }
+  responseHeaderTitle.value = 'RESPONSE'
 }
 const highlightCode = (json) => {
   if (json) {
@@ -72,12 +88,14 @@ const highlightCode = (json) => {
     successResponseBody.value = ''
   }
 }
+const request = () => {}
 onBeforeMount(async () => {
   const route = useRoute()
   setOperationDetails(route.params.id)
 })
 onBeforeRouteUpdate((to) => {
   setOperationDetails(to.params.id)
+  responseHeaderTitle.value = 'TYPICAL SUCCESSFUL RESPONSE'
 })
 </script>
 
@@ -95,34 +113,59 @@ onBeforeRouteUpdate((to) => {
       />
     </div>
     <div class="flex-preview-panel">
-      <input type="text" v-model="exampleRequestBody" />
+      <input type="text" v-show="exampleRequestBody" v-model="exampleRequestBody" />
     </div>
-    <div>
+    <div v-show="successResponseBody">
       <pre>
-        TYPICAL SUCCESSFUL RESPONSE:
+        {{responseHeaderTitle}}:
         <code><div id="code" v-html="successResponseBody"></div></code>
       </pre>
     </div>
-    <div>
+    <div v-show="showRequiredRoles">
       <p>REQUIRED ROLES:</p>
-      <div v-for="role in roles" :title="role" :key="role" :name="role">
+      <ul>
+        <li
+          v-for="role in requiredRoles"
+          v-show="role.requires_bank_id"
+          :key="role.role"
+          :name="role.role"
+        >
+          <p>{{ role.role }}</p>
+          <div class="flex-preview-panel" id="request-role-button-panel">
+            <input type="text" placeholder="Bank ID" id="request-role-input" />
+            <el-button id="request-role-button" @click="request">Request</el-button>
+          </div>
+        </li>
+      </ul>
+    </div>
+    <!--<div v-show="showValidations">-->
+    <div>
+      <p>VALIDATIONS:</p>
+      <!--TODO: implementation; replace hard coded.-->
+      <div>
         <ul>
-          <li>{{ role.role }}</li>
+          <li>Required JSON Validation: No</li>
+          <li>Allowed Authentication Types: Not set</li>
         </ul>
-        <div class="flex-preview-panel">
-          <input type="text" v-model="role.requires_bank_id" />
-        </div>
       </div>
     </div>
-    <div>
-      <p>Validations:</p>
+    <div v-show="showPossibleErrors">
+      <p>POSSIBLE ERRORS:</p>
+      <ul>
+        <li v-for="error in possibleErrors" :key="error" :name="error">
+          {{ error }}
+        </li>
+      </ul>
     </div>
-    <div>
-      <p>Possible Errors:</p>
+    <div v-show="showConnectorMethods">
+      <p>CONNECTOR METHODS:</p>
+      <ul>
+        <li v-for="method in connectorMethods" :key="method" :name="method">
+          {{ method }}
+        </li>
+      </ul>
     </div>
-    <div>
-      <p>Connector Methods:</p>
-    </div>
+    <br />
   </main>
 </template>
 
@@ -167,6 +210,12 @@ input[type='text'] {
 input[type='text']:focus {
   outline: none;
 }
+ul {
+  margin-left: -10px;
+}
+li {
+  padding: 5px 0 5px 0;
+}
 .content p a::after {
   content: '';
   position: absolute;
@@ -182,7 +231,8 @@ input[type='text']:focus {
   flex-direction: row;
   padding-bottom: 12px;
 }
-#search-input {
+#search-input,
+#request-role-input {
   -webkit-border-top-right-radius: 0;
   -moz-border-top-right-radius: 0;
   border-top-right-radius: 0;
@@ -190,7 +240,8 @@ input[type='text']:focus {
   -moz-border-bottom-right-radius: 0;
   border-bottom-right-radius: 0;
 }
-#search-button {
+#search-button,
+#request-role-button {
   height: 34px;
   -webkit-border-top-left-radius: 0;
   -moz-border-top-left-radius: 0;
@@ -198,5 +249,9 @@ input[type='text']:focus {
   -webkit-border-bottom-left-radius: 0;
   -moz-border-bottom-left-radius: 0;
   border-bottom-left-radius: 0;
+}
+#request-role-button-panel {
+  width: 95%;
+  margin: 0 auto;
 }
 </style>
