@@ -21,13 +21,14 @@ export default class OauthAccessTokenMiddleware implements ExpressMiddlewareInte
       oauthVerifier,
       (error: any, oauthTokenKey: string, oauthTokenSecret: string) => {
         if (error) {
-          console.log(error)
-          response.status(500).send('Error getting OAuth access token: ' + error)
+          const errorStr = JSON.stringify(error)
+          console.error(errorStr)
+          response.status(500).send('Error getting OAuth access token: ' + errorStr)
         } else {
           this.obpClientService.setAccessToken(oauthTokenKey, oauthTokenSecret)
           response.redirect(
-            //`${process.env.VITE_OBP_HOST}?key=${oauthTokenKey}&secret=${oauthTokenSecret}`
-            `${process.env.VITE_OBP_HOST}`
+            //`${process.env.VITE_OBP_EXPLORER_HOST}?key=${oauthTokenKey}&secret=${oauthTokenSecret}`
+            `${process.env.VITE_OBP_EXPLORER_HOST}`
           )
         }
       }

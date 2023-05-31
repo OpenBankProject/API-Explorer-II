@@ -1,9 +1,16 @@
 <script setup lang="ts">
-import { watchEffect } from 'vue'
+import { ref, watchEffect, onMounted } from 'vue'
 import { ArrowDown } from '@element-plus/icons-vue'
 import { useRoute } from 'vue-router'
+import { getCurrentUser } from '../obp'
 
 const route = useRoute()
+const obpApiHost = ref(import.meta.env.VITE_OBP_API_HOST)
+const obpApiManagerHost = ref(import.meta.env.VITE_OBP_API_MANAGER_HOST)
+const loginUsername = ref('')
+const logOffUrl = ref('')
+const isShowLoginButton = ref(true)
+const isShowLogOffButton = ref(false)
 
 const clearActiveTab = () => {
   const activeLinks = document.querySelectorAll('.router-link')
@@ -19,6 +26,19 @@ const setActive = (target) => {
   }
 }
 
+onMounted(async () => {
+  const currentUser = await getCurrentUser()
+  const currentResponseKeys = Object.keys(currentUser)
+  if (currentResponseKeys.includes('username')) {
+    isShowLoginButton.value = false
+    isShowLogOffButton.value = !isShowLoginButton.value
+    loginUsername.value = currentUser.username
+  } else {
+    isShowLoginButton.value = true
+    isShowLogOffButton.value = !isShowLoginButton.value
+  }
+})
+
 watchEffect(() => {
   const path = route.name
   if (path && route.params && !route.params.id) {
@@ -33,11 +53,7 @@ watchEffect(() => {
   <img alt="OBP logo" class="logo" src="@/assets/logo2x-1.png" />
   <nav id="nav">
     <RouterView name="header">
-      <a
-        v-bind:href="'https://apisandbox.openbankproject.com/'"
-        class="router-link"
-        id="header-nav-home"
-      >
+      <a v-bind:href="obpApiHost" class="router-link" id="header-nav-home">
         {{ $t('header.portal_home') }}
       </a>
       <RouterLink class="router-link" id="header-nav-tags" to="/operationid">{{
@@ -46,11 +62,7 @@ watchEffect(() => {
       <RouterLink class="router-link" id="header-nav-glossary" to="/glossary">{{
         $t('header.glossary')
       }}</RouterLink>
-      <a
-        v-bind:href="'https://apimanagersandbox.openbankproject.com'"
-        class="router-link"
-        id="header-nav-api-manager"
-      >
+      <a v-bind:href="obpApiManagerHost" class="router-link" id="header-nav-api-manager">
         {{ $t('header.api_manager') }}
       </a>
       <span class="el-dropdown-link">
@@ -76,8 +88,16 @@ watchEffect(() => {
           <arrow-down />
         </el-icon>
       </span>-->
-      <a v-bind:href="'/api/connect'" class="login-button router-link">
+      <a v-bind:href="'/api/connect'" v-show="isShowLoginButton" class="login-button router-link">
         {{ $t('header.login') }}
+      </a>
+      <span v-show="isShowLogOffButton" class="login-user">{{ loginUsername }}</span>
+      <a
+        v-bind:href="'/api/user/logoff'"
+        v-show="isShowLogOffButton"
+        class="logoff-button router-link"
+      >
+        {{ $t('header.logoff') }}
       </a>
     </RouterView>
   </nav>
@@ -113,6 +133,14 @@ nav {
   z-index: var(--el-index-normal);
 }
 
+.login-user {
+  font-family: 'Roboto';
+  padding: 9px;
+  color: #39455f;
+  font-size: 14px;
+  border-radius: 8px;
+}
+
 .router-link {
   padding: 9px;
   margin: 3px;
@@ -133,13 +161,16 @@ nav {
   cursor: pointer;
 }
 
-.login-button {
+.login-button,
+.logoff-button {
   margin: 5px;
   color: #ffffff;
   background-color: #32b9ce;
+  cursor: pointer;
 }
 
-.login-button:hover {
+.login-button:hover,
+.logoff-button:hover {
   color: #39455f;
 }
 </style>
