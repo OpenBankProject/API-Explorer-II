@@ -192,7 +192,7 @@ onBeforeRouteUpdate((to) => {
     </div>
     <el-form ref="roleFormRef" :model="roleForm" :rules="roleRules">
       <div v-show="showRequiredRoles">
-        <p>REQUIRED ROLES:</p>
+        <p>{{ $t('preview.required_roles') }}:</p>
         <el-alert v-show="!isUserLogon" type="info" show-icon :closable="false">
           <p>Please login to request this Role.</p>
         </el-alert>
@@ -225,7 +225,7 @@ onBeforeRouteUpdate((to) => {
     </el-form>
     <!--<div v-show="showValidations">-->
     <div>
-      <p>VALIDATIONS:</p>
+      <p>{{ $t('preview.validations') }}:</p>
       <!--TODO: implementation; replace hard coded.-->
       <div>
         <ul>
@@ -235,7 +235,7 @@ onBeforeRouteUpdate((to) => {
       </div>
     </div>
     <div v-show="showPossibleErrors">
-      <p>POSSIBLE ERRORS:</p>
+      <p>{{ $t('preview.possible_errors') }}:</p>
       <ul>
         <li v-for="error in possibleErrors" :key="error" :name="error">
           {{ error }}
@@ -243,7 +243,7 @@ onBeforeRouteUpdate((to) => {
       </ul>
     </div>
     <div v-show="showConnectorMethods">
-      <p>CONNECTOR METHODS:</p>
+      <p>{{ $t('preview.connector_methods') }}:</p>
       <ul>
         <li v-for="method in connectorMethods" :key="method" :name="method">
           {{ method }}
