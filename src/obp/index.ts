@@ -1,4 +1,5 @@
 import superagent from 'superagent'
+import { Version } from 'obp-typescript'
 
 export async function get(path: string): Promise<any> {
   try {
@@ -42,4 +43,15 @@ export async function getCurrentUser(): Promise<any> {
   } catch (error) {
     console.log(error)
   }
+}
+
+export async function createEntitlement(bankId: string, roleName: string): Promise<any> {
+  const userId = (await getCurrentUser()).user_id
+  const version = import.meta.env.VITE_OBP_API_VERSION
+  const url = `/obp/${version}/users/${userId}/entitlements`
+  const body = {
+    role_name: roleName,
+    bank_id: bankId
+  }
+  return await create(url, JSON.stringify(body))
 }

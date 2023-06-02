@@ -26,7 +26,7 @@ export default class OBPClientService {
     }
     this.clientConfig = {
       baseUri: process.env.VITE_OBP_API_HOST,
-      version: process.env.VITE_OBP_API_VERSION as Version.v510,
+      version: process.env.VITE_OBP_API_VERSION as Version,
       oauthConfig: this.oauthConfig
     }
   }

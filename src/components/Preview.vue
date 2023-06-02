@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { ref, inject, onBeforeMount } from 'vue'
+import { ref, reactive, inject, onBeforeMount } from 'vue'
 import { onBeforeRouteUpdate, useRoute } from 'vue-router'
 import { getOperationDetails } from '../obp/resource-docs'
-import { get, create, update, discard } from '../obp'
+import type { ElNotification, FormInstance, FormRules } from 'element-plus'
+import { get, create, update, discard, createEntitlement, getCurrentUser } from '../obp'
 
 const url = ref('')
+const roleName = ref('')
 const method = ref('')
 const header = ref('')
 const responseHeaderTitle = ref('TYPICAL SUCCESSFUL RESPONSE')
@@ -18,8 +20,19 @@ const showRequiredRoles = ref(true)
 const showValidations = ref(true)
 const showPossibleErrors = ref(true)
 const showConnectorMethods = ref(true)
+const isUserLogon = ref(true)
 const type = ref('')
 const docs = inject('OBP-ResourceDocs')
+
+const requestFormRef = reactive<FormInstance>({})
+const requestForm = reactive({ url: '' })
+const requestRules = reactive<FormRules>({
+  url: [{ required: true, message: 'URL path is required', trigger: 'blur' }]
+})
+
+const roleFormRef = reactive<FormInstance>({})
+const roleForm = reactive({})
+const roleRules = reactive<FormRules>({})
 
 const setOperationDetails = (id: string): void => {
   const operation = getOperationDetails(docs, id)
@@ -36,6 +49,19 @@ const setOperationDetails = (id: string): void => {
 
   highlightCode(operation.success_response_body)
   setType(method.value)
+}
+
+const setValidations = () => {
+  if (requiredRoles.value) {
+    requiredRoles.value.forEach((role, idx) => {
+      if (role.requires_bank_id) {
+        roleForm[`role${role.role}${idx}`] = role.role
+        roleRules[`bankId${role.role}` + idx] = [
+          { required: true, message: 'Bank Id is required', trigger: 'blur' }
+        ]
+      }
+    })
+  }
 }
 
 const setType = (method) => {
@@ -58,7 +84,7 @@ const setType = (method) => {
     }
   }
 }
-const submit = async () => {
+const submitRequest = async (form: FormInstance) => {
   switch (method.value) {
     case 'POST': {
       highlightCode(await create(url.value, exampleRequestBody.value))
@@ -79,6 +105,16 @@ const submit = async () => {
   }
   responseHeaderTitle.value = 'RESPONSE'
 }
+const submit = async (form: FormInstance | undefined, fn: () => void) => {
+  if (!form) return
+  await form.validate(async (valid) => {
+    if (valid) {
+      await fn(form)
+    } else {
+      return false
+    }
+  })
+}
 const highlightCode = (json) => {
   if (json) {
     successResponseBody.value = hljs.lineNumbersValue(
@@ -88,23 +124,56 @@ const highlightCode = (json) => {
     successResponseBody.value = ''
   }
 }
-const request = () => {}
+const submitEntitlement = async (form) => {
+  requiredRoles.value.forEach(async (formRole, idx) => {
+    if (formRole.requires_bank_id) {
+      const role = roleForm[`role${formRole.role}${idx}`]
+      const bankId = roleForm[`bankId${formRole.role}${idx}`]
+      if (role && bankId && isUserLogon) {
+        const response = await createEntitlement(bankId, role)
+        let type = 'success'
+        if ('code' in response && response['code'] >= 400) {
+          type = 'error'
+        }
+        ElNotification({
+          duration: 4500,
+          message: response.message,
+          type
+        })
+      }
+    }
+  })
+}
 onBeforeMount(async () => {
   const route = useRoute()
   setOperationDetails(route.params.id)
+
+  const currentUser = await getCurrentUser()
+  isUserLogon.value = currentUser.username
+  setValidations()
 })
 onBeforeRouteUpdate((to) => {
   setOperationDetails(to.params.id)
   responseHeaderTitle.value = 'TYPICAL SUCCESSFUL RESPONSE'
+  setValidations()
 })
 </script>
 
 <template>
   <main>
-    <div class="flex-preview-panel">
-      <input type="text" v-model="url" id="search-input" />
-      <el-button :type="type" id="search-button" @click="submit">{{ method }}</el-button>
-    </div>
+    <el-form ref="requestFormRef" :model="requestForm" :rules="requestRules">
+      <el-form-item prop="url">
+        <div class="flex-request-preview-panel">
+          <input type="text" v-model="url" :set="(requestForm.url = url)" id="search-input" />
+          <el-button
+            :type="type"
+            id="search-button"
+            @click="submit(requestFormRef, submitRequest)"
+            >{{ method }}</el-button
+          >
+        </div>
+      </el-form-item>
+    </el-form>
     <div class="flex-preview-panel">
       <input
         type="text"
@@ -121,23 +190,39 @@ onBeforeRouteUpdate((to) => {
         <code><div id="code" v-html="successResponseBody"></div></code>
       </pre>
     </div>
-    <div v-show="showRequiredRoles">
-      <p>REQUIRED ROLES:</p>
-      <ul>
-        <li
-          v-for="role in requiredRoles"
-          v-show="role.requires_bank_id"
-          :key="role.role"
-          :name="role.role"
+    <el-form ref="roleFormRef" :model="roleForm" :rules="roleRules">
+      <div v-show="showRequiredRoles">
+        <p>REQUIRED ROLES:</p>
+        <el-alert v-show="!isUserLogon" type="info" show-icon :closable="false">
+          <p>Please login to request this Role.</p>
+        </el-alert>
+        <ul>
+          <li
+            v-for="(role, idx) in requiredRoles"
+            :key="role.role"
+            :name="role.role"
+            v-show="role.requires_bank_id"
+          >
+            <p>{{ role.role }}</p>
+            <div class="flex-role-preview-panel" id="request-role-button-panel">
+              <el-form-item :prop="`bankId${role.role}${idx}`">
+                <input
+                  type="text"
+                  v-model="roleForm[`bankId${role.role}${idx}`]"
+                  placeholder="Bank ID"
+                />
+              </el-form-item>
+            </div>
+          </li>
+        </ul>
+        <el-button
+          id="request-role-button"
+          v-show="isUserLogon"
+          @click="submit(roleFormRef, submitEntitlement)"
+          >Request</el-button
         >
-          <p>{{ role.role }}</p>
-          <div class="flex-preview-panel" id="request-role-button-panel">
-            <input type="text" placeholder="Bank ID" id="request-role-input" />
-            <el-button id="request-role-button" @click="request">Request</el-button>
-          </div>
-        </li>
-      </ul>
-    </div>
+      </div>
+    </el-form>
     <!--<div v-show="showValidations">-->
     <div>
       <p>VALIDATIONS:</p>
@@ -229,10 +314,18 @@ li {
 .flex-preview-panel {
   display: flex;
   flex-direction: row;
+  padding-bottom: 18px;
+}
+.flex-role-preview-panel {
+  display: flex;
+  flex-direction: row;
   padding-bottom: 12px;
 }
-#search-input,
-#request-role-input {
+.flex-request-preview-panel {
+  display: flex;
+  flex-direction: row;
+}
+#search-input {
   -webkit-border-top-right-radius: 0;
   -moz-border-top-right-radius: 0;
   border-top-right-radius: 0;
@@ -240,8 +333,7 @@ li {
   -moz-border-bottom-right-radius: 0;
   border-bottom-right-radius: 0;
 }
-#search-button,
-#request-role-button {
+#search-button {
   height: 34px;
   -webkit-border-top-left-radius: 0;
   -moz-border-top-left-radius: 0;
@@ -250,8 +342,11 @@ li {
   -moz-border-bottom-left-radius: 0;
   border-bottom-left-radius: 0;
 }
+#request-role-button {
+  margin-left: 30px;
+}
 #request-role-button-panel {
   width: 95%;
-  margin: 0 auto;
+  margin: 0 0 -30px 0;
 }
 </style>
