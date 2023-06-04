@@ -54,6 +54,19 @@
   color: #52b165 !important;
 }
 
+.el-alert--info.is-light {
+  background-color: #253047;
+}
+
+.el-form-item,
+.el-form-item__content {
+  display: inherit;
+}
+
+.el-notification__content {
+  text-align: left;
+}
+
 #searchFavoriteButton .el-icon svg {
   /*color: white !important;*/
 }

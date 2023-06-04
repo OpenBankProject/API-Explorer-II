@@ -9,5 +9,11 @@
     "spaces": "Spaces",
     "login": "Log on",
     "logoff": "Log off"
+  },
+  "preview": {
+    "required_roles": "REQUIRED ROLES",
+    "validations": "VALIDATIONS",
+    "possible_errors": "POSSIBLE ERRORS",
+    "connector_methods": "CONNECTOR METHODS"
   }
 }

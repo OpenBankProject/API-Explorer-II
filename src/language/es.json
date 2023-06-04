@@ -8,5 +8,11 @@
     "spaces": "Espacio",
     "login": "Iniciar sesión",
     "logoff": "Desconectarse"
+  },
+  "preview": {
+    "required_roles": "RESPUESTA EXITOSA TÍPICA",
+    "validations": "VALIDACIONES",
+    "possible_errors": "POSIBLES ERRORES",
+    "connector_methods": " MÉTODOS DE CONECTOR"
   }
 }
