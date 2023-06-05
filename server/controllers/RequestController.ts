@@ -1,4 +1,4 @@
-import { Controller, Req, Res, Get, Delete, Post, Put } from 'routing-controllers'
+import { Controller, Session, Req, Res, Get, Delete, Post, Put } from 'routing-controllers'
 import { Request, Response } from 'express'
 import OBPClientService from '../services/OBPClientService'
 import { Service } from 'typedi'
@@ -8,28 +8,44 @@ import { Service } from 'typedi'
 export class OBPController {
   constructor(private obpClientService: OBPClientService) {}
   @Get('/get')
-  async get(@Req() request: Request, @Res() response: Response): Response {
+  async get(@Session() session: any, @Req() request: Request, @Res() response: Response): Response {
     const path = request.query.path
-    return response.json(await this.obpClientService.get(path))
+    const oauthConfig = session['clientConfig']
+    return response.json(await this.obpClientService.get(path, oauthConfig))
   }
 
   @Post('/create')
-  async create(@Req() request: Request, @Res() response: Response): Response {
+  async create(
+    @Session() session: any,
+    @Req() request: Request,
+    @Res() response: Response
+  ): Response {
     const path = request.query.path
     const data = request.body
-    return response.json(await this.obpClientService.create(path, data))
+    const oauthConfig = session['clientConfig']
+    return response.json(await this.obpClientService.create(path, data, oauthConfig))
   }
 
   @Put('/update')
-  async update(@Req() request: Request, @Res() response: Response): Response {
+  async update(
+    @Session() session: any,
+    @Req() request: Request,
+    @Res() response: Response
+  ): Response {
     const path = request.query.path
     const data = request.body
-    return response.json(await this.obpClientService.update(path, data))
+    const oauthConfig = session['clientConfig']
+    return response.json(await this.obpClientService.update(path, data, oauthConfig))
   }
 
   @Delete('/delete')
-  async delete(@Req() request: Request, @Res() response: Response): Response {
+  async delete(
+    @Session() session: any,
+    @Req() request: Request,
+    @Res() response: Response
+  ): Response {
     const path = request.query.path
-    return response.json(await this.obpClientService.discard(path))
+    const oauthConfig = session['clientConfig']
+    return response.json(await this.obpClientService.discard(path, oauthConfig))
   }
 }

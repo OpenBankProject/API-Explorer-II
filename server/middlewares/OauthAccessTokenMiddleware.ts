@@ -15,6 +15,7 @@ export default class OauthAccessTokenMiddleware implements ExpressMiddlewareInte
     const oauthService = this.oauthInjectedService
     const consumer = oauthService.getConsumer()
     const oauthVerifier = request.query.oauth_verifier
+    const session = request.session
     consumer.getOAuthAccessToken(
       oauthService.requestTokenKey,
       oauthService.requestTokenSecret,
@@ -25,11 +26,15 @@ export default class OauthAccessTokenMiddleware implements ExpressMiddlewareInte
           console.error(errorStr)
           response.status(500).send('Error getting OAuth access token: ' + errorStr)
         } else {
-          this.obpClientService.setAccessToken(oauthTokenKey, oauthTokenSecret)
-          response.redirect(
-            //`${process.env.VITE_OBP_EXPLORER_HOST}?key=${oauthTokenKey}&secret=${oauthTokenSecret}`
-            `${process.env.VITE_OBP_EXPLORER_HOST}`
-          )
+          const clientConfig = JSON.parse(
+            JSON.stringify(this.obpClientService.getOBPClientConfig())
+          ) //Deep copy
+          clientConfig['oauthConfig']['accessToken'] = {
+            key: oauthTokenKey,
+            secret: oauthTokenSecret
+          }
+          session['clientConfig'] = clientConfig
+          response.redirect(`${process.env.VITE_OBP_EXPLORER_HOST}`)
         }
       }
     )
