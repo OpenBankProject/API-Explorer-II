@@ -21,7 +21,7 @@ export class UserController {
   ): Response {
     this.oauthInjectedService.requestTokenKey = undefined
     this.oauthInjectedService.requestTokenSecret = undefined
-    session['oauthConfig'] = undefined
+    session['clientConfig'] = undefined
     response.redirect(this.obpExplorerHome)
     return response
   }

@@ -31,20 +31,23 @@ export default class OBPClientService {
     }
   }
   async get(path: string, clientConfig: any): Promise<any> {
-    const config = clientConfig || this.clientConfig
+    const config = this.getSessionConfig(clientConfig)
     return await get<API.Any>(config, Any)(GetAny)(path)
   }
   async create(path: string, body: any, clientConfig: any): Promise<any> {
-    const config = clientConfig || this.clientConfig
-    return await create<API.Any>(config || this.clientConfig, Any)(CreateAny)(path)(body)
+    const config = this.getSessionConfig(clientConfig)
+    return await create<API.Any>(config, Any)(CreateAny)(path)(body)
   }
   async update(path: string, body: any, clientConfig: any): Promise<any> {
-    const config = clientConfig || this.clientConfig
-    return await update<API.Any>(config || this.clientConfig, Any)(UpdateAny)(path)(body)
+    const config = this.getSessionConfig(clientConfig)
+    return await update<API.Any>(config, Any)(UpdateAny)(path)(body)
   }
   async discard(path: string, clientConfig: any): Promise<any> {
-    const config = clientConfig || this.clientConfig
-    return await discard<API.Any>(config || this.clientConfig, Any)(DiscardAny)(path)
+    const config = this.getSessionConfig(clientConfig)
+    return await discard<API.Any>(config, Any)(DiscardAny)(path)
+  }
+  private getSessionConfig(clientConfig: any): any {
+    return clientConfig || this.clientConfig
   }
 
   getOBPVersion(): string {
