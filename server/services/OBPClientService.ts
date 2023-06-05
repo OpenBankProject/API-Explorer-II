@@ -30,23 +30,28 @@ export default class OBPClientService {
       oauthConfig: this.oauthConfig
     }
   }
-  setAccessToken(key: string, secret: string): void {
-    this.oauthConfig['accessToken'] = { key, secret }
+  async get(path: string, clientConfig: any): Promise<any> {
+    const config = clientConfig || this.clientConfig
+    return await get<API.Any>(config, Any)(GetAny)(path)
   }
-  async get(path: string): Promise<any> {
-    return await get<API.Any>(this.clientConfig, Any)(GetAny)(path)
+  async create(path: string, body: any, clientConfig: any): Promise<any> {
+    const config = clientConfig || this.clientConfig
+    return await create<API.Any>(config || this.clientConfig, Any)(CreateAny)(path)(body)
   }
-  async create(path: string, body: any): Promise<any> {
-    return await create<API.Any>(this.clientConfig, Any)(CreateAny)(path)(body)
+  async update(path: string, body: any, clientConfig: any): Promise<any> {
+    const config = clientConfig || this.clientConfig
+    return await update<API.Any>(config || this.clientConfig, Any)(UpdateAny)(path)(body)
   }
-  async update(path: string, body: any): Promise<any> {
-    return await update<API.Any>(this.clientConfig, Any)(UpdateAny)(path)(body)
-  }
-  async discard(path: string): Promise<any> {
-    return await discard<API.Any>(this.clientConfig, Any)(DiscardAny)(path)
+  async discard(path: string, clientConfig: any): Promise<any> {
+    const config = clientConfig || this.clientConfig
+    return await discard<API.Any>(config || this.clientConfig, Any)(DiscardAny)(path)
   }
 
   getOBPVersion(): string {
     return this.clientConfig.version
+  }
+
+  getOBPClientConfig(): any {
+    return this.clientConfig
   }
 }

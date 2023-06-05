@@ -1,4 +1,4 @@
-import { Controller, Req, Res, Get } from 'routing-controllers'
+import { Controller, Session, Req, Res, Get } from 'routing-controllers'
 import { Request, Response } from 'express'
 import OBPClientService from '../services/OBPClientService'
 import OauthInjectedService from '../services/OauthInjectedService'
@@ -14,17 +14,28 @@ export class UserController {
     private oauthInjectedService: OauthInjectedService
   ) {}
   @Get('/logoff')
-  async logout(@Req() request: Request, @Res() response: Response): Response {
+  async logout(
+    @Session() session: any,
+    @Req() request: Request,
+    @Res() response: Response
+  ): Response {
     this.oauthInjectedService.requestTokenKey = undefined
     this.oauthInjectedService.requestTokenSecret = undefined
-    this.obpClientService.setAccessToken(undefined, undefined)
+    session['oauthConfig'] = undefined
     response.redirect(this.obpExplorerHome)
     return response
   }
 
   @Get('/current')
-  async current(@Req() request: Request, @Res() response: Response): Response {
+  async current(
+    @Session() session: any,
+    @Req() request: Request,
+    @Res() response: Response
+  ): Response {
+    const oauthConfig = session['clientConfig']
     const version = this.obpClientService.getOBPVersion()
-    return response.json(await this.obpClientService.get(`/obp/${version}/users/current`))
+    return response.json(
+      await this.obpClientService.get(`/obp/${version}/users/current`, oauthConfig)
+    )
   }
 }
