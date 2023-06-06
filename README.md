@@ -7,7 +7,11 @@ This application is used to explore OBP APIs and interact with the data and serv
 
 
 
-## Development Project Setup
+## Install the Prerequisite Software
+  * required: { node: `>=16.14` }
+  * required: { npm: `>=8.0.0` }
+
+### Development Project Setup
 
   * Setup your .env (see .env.example)
 
