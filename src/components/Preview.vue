@@ -104,6 +104,7 @@ const submitRequest = async () => {
       duration: elMessageDuration,
       message: 'URL path is required.',
       type: 'error',
+      position: 'bottom-right',
     })
   }
 }
