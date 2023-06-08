@@ -5,6 +5,7 @@ import { getOperationDetails } from '../obp/resource-docs'
 import type { ElNotification, FormInstance, FormRules } from 'element-plus'
 import { get, create, update, discard, createEntitlement, getCurrentUser } from '../obp'
 
+const elMessageDuration = 5500
 const url = ref('')
 const roleName = ref('')
 const method = ref('')
@@ -26,13 +27,9 @@ const docs = inject('OBP-ResourceDocs')
 
 const requestFormRef = reactive<FormInstance>({})
 const requestForm = reactive({ url: '' })
-const requestRules = reactive<FormRules>({
-  url: [{ required: true, message: 'URL path is required', trigger: 'blur' }]
-})
 
 const roleFormRef = reactive<FormInstance>({})
 const roleForm = reactive({})
-const roleRules = reactive<FormRules>({})
 
 const setOperationDetails = (id: string): void => {
   const operation = getOperationDetails(docs, id)
@@ -51,14 +48,11 @@ const setOperationDetails = (id: string): void => {
   setType(method.value)
 }
 
-const setValidations = () => {
+const setRoleForm = () => {
   if (requiredRoles.value) {
     requiredRoles.value.forEach((role, idx) => {
       if (role.requires_bank_id) {
         roleForm[`role${role.role}${idx}`] = role.role
-        roleRules[`bankId${role.role}` + idx] = [
-          { required: true, message: 'Bank Id is required', trigger: 'blur' }
-        ]
       }
     })
   }
@@ -84,36 +78,39 @@ const setType = (method) => {
     }
   }
 }
-const submitRequest = async (form: FormInstance) => {
-  switch (method.value) {
-    case 'POST': {
-      highlightCode(await create(url.value, exampleRequestBody.value))
-      break
+const submitRequest = async () => {
+  if (url.value) {
+    switch (method.value) {
+      case 'POST': {
+        highlightCode(await create(url.value, exampleRequestBody.value))
+        break
+      }
+      case 'PUT': {
+        highlightCode(await update(url.value, exampleRequestBody.value))
+        break
+      }
+      case 'DELETE': {
+        highlightCode(await discard(url.value))
+        break
+      }
+      default: {
+        highlightCode(await get(url.value))
+        break
+      }
     }
-    case 'PUT': {
-      highlightCode(await update(url.value, exampleRequestBody.value))
-      break
-    }
-    case 'DELETE': {
-      highlightCode(await discard(url.value))
-      break
-    }
-    default: {
-      highlightCode(await get(url.value))
-      break
-    }
+    responseHeaderTitle.value = 'RESPONSE'
+  } else {
+    ElNotification({
+      duration: elMessageDuration,
+      message: 'URL path is required.',
+      type: 'error',
+      position: 'bottom-right',
+    })
   }
-  responseHeaderTitle.value = 'RESPONSE'
 }
-const submit = async (form: FormInstance | undefined, fn: () => void) => {
+const submit = async (form: FormInstance, fn: () => void) => {
   if (!form) return
-  await form.validate(async (valid) => {
-    if (valid) {
-      await fn(form)
-    } else {
-      return false
-    }
-  })
+  fn(form).then(() => {})
 }
 const highlightCode = (json) => {
   if (json) {
@@ -124,7 +121,7 @@ const highlightCode = (json) => {
     successResponseBody.value = ''
   }
 }
-const submitEntitlement = async (form) => {
+const submitEntitlement = async () => {
   requiredRoles.value.forEach(async (formRole, idx) => {
     if (formRole.requires_bank_id) {
       const role = roleForm[`role${formRole.role}${idx}`]
@@ -136,9 +133,17 @@ const submitEntitlement = async (form) => {
           type = 'error'
         }
         ElNotification({
-          duration: 4500,
+          duration: elMessageDuration,
           message: response.message,
-          type
+          position: 'bottom-right',
+          type,
+        })
+      } else {
+        ElNotification({
+          duration: elMessageDuration,
+          message: 'Bank Id is required.',
+          position: 'bottom-right',
+          type: 'error',
         })
       }
     }
@@ -150,18 +155,18 @@ onBeforeMount(async () => {
 
   const currentUser = await getCurrentUser()
   isUserLogon.value = currentUser.username
-  setValidations()
+  setRoleForm()
 })
 onBeforeRouteUpdate((to) => {
   setOperationDetails(to.params.id)
   responseHeaderTitle.value = 'TYPICAL SUCCESSFUL RESPONSE'
-  setValidations()
+  setRoleForm()
 })
 </script>
 
 <template>
   <main>
-    <el-form ref="requestFormRef" :model="requestForm" :rules="requestRules">
+    <el-form ref="requestFormRef" :model="requestForm">
       <el-form-item prop="url">
         <div class="flex-request-preview-panel">
           <input type="text" v-model="url" :set="(requestForm.url = url)" id="search-input" />
@@ -190,7 +195,7 @@ onBeforeRouteUpdate((to) => {
         <code><div id="code" v-html="successResponseBody"></div></code>
       </pre>
     </div>
-    <el-form ref="roleFormRef" :model="roleForm" :rules="roleRules">
+    <el-form ref="roleFormRef" :model="roleForm">
       <div v-show="showRequiredRoles">
         <p>{{ $t('preview.required_roles') }}:</p>
         <el-alert v-show="!isUserLogon" type="info" show-icon :closable="false">
