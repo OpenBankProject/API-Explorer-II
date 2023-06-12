@@ -30,6 +30,7 @@ main {
   text-align: right;
 }
 
+.activeFavoriteButton,
 .favoriteButton:hover {
   color: #fcc406;
 }

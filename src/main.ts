@@ -1,5 +1,6 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
+import ElementPlus from 'element-plus'
 
 import App from './App.vue'
 import router from './router'
@@ -7,6 +8,7 @@ import { createI18n } from 'vue-i18n'
 import { languages, defaultLocale } from './language'
 
 import { getOBPResourceDocs, getGroupedResourceDocs } from './obp/resource-docs'
+import { getMyAPICollections, getMyAPICollectionsEndpoint } from './obp'
 import { getOBPGlossary } from './obp/glossary'
 
 import 'element-plus/dist/index.css'
@@ -33,6 +35,16 @@ import '@fontsource/roboto/700.css'
   const glossary = await getOBPGlossary()
   app.provide('OBP-Glossary', glossary)
 
+  const apiCollections = (await getMyAPICollections()).api_collections
+  if (apiCollections) {
+    for (const { api_collection_name } of apiCollections) {
+      const apiCollectionsEndpoint = (
+        await getMyAPICollectionsEndpoint(api_collection_name)
+      ).api_collection_endpoints.map((api) => api.operation_id)
+      app.provide('OBP-MyCollectionsEndpoint', apiCollectionsEndpoint)
+    }
+  }
+
   const messages = Object.assign(languages)
   const i18n = createI18n({
     locale: defaultLocale,
@@ -41,6 +53,7 @@ import '@fontsource/roboto/700.css'
   })
   app.provide('i18n', i18n)
 
+  app.use(ElementPlus)
   app.use(i18n)
   app.use(createPinia())
   app.use(router)
