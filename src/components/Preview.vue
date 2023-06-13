@@ -2,7 +2,7 @@
 import { ref, reactive, inject, onBeforeMount } from 'vue'
 import { onBeforeRouteUpdate, useRoute } from 'vue-router'
 import { getOperationDetails } from '../obp/resource-docs'
-import type { ElNotification, FormInstance, FormRules } from 'element-plus'
+import type { ElNotification, FormInstance } from 'element-plus'
 import { get, create, update, discard, createEntitlement, getCurrentUser } from '../obp'
 
 const elMessageDuration = 5500
@@ -104,7 +104,7 @@ const submitRequest = async () => {
       duration: elMessageDuration,
       message: 'URL path is required.',
       type: 'error',
-      position: 'bottom-right',
+      position: 'bottom-right'
     })
   }
 }
@@ -136,14 +136,14 @@ const submitEntitlement = async () => {
           duration: elMessageDuration,
           message: response.message,
           position: 'bottom-right',
-          type,
+          type
         })
       } else {
         ElNotification({
           duration: elMessageDuration,
           message: 'Bank Id is required.',
           position: 'bottom-right',
-          type: 'error',
+          type: 'error'
         })
       }
     }

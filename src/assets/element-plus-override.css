@@ -67,6 +67,10 @@
   text-align: left;
 }
 
+.el-notification.right {
+  width: 38%;
+}
+
 #searchFavoriteButton .el-icon svg {
   /*color: white !important;*/
 }
