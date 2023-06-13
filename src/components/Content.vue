@@ -1,11 +1,16 @@
 <script setup lang="ts">
-import { ref, inject, onActivated, onMounted } from 'vue'
+import { ref, inject, provide, onActivated, onMounted } from 'vue'
 import { onBeforeRouteUpdate, useRoute } from 'vue-router'
 import { getOperationDetails } from '../obp/resource-docs'
 import { ArrowLeftBold, ArrowRightBold } from '@element-plus/icons-vue'
 import type { ElNotification } from 'element-plus'
-import { createMyAPICollectionEndpoint, deleteMyAPICollectionEndpoint } from '../obp'
-import { initializeAPICollections } from './SearchNav.vue'
+import {
+  createMyAPICollection,
+  createMyAPICollectionEndpoint,
+  deleteMyAPICollectionEndpoint,
+  getCurrentUser
+} from '../obp'
+import { setTabActive, initializeAPICollections } from './SearchNav.vue'
 
 const route = useRoute()
 const description = ref('')
@@ -18,6 +23,7 @@ const next = ref({ id: 'next' })
 const favoriteButtonStyle = ref('favorite favoriteButton')
 let routeId = ''
 let isFavorite = false
+let apiCollectionsEndpoint = inject('OBP-MyCollectionsEndpoint')!
 
 const setOperationDetails = (id: string): void => {
   const operation = getOperationDetails(docs, id)
@@ -52,7 +58,6 @@ const setPager = (id: string): void => {
 
 const tagFavoriteButton = async (routeId: string): void => {
   favoriteButtonStyle.value = 'favorite favoriteButton'
-  const apiCollectionsEndpoint = inject('OBP-MyCollectionsEndpoint')!
   if (apiCollectionsEndpoint) {
     isFavorite = apiCollectionsEndpoint.includes(routeId)
     if (isFavorite) {
@@ -63,18 +68,31 @@ const tagFavoriteButton = async (routeId: string): void => {
 }
 
 const createDeleteFavorite = async (): void => {
+  const currentUser = await getCurrentUser()
+  if (!Object.keys(currentUser).includes('username')) {
+    showNotification('User not logged in.', 'error')
+    return
+  }
+  if (!apiCollectionsEndpoint) {
+    createMyAPICollection()
+    apiCollectionsEndpoint = []
+  }
   if (isFavorite) {
     await deleteMyAPICollectionEndpoint(routeId)
     favoriteButtonStyle.value = 'favorite favoriteButton'
     showNotification('Removed from favourites.', 'success')
     isFavorite = false
+    apiCollectionsEndpoint = apiCollectionsEndpoint.filter((api) => api != routeId)
   } else {
     await createMyAPICollectionEndpoint(routeId)
     favoriteButtonStyle.value = 'favorite activeFavoriteButton'
     showNotification('Added to favourites.', 'success')
     isFavorite = true
+    apiCollectionsEndpoint.push(routeId)
   }
+  provide('OBP-MyCollectionsEndpoint', apiCollectionsEndpoint)
   await initializeAPICollections()
+  setTabActive(routeId)
 }
 
 const showNotification = (message: string, type: string): void => {

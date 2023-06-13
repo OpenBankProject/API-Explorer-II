@@ -14,8 +14,26 @@ const form = reactive({
   search: ''
 })
 const apiCollections = ref({})
-const apiCollectionsEndpoint = ref({})
 const apiCollectionsEndpointMapping = ref({})
+const apiCollectionsEndpoint = ref({})
+
+const clearActiveTab = () => {
+  const activeTabs = document.querySelectorAll('.active-api-router-tab')
+  activeTabs.forEach((tab) => {
+    tab.classList.remove('active-api-router-tab')
+  })
+}
+
+export const setTabActive = (id) => {
+  const tabs = document.querySelectorAll('.api-router-link')
+  clearActiveTab()
+  tabs.forEach((tab) => {
+    if (tab.id === id) {
+      tab.parentElement.classList.add('active-api-router-tab')
+    }
+  })
+}
+
 export const initializeAPICollections = async () => {
   apiCollections.value = (await getMyAPICollections()).api_collections
   if (apiCollections.value) {
@@ -37,6 +55,7 @@ onBeforeMount(async () => {
   activeKeys.value = Object.keys(groups.value)
   sortedKeys.value = activeKeys.value.sort()
   await initializeAPICollections()
+  setTabActive(route.params.id)
 })
 
 onMounted(() => {
@@ -59,7 +78,8 @@ onMounted(() => {
 const sortLinks = (items: any) => {
   const uniqueLinks = {}
   for (const { summary, operation_id } of items) {
-    if (!Object.keys(uniqueLinks).includes(summary)) uniqueLinks[summary.trim()] = operation_id
+    if (!Object.keys(uniqueLinks).includes(summary.trim()))
+      uniqueLinks[summary.trim()] = operation_id
     operationIdTitle[operation_id] = summary.trim()
   }
   const sortResult = Object.fromEntries(
@@ -76,18 +96,10 @@ const sortLinks = (items: any) => {
   return sortResult
 }
 
-const clearActiveTab = () => {
-  const active = document.querySelector('.active-api-router-tab')
-  if (active) {
-    active.classList.remove('active-api-router-tab')
-  }
-}
-
 const setActive = (event) => {
-  clearActiveTab()
   const target = event.target
   if (target.tagName.toLowerCase() === 'a') {
-    target.parentElement.classList.add('active-api-router-tab')
+    setTabActive(target.id)
   }
 }
 
@@ -141,7 +153,7 @@ const searchEvent = (event) => {
           >
             <RouterLink
               :to="{ name: 'api', params: { id: value } }"
-              :id="`${value}`"
+              :id="value"
               active-class="active-api-router-link"
               class="api-router-link"
               >{{ operationIdTitle[value] }}</RouterLink
