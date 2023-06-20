@@ -103,20 +103,23 @@ const setActive = (event) => {
   }
 }
 
+const iskeyFound = (keys, item) => keys.every((k) => item.toLowerCase().includes(k))
+
 const filterKeys = (keys, key) => {
+  const splitKey = key.split(' ').map((k) => k.toLowerCase())
   return keys.filter((title) => {
-    const isGroupFound = title.toLowerCase().includes(key.toLowerCase())
-    const items = docs.value[title].filter((item) =>
-      item.summary.toLowerCase().includes(key.toLowerCase())
+    const isGroupFound = iskeyFound(splitKey, title)
+    const items = docs.value[title].filter(
+      (item) => isGroupFound || iskeyFound(splitKey, item.summary)
     )
     groups.value[title] = items
     return isGroupFound || items.length > 0
   })
 }
 
-const searchEvent = (event) => {
-  if (event) {
-    sortedKeys.value = filterKeys(activeKeys.value, event)
+const searchEvent = (value) => {
+  if (value) {
+    sortedKeys.value = filterKeys(activeKeys.value, value)
   } else {
     groups.value = JSON.parse(JSON.stringify(docs.value))
     sortedKeys.value = Object.keys(groups.value).sort()
