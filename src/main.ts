@@ -37,12 +37,18 @@ import '@fontsource/roboto/700.css'
 
   const apiCollections = (await getMyAPICollections()).api_collections
   if (apiCollections) {
-    for (const { api_collection_name } of apiCollections) {
-      const apiCollectionsEndpoint = (
-        await getMyAPICollectionsEndpoint(api_collection_name)
-      ).api_collection_endpoints.map((api) => api.operation_id)
-      app.provide('OBP-MyCollectionsEndpoint', apiCollectionsEndpoint)
-    }
+    //for (const { api_collection_name } of apiCollections) {
+    //  const apiCollectionsEndpoint = (
+    //    await getMyAPICollectionsEndpoint(api_collection_name)
+    //  ).api_collection_endpoints.map((api) => api.operation_id)
+    //  app.provide('OBP-MyCollectionsEndpoint', apiCollectionsEndpoint)
+    //}
+    const apiCollectionsEndpoint = (
+      await getMyAPICollectionsEndpoint('Favourites')
+    ).api_collection_endpoints.map((api) => api.operation_id)
+    app.provide('OBP-MyCollectionsEndpoint', apiCollectionsEndpoint)
+  } else {
+    app.provide('OBP-MyCollectionsEndpoint', undefined)
   }
 
   const messages = Object.assign(languages)

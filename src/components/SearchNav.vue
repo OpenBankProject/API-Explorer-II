@@ -3,6 +3,7 @@ import { reactive, ref, onBeforeMount, onMounted, inject } from 'vue'
 import { Search, Star } from '@element-plus/icons-vue'
 import { useRoute } from 'vue-router'
 import { getMyAPICollections, getMyAPICollectionsEndpoint } from '../obp'
+import { searchLinksColor as searchLinksColorSetting } from '../obp/style-setting'
 
 const operationIdTitle = {}
 const docs = ref({})
@@ -16,6 +17,7 @@ const form = reactive({
 const apiCollections = ref({})
 const apiCollectionsEndpointMapping = ref({})
 const apiCollectionsEndpoint = ref({})
+const searchLinksColor = ref(searchLinksColorSetting)
 
 const clearActiveTab = () => {
   const activeTabs = document.querySelectorAll('.active-api-router-tab')
@@ -209,12 +211,12 @@ const searchEvent = (value) => {
 
 .api-router-tab:hover,
 .active-api-router-tab {
-  border-left: 2px solid #52b165;
+  border-left: 2px solid v-bind(searchLinksColor);
 }
 
 .api-router-tab:hover .api-router-link,
 .active-api-router-link {
-  color: #52b165;
+  color: v-bind(searchLinksColor);
 }
 .favorite {
   cursor: pointer;

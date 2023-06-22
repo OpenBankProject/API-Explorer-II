@@ -103,8 +103,7 @@ const submitRequest = async () => {
     ElNotification({
       duration: elMessageDuration,
       message: 'URL path is required.',
-      type: 'error',
-      position: 'bottom-right'
+      type: 'error'
     })
   }
 }

@@ -11,6 +11,7 @@ import {
   getCurrentUser
 } from '../obp'
 import { setTabActive, initializeAPICollections } from './SearchNav.vue'
+import { summaryPagerLinksColor as summaryPagerLinksColorSetting } from '../obp/style-setting'
 
 const route = useRoute()
 const description = ref('')
@@ -21,6 +22,7 @@ const displayNext = ref(true)
 const prev = ref({ id: 'prev' })
 const next = ref({ id: 'next' })
 const favoriteButtonStyle = ref('favorite favoriteButton')
+const summaryPagerLinksColor = ref(summaryPagerLinksColorSetting)
 let routeId = ''
 let isFavorite = false
 let apiCollectionsEndpoint = inject('OBP-MyCollectionsEndpoint')!
@@ -78,15 +80,19 @@ const createDeleteFavorite = async (): void => {
     apiCollectionsEndpoint = []
   }
   if (isFavorite) {
-    await deleteMyAPICollectionEndpoint(routeId)
+    const response = await deleteMyAPICollectionEndpoint(routeId)
     favoriteButtonStyle.value = 'favorite favoriteButton'
-    showNotification('Removed from favourites.', 'success')
+    if (response) {
+      showNotification(response, 'success')
+    } else {
+      showNotification('Removed from favourites.', 'success')
+    }
     isFavorite = false
     apiCollectionsEndpoint = apiCollectionsEndpoint.filter((api) => api != routeId)
   } else {
-    await createMyAPICollectionEndpoint(routeId)
+    const response = await createMyAPICollectionEndpoint(routeId)
     favoriteButtonStyle.value = 'favorite activeFavoriteButton'
-    showNotification('Added to favourites.', 'success')
+    showNotification(response, 'success')
     isFavorite = true
     apiCollectionsEndpoint.push(routeId)
   }
@@ -98,7 +104,6 @@ const createDeleteFavorite = async (): void => {
 const showNotification = (message: string, type: string): void => {
   ElNotification({
     duration: 5500,
-    position: 'bottom-right',
     message,
     type
   })
@@ -214,7 +219,7 @@ div {
 .pager-router-link:hover,
 .pager-left:hover,
 .pager-right:hover {
-  color: #52b165;
+  color: v-bind(summaryPagerLinksColor);
 }
 .favorite {
   cursor: pointer;
