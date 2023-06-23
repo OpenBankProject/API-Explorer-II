@@ -1,29 +1,47 @@
 <script setup lang="ts">
 import { ref, watchEffect, onMounted } from 'vue'
 import { ArrowDown } from '@element-plus/icons-vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { getCurrentUser } from '../obp'
+import {
+  logo as logoSource,
+  headerLinksColor,
+  headerLinksHoverColor as headerLinksHoverColorSetting,
+  headerLinksBackgroundColor as headerLinksBackgroundColorSetting
+} from '../obp/style-setting'
 
 const route = useRoute()
+const router = useRouter()
 const obpApiHost = ref(import.meta.env.VITE_OBP_API_HOST)
 const obpApiManagerHost = ref(import.meta.env.VITE_OBP_API_MANAGER_HOST)
 const loginUsername = ref('')
 const logOffUrl = ref('')
 const isShowLoginButton = ref(true)
 const isShowLogOffButton = ref(false)
+const logo = ref(logoSource)
+const headerLinksHoverColor = ref(headerLinksHoverColorSetting)
+const headerLinksBackgroundColor = ref(headerLinksBackgroundColorSetting)
 
 const clearActiveTab = () => {
   const activeLinks = document.querySelectorAll('.router-link')
   for (const active of activeLinks) {
-    if (active.id) active.style.backgroundColor = 'transparent'
+    if (active.id) {
+      active.style.backgroundColor = 'transparent'
+      active.style.color = '#39455f'
+    }
   }
 }
 
 const setActive = (target) => {
   if (target) {
     clearActiveTab()
-    target.style.backgroundColor = '#eef0f4'
+    target.style.backgroundColor = headerLinksBackgroundColor.value
+    target.style.color = headerLinksColor
   }
+}
+
+const handleMore = (command: string) => {
+  router.replace({ path: `/${command}` })
 }
 
 onMounted(async () => {
@@ -50,7 +68,8 @@ watchEffect(() => {
 </script>
 
 <template>
-  <img alt="OBP logo" class="logo" src="@/assets/logo2x-1.png" />
+  <img alt="OBP logo" class="logo" v-show="logo" :src="logo" />
+  <img alt="OBP logo" class="logo" v-show="!logo" src="@/assets/logo2x-1.png" />
   <nav id="nav">
     <RouterView name="header">
       <a v-bind:href="obpApiHost" class="router-link" id="header-nav-home">
@@ -66,18 +85,20 @@ watchEffect(() => {
         {{ $t('header.api_manager') }}
       </a>
       <span class="el-dropdown-link">
-        <el-dropdown class="menu-right router-link" id="header-nav-spaces">
+        <el-dropdown class="menu-right router-link" id="header-nav-spaces" @command="handleMore">
           <span class="el-dropdown-link">
             {{ $t('header.more') }}
             <el-icon class="el-icon--right">
               <arrow-down />
             </el-icon>
           </span>
-          <template #dropdown>
+          <!--<template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item key="messageDocs">Message Docs</el-dropdown-item>
+              <el-dropdown-item command="message-docs" key="message-docs"
+                >Message Docs</el-dropdown-item
+              >
             </el-dropdown-menu>
-          </template>
+          </template>-->
         </el-dropdown>
       </span>
       <!--<span class="el-dropdown-link">
@@ -152,7 +173,8 @@ nav {
 }
 
 .router-link:hover {
-  background-color: #eef0f4 !important;
+  background-color: v-bind(headerLinksBackgroundColor) !important;
+  color: v-bind(headerLinksHoverColor) !important;
 }
 
 .logo {

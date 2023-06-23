@@ -1,5 +1,6 @@
 import { Any, GetAny, Version, API, get } from 'obp-typescript'
 import type { APIClientConfig } from 'obp-typescript'
+import { version } from '../obp'
 
 const clientConfig: APIClientConfig = {
   baseUri: import.meta.env.VITE_OBP_API_HOST,
@@ -9,14 +10,13 @@ const clientConfig: APIClientConfig = {
 
 // Get Resource Docs
 export async function getOBPResourceDocs(): Promise<any> {
-  return await get<API.Any>(clientConfig, Any)(GetAny)(`/resource-docs/${Version.v510}/obp`)
+  return await get<API.Any>(clientConfig, Any)(GetAny)(`/resource-docs/${version}/obp`)
 }
 
 export async function getGroupedResourceDocs(docs: any): Promise<any> {
   return docs.resource_docs.reduce((values: any, doc: any) => {
-    doc.tags.forEach((tag: any) => {
-      ;(values[tag] = values[tag] || []).push(doc)
-    })
+    const tag = doc.tags[0]
+    ;(values[tag] = values[tag] || []).push(doc)
     return values
   }, {})
 }

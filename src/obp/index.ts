@@ -1,7 +1,6 @@
 import superagent from 'superagent'
-import { Version } from 'obp-typescript'
 
-const version = import.meta.env.VITE_OBP_API_VERSION
+export const version = import.meta.env.VITE_OBP_API_VERSION
 const default_collection_name = 'Favourites'
 
 export async function get(path: string): Promise<any> {
