@@ -36,7 +36,8 @@ import '@fontsource/roboto/700.css'
   app.provide('OBP-Glossary', glossary)
 
   const apiCollections = (await getMyAPICollections()).api_collections
-  if (apiCollections) {
+  if (apiCollections && apiCollections.length > 0) {
+    //Uncomment this when other collection will be supported.
     //for (const { api_collection_name } of apiCollections) {
     //  const apiCollectionsEndpoint = (
     //    await getMyAPICollectionsEndpoint(api_collection_name)
