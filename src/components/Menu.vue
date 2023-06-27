@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { ArrowDown } from '@element-plus/icons-vue'
-import { inject } from 'vue'
+import { searchLinksColor as searchLinksColorSetting} from '../obp/style-setting'
+import { inject, ref } from 'vue'
 
 const i18n = inject('i18n')
 const host = inject('OBP-API-Host')
+const searchLinksColor = ref(searchLinksColorSetting)
 const handleLocale = (command: string) => {
   i18n.global.locale.value = command
 }
@@ -50,7 +52,7 @@ a {
   text-decoration: none;
 }
 a:hover {
-  color: #52b165;
+  color: v-bind(searchLinksColor);
 }
 .host {
   font-size: 14px;
