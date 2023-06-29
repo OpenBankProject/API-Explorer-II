@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ArrowDown } from '@element-plus/icons-vue'
-import { searchLinksColor as searchLinksColorSetting} from '../obp/style-setting'
+import { searchLinksColor as searchLinksColorSetting } from '../obp/style-setting'
 import { inject, ref } from 'vue'
 
 const i18n = inject('i18n')
