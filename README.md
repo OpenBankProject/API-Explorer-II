@@ -5,6 +5,8 @@ Welcome to the OBP API Explorer II
 
 This application is used to explore OBP APIs and interact with the data and services in the context of the logged in user.
 
+This application will gradually replace the original API Explorer.
+
 
 
 ## Install the Prerequisite Software
