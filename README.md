@@ -15,7 +15,7 @@ This application will gradually replace the original API Explorer. Long live the
 
 ### Development Project Setup
 
-  * Setup your .env (see .env.example)
+  * Setup your .env file (see .env.example)
 
 ##### Install dependencies
 
@@ -54,52 +54,17 @@ npm test:unit
 ```
 </strike>
 
-
-##### Lint with [ESLint](https://eslint.org/)
-
-```sh
-yarn lint
-```
-or
-```sh
-npm lint
-```
-
-##### Format with [Prettier](https://prettier.io/)
-
-```sh
-yarn format
-```
-or
-```sh
-npm format
-```
-
 ## Compile and Minify for Production
 
-##### Build the frontend
+##### Build 
 
 ```sh
-yarn build
-```
-or
-```sh
-npm build
-```
-
-##### Build the backend
-
-```sh
-yarn build-server
-```
-or
-```sh
-npm build-server
+npm run build
 ```
 
 ##### Start the backend server
 ```sh
-your-absolute-path-to-server-dist> node app.js
+npx ts-node <path-to-your-install>/server/app.ts
 ```
 
 ##### Nginx deployment
@@ -108,7 +73,7 @@ your-absolute-path-to-server-dist> node app.js
 server {
     # Frontend
     location / {
-        root    /your_absolute_path_to_dist/dist;
+        root    /path_to_dist/dist;
         try_files $uri $uri/ /index.html;
     }
     
@@ -118,11 +83,6 @@ server {
     }
 }
 ```
-
-```sh
-nginx -s reload //Restart your nginx
-```
-
 
 # LICENSE
 
