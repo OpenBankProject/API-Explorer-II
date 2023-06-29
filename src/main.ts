@@ -19,16 +19,40 @@ import '@fontsource/roboto/700.css'
 ;(async () => {
   const app = createApp(App)
 
+  const worker = new Worker('/js/worker/web-worker.js')
   const cache = await caches.open('obp-resource-docs-cache')
   const response = await cache.match('/operationid')
   let docs
-  if (response) {
-    docs = await response.json()
-  } else {
+
+  const setCacheDocs = async () => {
     docs = await getOBPResourceDocs()
     await cache.put('/operationid', new Response(JSON.stringify(docs)))
   }
+  if (response) {
+    try {
+      docs = await response.json()
+      if (!docs) {
+        await setCacheDocs()
+      }
+    } catch (err) {
+      console.warn(err)
+      //If cache docs is malformed update with the latest resource docs.
+      await setCacheDocs()
+    }
+    worker.postMessage('update-resource-docs')
+  } else {
+    await setCacheDocs()
+  }
+
+  //Listen to Web worker
+  worker.onmessage = async (event) => {
+    //Update resource docs cache data in the background
+    if (event.data === 'update-resource-docs') {
+      await setCacheDocs()
+    }
+  }
   const groupedDocs = await getGroupedResourceDocs(docs)
+
   app.provide('OBP-ResourceDocs', docs)
   app.provide('OBP-GroupedResourceDocs', groupedDocs)
   app.provide('OBP-API-Host', import.meta.env.VITE_OBP_API_HOST)
