@@ -2,11 +2,13 @@
 import { reactive, ref, onBeforeMount, inject } from 'vue'
 import { Search } from '@element-plus/icons-vue'
 import { useRoute } from 'vue-router'
+import { searchLinksColor as searchLinksColorSetting } from '../obp/style-setting'
 
 const route = useRoute()
 const activeKeys = ref([])
 const glossaryKeys = ref([])
 const alphabet = ref([])
+const searchLinksColor = ref(searchLinksColorSetting)
 const form = reactive({
   search: ''
 })
@@ -77,7 +79,7 @@ const searchEvent = (event) => {
   </div>
 </template>
 
-<style>
+<style scoped>
 .tabs {
   display: flex;
   max-height: 90vh;
@@ -98,11 +100,6 @@ const searchEvent = (event) => {
   color: #39455f;
   text-decoration: none;
 }
-.search-nav {
-  background-color: #f8f9fb;
-  padding: 8px;
-  border-right: solid 1px var(--el-menu-border-color);
-}
 
 .glossary-router-link {
   margin-left: 15px;
@@ -120,14 +117,14 @@ const searchEvent = (event) => {
 
 .glossary-router-tab:hover,
 .active-glossary-router-tab {
-  border-left: 2px solid #52b165;
+  border-left: 2px solid v-bind(searchLinksColor);
 }
 
 .glossary-router-tab:hover .glossary-router-link,
 .active-glossary-router-link,
 .alphabet-router-link:hover,
 .alphabet-link:hover .alphabet-router-link {
-  color: #52b165;
+  color: v-bind(searchLinksColor);
 }
 .tab-items {
   overflow: auto;

@@ -92,13 +92,13 @@ watchEffect(() => {
               <arrow-down />
             </el-icon>
           </span>
-          <!--<template #dropdown>
+          <template #dropdown>
             <el-dropdown-menu>
               <el-dropdown-item command="message-docs" key="message-docs"
                 >Message Docs</el-dropdown-item
               >
             </el-dropdown-menu>
-          </template>-->
+          </template>
         </el-dropdown>
       </span>
       <!--<span class="el-dropdown-link">
@@ -194,5 +194,10 @@ nav {
 .login-button:hover,
 .logoff-button:hover {
   color: #39455f;
+}
+
+/*override element plus*/
+.el-dropdown-menu__item:hover {
+  color: v-bind(headerLinksHoverColor) !important;
 }
 </style>

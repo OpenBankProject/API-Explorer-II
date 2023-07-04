@@ -50,10 +50,6 @@
   font-family: Roboto;
 }
 
-.el-dropdown-menu__item:hover {
-  color: #52b165 !important;
-}
-
 .el-alert--info.is-light {
   background-color: #253047;
 }
