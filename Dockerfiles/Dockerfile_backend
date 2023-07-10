@@ -1,0 +1,25 @@
+# First stage builds the application
+FROM ubi8/nodejs-16 as builder
+
+# Add application sources
+ADD app-src $HOME
+
+# Install the dependencies
+RUN npm install
+RUN npm build-server
+
+# Run script uses standard ways to run the application
+CMD npm run -d start
+FROM node:lts-bullseye
+
+USER 0
+
+COPY --from=builder /app/server-dist /app
+WORKDIR /app
+RUN chown  1001 /
+RUN chown -R 1001 /app
+RUN chgrp -R 0 /app && chmod -R g+rwX /app
+USER 1001
+CMD ["node", "app.js"]
+
+

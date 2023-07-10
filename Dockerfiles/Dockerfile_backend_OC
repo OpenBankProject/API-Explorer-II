@@ -1,0 +1,23 @@
+# First stage builds the application
+FROM ubi8/nodejs-16 as builder
+
+# Add application sources
+ADD app-src $HOME
+
+# Install the dependencies
+RUN npm install
+RUN npm build-server
+
+FROM ubi8/nodejs-16-minimal
+
+USER 0
+COPY --from=builder $HOME $HOME
+RUN chown -R 1001:0 $HOME
+USER 1001 Copy the application source and build artifacts from the builder image to this one
+
+
+# Run script uses standard ways to run the application
+CMD npm run -d start
+
+
+

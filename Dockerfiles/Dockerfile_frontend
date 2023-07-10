@@ -1,0 +1,22 @@
+FROM ubi8/nodejs-16 as builder
+USER 0
+# Add application sources
+ADD .. $HOME
+
+# Install the dependencies
+RUN npm install
+RUN npm run build
+
+FROM registry.access.redhat.com/ubi9/nginx-120
+USER 0
+RUN dnf update -y
+ADD Dockerfiles/nginx.conf "${NGINX_DEFAULT_CONF_PATH}"
+COPY --from=builder /app/dist /opt/app-root/src
+RUN chgrp -R 0 /opt/app-root/src/ && chmod -R g+rwX /opt/app-root/src/
+USER 1001
+CMD ["nginx", "-g", "daemon off;"]
+
+
+
+
+
