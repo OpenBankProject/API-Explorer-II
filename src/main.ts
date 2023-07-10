@@ -7,7 +7,13 @@ import router from './router'
 import { createI18n } from 'vue-i18n'
 import { languages, defaultLocale } from './language'
 
-import { getOBPResourceDocs, getGroupedResourceDocs } from './obp/resource-docs'
+import {
+  getOBPResourceDocs,
+  getGroupedResourceDocs,
+  cache as cacheResourceDocs,
+  cacheDoc as cacheResourceDocsDoc
+} from './obp/resource-docs'
+import { cache as cacheMessageDocs, cacheDoc as cacheMessageDocsDoc } from './obp/message-docs'
 import { getMyAPICollections, getMyAPICollectionsEndpoint } from './obp'
 import { getOBPGlossary } from './obp/glossary'
 
@@ -20,41 +26,29 @@ import '@fontsource/roboto/700.css'
   const app = createApp(App)
 
   const worker = new Worker('/js/worker/web-worker.js')
-  const cache = await caches.open('obp-resource-docs-cache')
-  const response = await cache.match('/operationid')
-  let docs
+  const resourceDocsCache = await caches.open('obp-resource-docs-cache')
+  const resourceDocsCacheResponse = await resourceDocsCache.match('/operationid')
+  const messageDocsCache = await caches.open('obp-message-docs-cache')
+  const messageDocsCacheResponse = await resourceDocsCache.match('/message-docs')
 
-  const setCacheDocs = async () => {
-    docs = await getOBPResourceDocs()
-    await cache.put('/operationid', new Response(JSON.stringify(docs)))
-  }
-  if (response) {
-    try {
-      docs = await response.json()
-      if (!docs) {
-        await setCacheDocs()
-      }
-    } catch (err) {
-      console.warn(err)
-      //If cache docs is malformed update with the latest resource docs.
-      await setCacheDocs()
-    }
-    worker.postMessage('update-resource-docs')
-  } else {
-    await setCacheDocs()
-  }
+  const resourceDocs = await cacheMessageDocs(resourceDocsCache, resourceDocsCacheResponse, worker)
+  const messageDocs = await cacheMessageDocs(messageDocsCache, messageDocsCacheResponse, worker)
 
   //Listen to Web worker
   worker.onmessage = async (event) => {
-    //Update resource docs cache data in the background
+    //Update cache docs data in the background
     if (event.data === 'update-resource-docs') {
-      await setCacheDocs()
+      await cacheResourceDocsDoc(resourceDocsCache)
+    }
+    if (event.data === 'update-message-docs') {
+      await cacheMessageDocsDoc(messageDocsCache)
     }
   }
-  const groupedDocs = await getGroupedResourceDocs(docs)
+  const groupedDocs = await getGroupedResourceDocs(resourceDocs)
 
-  app.provide('OBP-ResourceDocs', docs)
+  app.provide('OBP-ResourceDocs', resourceDocs)
   app.provide('OBP-GroupedResourceDocs', groupedDocs)
+  app.provide('OBP-GroupedMessageDocs', messageDocs)
   app.provide('OBP-API-Host', import.meta.env.VITE_OBP_API_HOST)
   const glossary = await getOBPGlossary()
   app.provide('OBP-Glossary', glossary)

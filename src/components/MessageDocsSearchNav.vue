@@ -3,9 +3,10 @@ import { reactive, ref, onBeforeMount, inject } from 'vue'
 import { Search } from '@element-plus/icons-vue'
 import { useRoute } from 'vue-router'
 import { searchLinksColor as searchLinksColorSetting } from '../obp/style-setting'
-import { getOBPMessageDocs, getGroupedMessageDocs } from '../obp/message-docs'
+import { getOBPMessageDocs, getGroupedMessageDocs, connectors } from '../obp/message-docs'
 
 const route = useRoute()
+const groupedMessageDocs = ref(inject('OBP-GroupedMessageDocs')!)
 const docs = ref({})
 const groups = ref({})
 const sortedKeys = ref([])
@@ -16,22 +17,16 @@ const form = reactive({
   search: ''
 })
 
-const messageDocItems = [
-  'kafka_vSept2018',
-  'akka_vDec2018',
-  'rest_vMar2019',
-  'stored_procedure_vDec2019'
-]
-
 onBeforeMount(async () => {
-  let connector = messageDocItems[0]
+  let connector = connectors[0]
   if (route.query && Object.keys(route.query).includes('connector')) {
     const queryParamConnector = route.query.connector
-    if (messageDocItems.includes(queryParamConnector)) {
+    if (connectors.includes(queryParamConnector)) {
       connector = queryParamConnector
     }
   }
-  const messageDocs = await getGroupedMessageDocs(await getOBPMessageDocs(connector))
+  const messageDocs = groupedMessageDocs.value[connector]
+
   docs.value = Object.keys(messageDocs).reduce((doc, key) => {
     doc[key] = messageDocs[key].map((group) => group.process)
     return doc
