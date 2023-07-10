@@ -8,7 +8,6 @@ import { createI18n } from 'vue-i18n'
 import { languages, defaultLocale } from './language'
 
 import {
-  getOBPResourceDocs,
   getGroupedResourceDocs,
   cache as cacheResourceDocs,
   cacheDoc as cacheResourceDocsDoc
@@ -31,7 +30,7 @@ import '@fontsource/roboto/700.css'
   const messageDocsCache = await caches.open('obp-message-docs-cache')
   const messageDocsCacheResponse = await resourceDocsCache.match('/message-docs')
 
-  const resourceDocs = await cacheMessageDocs(resourceDocsCache, resourceDocsCacheResponse, worker)
+  const resourceDocs = await cacheResourceDocs(resourceDocsCache, resourceDocsCacheResponse, worker)
   const messageDocs = await cacheMessageDocs(messageDocsCache, messageDocsCacheResponse, worker)
 
   //Listen to Web worker
