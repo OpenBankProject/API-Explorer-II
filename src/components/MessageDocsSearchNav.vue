@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { reactive, ref, onBeforeMount, inject } from 'vue'
+import { reactive, ref, onBeforeMount, inject, watch } from 'vue'
 import { Search } from '@element-plus/icons-vue'
 import { useRoute } from 'vue-router'
 import { searchLinksColor as searchLinksColorSetting } from '../obp/style-setting'
-import { getOBPMessageDocs, getGroupedMessageDocs, connectors } from '../obp/message-docs'
+import { connectors } from '../obp/message-docs'
 
+let connector = connectors[0]
 const route = useRoute()
 const groupedMessageDocs = ref(inject('OBP-GroupedMessageDocs')!)
 const docs = ref({})
@@ -17,24 +18,16 @@ const form = reactive({
   search: ''
 })
 
-onBeforeMount(async () => {
-  let connector = connectors[0]
-  if (route.query && Object.keys(route.query).includes('connector')) {
-    const queryParamConnector = route.query.connector
-    if (connectors.includes(queryParamConnector)) {
-      connector = queryParamConnector
-    }
-  }
-  const messageDocs = groupedMessageDocs.value[connector]
-
-  docs.value = Object.keys(messageDocs).reduce((doc, key) => {
-    doc[key] = messageDocs[key].map((group) => group.process)
-    return doc
-  }, {})
-  groups.value = JSON.parse(JSON.stringify(docs.value))
-  messageDocKeys.value = Object.keys(groups.value)
-  activeKeys.value = Object.keys(groups.value)
+onBeforeMount(() => {
+  setDocs()
 })
+
+watch(
+  () => route.params.id,
+  async (id) => {
+    setDocs()
+  }
+)
 
 const isKeyFound = (keys, item) => keys.every((k) => item.toLowerCase().includes(k))
 
@@ -55,6 +48,22 @@ const searchEvent = (value) => {
     groups.value = JSON.parse(JSON.stringify(docs.value))
     messageDocKeys.value = Object.keys(groups.value)
   }
+}
+
+const setDocs = () => {
+  const paramConnector = route.params.id
+  if (connectors.includes(paramConnector)) {
+    connector = paramConnector
+  }
+  const messageDocs = groupedMessageDocs.value[connector]
+
+  docs.value = Object.keys(messageDocs).reduce((doc, key) => {
+    doc[key] = messageDocs[key].map((group) => group.process)
+    return doc
+  }, {})
+  groups.value = JSON.parse(JSON.stringify(docs.value))
+  messageDocKeys.value = Object.keys(groups.value)
+  activeKeys.value = Object.keys(groups.value)
 }
 </script>
 
