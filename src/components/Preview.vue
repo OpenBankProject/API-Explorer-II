@@ -182,7 +182,7 @@ onBeforeRouteUpdate((to) => {
       <input
         type="text"
         v-model="header"
-        placeholder="Request Header (Heeader1:Value1::Header2:Value2)"
+        placeholder="Request Header (Header1:Value1::Header2:Value2)"
       />
     </div>
     <div class="flex-preview-panel">

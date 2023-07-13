@@ -105,14 +105,14 @@ const setActive = (event) => {
   }
 }
 
-const iskeyFound = (keys, item) => keys.every((k) => item.toLowerCase().includes(k))
+const isKeyFound = (keys, item) => keys.every((k) => item.toLowerCase().includes(k))
 
 const filterKeys = (keys, key) => {
   const splitKey = key.split(' ').map((k) => k.toLowerCase())
   return keys.filter((title) => {
-    const isGroupFound = iskeyFound(splitKey, title)
+    const isGroupFound = isKeyFound(splitKey, title)
     const items = docs.value[title].filter(
-      (item) => isGroupFound || iskeyFound(splitKey, item.summary)
+      (item) => isGroupFound || isKeyFound(splitKey, item.summary)
     )
     groups.value[title] = items
     return isGroupFound || items.length > 0

@@ -41,7 +41,7 @@ const setActive = (target) => {
 }
 
 const handleMore = (command: string) => {
-  router.replace({ path: `/${command}` })
+  router.push({ name: 'message-docs', params: { id: command } })
 }
 
 onMounted(async () => {
@@ -62,7 +62,11 @@ watchEffect(() => {
   if (path && route.params && !route.params.id) {
     setActive(document.getElementById('header-nav-' + path))
   } else {
-    setActive(document.getElementById('header-nav-tags'))
+    if (path == 'message-docs') {
+      clearActiveTab()
+    } else {
+      setActive(document.getElementById('header-nav-tags'))
+    }
   }
 })
 </script>
@@ -85,20 +89,29 @@ watchEffect(() => {
         {{ $t('header.api_manager') }}
       </a>
       <span class="el-dropdown-link">
-        <el-dropdown class="menu-right router-link" id="header-nav-spaces" @command="handleMore">
+        <el-dropdown class="menu-right router-link" id="header-nav-more" @command="handleMore">
           <span class="el-dropdown-link">
             {{ $t('header.more') }}
             <el-icon class="el-icon--right">
               <arrow-down />
             </el-icon>
           </span>
-          <!--<template #dropdown>
+          <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item command="message-docs" key="message-docs"
-                >Message Docs</el-dropdown-item
+              <el-dropdown-item command="akka_vDec2018" key="akka_vDec2018"
+                >Message Docs for: Akka</el-dropdown-item
+              >
+              <el-dropdown-item command="kafka_vSept2018" key="kafka_vSept2018"
+                >Message Docs for: Kafka</el-dropdown-item
+              >
+              <el-dropdown-item command="rest_vMar2019" key="rest_vMar2019"
+                >Message Docs for: Rest</el-dropdown-item
+              >
+              <el-dropdown-item command="stored_procedure_vDec2019" key="stored_procedure_vDec2019"
+                >Message Docs for: Stored Procedue</el-dropdown-item
               >
             </el-dropdown-menu>
-          </template>-->
+          </template>
         </el-dropdown>
       </span>
       <!--<span class="el-dropdown-link">
@@ -194,5 +207,10 @@ nav {
 .login-button:hover,
 .logoff-button:hover {
   color: #39455f;
+}
+
+/*override element plus*/
+.el-dropdown-menu__item:hover {
+  color: v-bind(headerLinksHoverColor) !important;
 }
 </style>

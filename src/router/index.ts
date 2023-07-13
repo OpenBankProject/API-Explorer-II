@@ -20,7 +20,7 @@ const router = createRouter({
       component: GlossaryView
     },
     {
-      path: '/message-docs',
+      path: '/message-docs/:id',
       name: 'message-docs',
       component: MessageDocsView
     },

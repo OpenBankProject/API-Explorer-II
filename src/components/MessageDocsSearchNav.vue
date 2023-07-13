@@ -1,83 +1,121 @@
 <script setup lang="ts">
-import { reactive, ref, onBeforeMount, inject } from 'vue'
+import { reactive, ref, onBeforeMount, inject, watch } from 'vue'
 import { Search } from '@element-plus/icons-vue'
 import { useRoute } from 'vue-router'
+import { searchLinksColor as searchLinksColorSetting } from '../obp/style-setting'
+import { connectors } from '../obp/message-docs'
 
+let connector = connectors[0]
 const route = useRoute()
+const groupedMessageDocs = ref(inject('OBP-GroupedMessageDocs')!)
+const docs = ref({})
+const groups = ref({})
+const sortedKeys = ref([])
 const activeKeys = ref([])
-const glossaryKeys = ref([])
-const alphabet = ref([])
+const messageDocKeys = ref([])
+const searchLinksColor = ref(searchLinksColorSetting)
 const form = reactive({
   search: ''
 })
 
-const alphabetCharCodes = Array.from(Array(26)).map((e, i) => i + 65)
-alphabet.value = alphabetCharCodes.map((x) => String.fromCharCode(x))
-
 onBeforeMount(() => {
-  const glossary = inject('OBP-Glossary')!
-  for (const item of glossary.glossary_items) {
-    if (!activeKeys.value.includes(item.title)) {
-      activeKeys.value.push(item.title)
-    }
-  }
-  glossaryKeys.value = activeKeys.value
+  setDocs()
 })
 
+watch(
+  () => route.params.id,
+  async (id) => {
+    setDocs()
+  }
+)
+
+const isKeyFound = (keys, item) => keys.every((k) => item.toLowerCase().includes(k))
+
 const filterKeys = (keys, key) => {
+  const splitKey = key.split(' ').map((k) => k.toLowerCase())
   return keys.filter((title) => {
-    return title.toLowerCase().includes(key.toLowerCase())
+    const isGroupFound = isKeyFound(splitKey, title)
+    const items = docs.value[title].filter((item) => isGroupFound || isKeyFound(splitKey, item))
+    groups.value[title] = items
+    return isGroupFound || items.length > 0
   })
 }
 
-const searchEvent = (event) => {
-  if (event) {
-    glossaryKeys.value = filterKeys(activeKeys.value, event).sort()
+const searchEvent = (value) => {
+  if (value) {
+    messageDocKeys.value = filterKeys(activeKeys.value, value)
   } else {
-    glossaryKeys.value = activeKeys.value
+    groups.value = JSON.parse(JSON.stringify(docs.value))
+    messageDocKeys.value = Object.keys(groups.value)
   }
+}
+
+const setDocs = () => {
+  const paramConnector = route.params.id
+  if (connectors.includes(paramConnector)) {
+    connector = paramConnector
+  }
+  const messageDocs = groupedMessageDocs.value[connector]
+
+  docs.value = Object.keys(messageDocs).reduce((doc, key) => {
+    doc[key] = messageDocs[key].map((group) => group.process)
+    return doc
+  }, {})
+  groups.value = JSON.parse(JSON.stringify(docs.value))
+  messageDocKeys.value = Object.keys(groups.value)
+  activeKeys.value = Object.keys(groups.value)
 }
 </script>
 
 <template>
-  <el-input
-    v-model="form.search"
-    class="w-50 m-1"
-    placeholder="Search"
-    :prefix-icon="Search"
-    @input="searchEvent"
-  />
-  <div class="tabs"></div>
+  <el-row>
+    <el-col :span="24">
+      <el-input
+        v-model="form.search"
+        placeholder="Search"
+        :prefix-icon="Search"
+        @input="searchEvent"
+      />
+    </el-col>
+  </el-row>
+  <el-collapse v-model="activeKeys">
+    <el-collapse-item v-for="key in messageDocKeys" :title="key" :key="key" :name="key">
+      <div class="el-tabs--right">
+        <div v-for="(value, key) of groups[key]" :key="value" class="message-docs-router-tab">
+          <a class="message-docs-router-link" :id="`${value}-quick-nav`" v-bind:href="`#${value}`">
+            {{ value }}
+          </a>
+        </div>
+      </div>
+    </el-collapse-item>
+  </el-collapse>
 </template>
 
-<style>
-.tabs {
-  display: flex;
-  max-height: 90vh;
-}
-.alphabet {
-  padding: 10px 5px 5px 5px;
-  min-width: 25px;
-}
-.alphabet-link {
-  padding: 5px 0px 5px 0px;
+<style scoped>
+.api-router-link {
   width: 100%;
-  text-align: center;
-  cursor: pointer;
-}
-.alphabet-router-link {
-  font-size: 13px;
+  margin-left: 15px;
   font-family: 'Roboto';
-  color: #39455f;
   text-decoration: none;
-}
-.search-nav {
-  background-color: #f8f9fb;
-  padding: 8px;
-  border-right: solid 1px var(--el-menu-border-color);
+  color: #39455f;
+  display: inline-block;
 }
 
-.glossary-router-link {
+.api-router-tab {
+  border-left: 2px solid var(--el-menu-border-color);
+}
+
+.api-router-tab:hover,
+.active-api-router-tab {
+  border-left: 2px solid v-bind(searchLinksColor);
+}
+
+.api-router-tab:hover .api-router-link,
+.active-api-router-link {
+  color: v-bind(searchLinksColor);
+}
+
+.message-docs-router-link {
   margin-left: 15px;
   font-size: 13px;
   font-family: 'Roboto';
@@ -86,26 +124,17 @@ const searchEvent = (event) => {
   display: inline-block;
 }
 
-.glossary-router-tab {
+.message-docs-router-tab {
   border-left: 2px solid var(--el-menu-border-color);
   line-height: 30px;
 }
 
-.glossary-router-tab:hover,
-.active-glossary-router-tab {
-  border-left: 2px solid #52b165;
+.message-docs-router-tab:hover,
+.active-message-docs-router-tab {
+  border-left: 2px solid v-bind(searchLinksColor);
 }
 
-.glossary-router-tab:hover .glossary-router-link,
-.active-glossary-router-link,
-.alphabet-router-link:hover,
-.alphabet-link:hover .alphabet-router-link {
-  color: #52b165;
-}
-.tab-items {
-  overflow: auto;
-  max-height: 100vh;
-  margin-top: 10px;
-  margin-right: -8px;
+.message-docs-router-tab:hover .message-docs-router-link {
+  color: v-bind(searchLinksColor);
 }
 </style>
