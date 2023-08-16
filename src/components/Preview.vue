@@ -24,6 +24,12 @@ const showConnectorMethods = ref(true)
 const isUserLogon = ref(true)
 const type = ref('')
 const docs = inject('OBP-ResourceDocs')
+const footNote = ref({
+  operationId: '',
+  version: '',
+  functionName: '',
+  messageTags: ''
+})
 
 const requestFormRef = reactive<FormInstance>({})
 const requestForm = reactive({ url: '' })
@@ -43,6 +49,10 @@ const setOperationDetails = (id: string): void => {
   showValidations.value = validations.value.length > 0
   showPossibleErrors.value = possibleErrors.value.length > 0
   showConnectorMethods.value = connectorMethods.value.length > 0
+  footNote.value.version = operation.operation_id
+  footNote.value.version = operation.implemented_by.version
+  footNote.value.functionName = operation.implemented_by.function
+  footNote.value.messageTags = operation.tags.join(',')
 
   highlightCode(operation.success_response_body)
   setType(method.value)
@@ -228,6 +238,7 @@ onBeforeRouteUpdate((to) => {
       </div>
     </el-form>
     <!--<div v-show="showValidations">-->
+    <el-divider />
     <div>
       <p>{{ $t('preview.validations') }}:</p>
       <!--TODO: implementation; replace hard coded.-->
@@ -238,6 +249,7 @@ onBeforeRouteUpdate((to) => {
         </ul>
       </div>
     </div>
+    <el-divider />
     <div v-show="showPossibleErrors">
       <p>{{ $t('preview.possible_errors') }}:</p>
       <ul>
@@ -246,6 +258,7 @@ onBeforeRouteUpdate((to) => {
         </li>
       </ul>
     </div>
+    <el-divider />
     <div v-show="showConnectorMethods">
       <p>{{ $t('preview.connector_methods') }}:</p>
       <ul>
@@ -253,6 +266,13 @@ onBeforeRouteUpdate((to) => {
           {{ method }}
         </li>
       </ul>
+    </div>
+    <el-divider />
+    <div>
+      <p class="footnote">
+        Version: {{ footNote.version }}, function_name: by {{ footNote.functionName }},
+        operation_id: {{ footNote.functionName }}, Message Tags: {{ footNote.messageTags }}
+      </p>
     </div>
     <br />
   </main>
@@ -328,6 +348,10 @@ li {
 .flex-request-preview-panel {
   display: flex;
   flex-direction: row;
+}
+.footnote {
+  color: #656665;
+  font-size: 12px;
 }
 #search-input {
   -webkit-border-top-right-radius: 0;
