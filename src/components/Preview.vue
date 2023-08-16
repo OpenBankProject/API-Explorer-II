@@ -238,7 +238,7 @@ onBeforeRouteUpdate((to) => {
       </div>
     </el-form>
     <!--<div v-show="showValidations">-->
-    <el-divider />
+    <el-divider class="divider" />
     <div>
       <p>{{ $t('preview.validations') }}:</p>
       <!--TODO: implementation; replace hard coded.-->
@@ -249,7 +249,7 @@ onBeforeRouteUpdate((to) => {
         </ul>
       </div>
     </div>
-    <el-divider />
+    <el-divider class="divider" />
     <div v-show="showPossibleErrors">
       <p>{{ $t('preview.possible_errors') }}:</p>
       <ul>
@@ -258,7 +258,7 @@ onBeforeRouteUpdate((to) => {
         </li>
       </ul>
     </div>
-    <el-divider />
+    <el-divider class="divider" />
     <div v-show="showConnectorMethods">
       <p>{{ $t('preview.connector_methods') }}:</p>
       <ul>
@@ -267,7 +267,7 @@ onBeforeRouteUpdate((to) => {
         </li>
       </ul>
     </div>
-    <el-divider />
+    <el-divider class="divider" />
     <div>
       <p class="footnote">
         Version: {{ footNote.version }}, function_name: by {{ footNote.functionName }},
@@ -350,8 +350,13 @@ li {
   flex-direction: row;
 }
 .footnote {
-  color: #656665;
+  color: var(--el-color-info);
   font-size: 12px;
+}
+.divider {
+  border-top: 1px #253047 solid;
+  margin-left: -25px;
+  padding-right: 50px;
 }
 #search-input {
   -webkit-border-top-right-radius: 0;
