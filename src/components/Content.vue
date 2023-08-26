@@ -12,11 +12,15 @@ import {
 } from '../obp'
 import { setTabActive, initializeAPICollections } from './SearchNav.vue'
 import { summaryPagerLinksColor as summaryPagerLinksColorSetting } from '../obp/style-setting'
+import { version } from '../obp'
+import { getGroupedResourceDocs } from '../obp/resource-docs'
 
 const route = useRoute()
+const configVersion = 'OBP' + version
 const description = ref('')
 const summary = ref('')
-const docs = inject('OBP-ResourceDocs')
+const resourceDocs = inject('OBP-ResourceDocs')
+const docs = getGroupedResourceDocs(configVersion, resourceDocs)
 const displayPrev = ref(true)
 const displayNext = ref(true)
 const prev = ref({ id: 'prev' })
@@ -27,8 +31,8 @@ let routeId = ''
 let isFavorite = false
 let apiCollectionsEndpoint = inject('OBP-MyCollectionsEndpoint')!
 
-const setOperationDetails = (id: string): void => {
-  const operation = getOperationDetails(docs, id)
+const setOperationDetails = (id: string, version: string): void => {
+  const operation = getOperationDetails(version, id, resourceDocs)
   description.value = operation.description
   summary.value = operation.summary
 }
@@ -111,13 +115,15 @@ const showNotification = (message: string, type: string): void => {
 
 onMounted(async () => {
   routeId = route.params.id
-  setOperationDetails(routeId)
+  const version = route.query.version ? route.query.version : configVersion
+  setOperationDetails(routeId, version)
   setPager(routeId)
   await tagFavoriteButton(routeId)
 })
 onBeforeRouteUpdate(async (to) => {
   routeId = to.params.id
-  setOperationDetails(routeId)
+  const version = route.query.version ? route.query.version : configVersion
+  setOperationDetails(routeId, version)
   setPager(routeId)
   await tagFavoriteButton(routeId)
 })

@@ -13,7 +13,7 @@ import {
   cacheDoc as cacheResourceDocsDoc
 } from './obp/resource-docs'
 import { cache as cacheMessageDocs, cacheDoc as cacheMessageDocsDoc } from './obp/message-docs'
-import { getMyAPICollections, getMyAPICollectionsEndpoint } from './obp'
+import { version as configVersion, getMyAPICollections, getMyAPICollectionsEndpoint } from './obp'
 import { getOBPGlossary } from './obp/glossary'
 
 import 'element-plus/dist/index.css'
@@ -29,7 +29,6 @@ import '@fontsource/roboto/700.css'
   const resourceDocsCacheResponse = await resourceDocsCache.match('/operationid')
   const messageDocsCache = await caches.open('obp-message-docs-cache')
   const messageDocsCacheResponse = await resourceDocsCache.match('/message-docs')
-
   const resourceDocs = await cacheResourceDocs(resourceDocsCache, resourceDocsCacheResponse, worker)
   const messageDocs = await cacheMessageDocs(messageDocsCache, messageDocsCacheResponse, worker)
 
@@ -43,9 +42,10 @@ import '@fontsource/roboto/700.css'
       await cacheMessageDocsDoc(messageDocsCache)
     }
   }
-  const groupedDocs = await getGroupedResourceDocs(resourceDocs)
+  const groupedDocs = getGroupedResourceDocs('OBP' + configVersion, resourceDocs)
 
   app.provide('OBP-ResourceDocs', resourceDocs)
+  app.provide('OBP-APIActiveVersions', Object.keys(resourceDocs).sort())
   app.provide('OBP-GroupedResourceDocs', groupedDocs)
   app.provide('OBP-GroupedMessageDocs', messageDocs)
   app.provide('OBP-API-Host', import.meta.env.VITE_OBP_API_HOST)

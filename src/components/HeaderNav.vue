@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref, watchEffect, onMounted } from 'vue'
+import { ref, inject, watchEffect, onMounted } from 'vue'
 import { ArrowDown } from '@element-plus/icons-vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getCurrentUser } from '../obp'
+import { getOBPAPIVersions } from '../obp/api-version'
 import {
   logo as logoSource,
   headerLinksColor,
@@ -15,7 +16,8 @@ const router = useRouter()
 const obpApiHost = ref(import.meta.env.VITE_OBP_API_HOST)
 const obpApiManagerHost = ref(import.meta.env.VITE_OBP_API_MANAGER_HOST)
 const loginUsername = ref('')
-const logOffUrl = ref('')
+const logoffurl = ref('')
+const obpApiVersions = ref(inject('OBP-APIActiveVersions')!)
 const isShowLoginButton = ref(true)
 const isShowLogOffButton = ref(false)
 const logo = ref(logoSource)
@@ -41,7 +43,11 @@ const setActive = (target) => {
 }
 
 const handleMore = (command: string) => {
-  router.push({ name: 'message-docs', params: { id: command } })
+  if (command.includes('_')) {
+    router.push({ name: 'message-docs', params: { id: command } })
+  } else {
+    router.replace({ path: '/operationid', query: { version: command } })
+  }
 }
 
 onMounted(async () => {
@@ -98,6 +104,9 @@ watchEffect(() => {
           </span>
           <template #dropdown>
             <el-dropdown-menu>
+              <el-dropdown-item v-for="value in obpApiVersions" :command="value" key="value">{{
+                value
+              }}</el-dropdown-item>
               <el-dropdown-item command="akka_vDec2018" key="akka_vDec2018"
                 >Message Docs for: Akka</el-dropdown-item
               >

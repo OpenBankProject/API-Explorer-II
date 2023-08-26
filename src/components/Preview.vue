@@ -3,9 +3,11 @@ import { ref, reactive, inject, onBeforeMount } from 'vue'
 import { onBeforeRouteUpdate, useRoute } from 'vue-router'
 import { getOperationDetails } from '../obp/resource-docs'
 import type { ElNotification, FormInstance } from 'element-plus'
-import { get, create, update, discard, createEntitlement, getCurrentUser } from '../obp'
+import { version, get, create, update, discard, createEntitlement, getCurrentUser } from '../obp'
+import { getGroupedResourceDocs } from '../obp/resource-docs'
 
 const elMessageDuration = 5500
+const configVersion = 'OBP' + version
 const url = ref('')
 const roleName = ref('')
 const method = ref('')
@@ -23,7 +25,8 @@ const showPossibleErrors = ref(true)
 const showConnectorMethods = ref(true)
 const isUserLogon = ref(true)
 const type = ref('')
-const docs = inject('OBP-ResourceDocs')
+const resourceDocs = inject('OBP-ResourceDocs')
+const docs = getGroupedResourceDocs(configVersion, resourceDocs)
 const footNote = ref({
   operationId: '',
   version: '',
@@ -37,8 +40,8 @@ const requestForm = reactive({ url: '' })
 const roleFormRef = reactive<FormInstance>({})
 const roleForm = reactive({})
 
-const setOperationDetails = (id: string): void => {
-  const operation = getOperationDetails(docs, id)
+const setOperationDetails = (id: string, version: string): void => {
+  const operation = getOperationDetails(version, id, resourceDocs)
   url.value = operation.specified_url
   method.value = operation.request_verb
   exampleRequestBody.value = JSON.stringify(operation.example_request_body)
@@ -160,14 +163,16 @@ const submitEntitlement = async () => {
 }
 onBeforeMount(async () => {
   const route = useRoute()
-  setOperationDetails(route.params.id)
+  const version = route.query.version ? route.query.version : configVersion
+  setOperationDetails(route.params.id, version)
 
   const currentUser = await getCurrentUser()
   isUserLogon.value = currentUser.username
   setRoleForm()
 })
 onBeforeRouteUpdate((to) => {
-  setOperationDetails(to.params.id)
+  const version = to.query.version ? to.query.version : configVersion
+  setOperationDetails(to.params.id, version)
   responseHeaderTitle.value = 'TYPICAL SUCCESSFUL RESPONSE'
   setRoleForm()
 })
