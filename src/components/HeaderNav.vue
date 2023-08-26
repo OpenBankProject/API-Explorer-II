@@ -2,7 +2,7 @@
 import { ref, inject, watchEffect, onMounted } from 'vue'
 import { ArrowDown } from '@element-plus/icons-vue'
 import { useRoute, useRouter } from 'vue-router'
-import { getCurrentUser } from '../obp'
+import { version, getCurrentUser } from '../obp'
 import { getOBPAPIVersions } from '../obp/api-version'
 import {
   logo as logoSource,
@@ -85,9 +85,12 @@ watchEffect(() => {
       <a v-bind:href="obpApiHost" class="router-link" id="header-nav-home">
         {{ $t('header.portal_home') }}
       </a>
-      <RouterLink class="router-link" id="header-nav-tags" to="/operationid">{{
-        $t('header.api_explorer')
-      }}</RouterLink>
+      <RouterLink
+        class="router-link"
+        id="header-nav-tags"
+        :to="'/operationid?version=OBP' + version"
+        >{{ $t('header.api_explorer') }}</RouterLink
+      >
       <RouterLink class="router-link" id="header-nav-glossary" to="/glossary">{{
         $t('header.glossary')
       }}</RouterLink>
