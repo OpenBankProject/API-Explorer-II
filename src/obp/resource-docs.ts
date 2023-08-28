@@ -7,6 +7,8 @@ export async function getOBPResourceDocs(version: string): Promise<any> {
 }
 
 export function getGroupedResourceDocs(version: string, docs: any): Promise<any> {
+  if (version === undefined || docs === undefined) return Promise.resolve<any>({})
+
   return docs[version].resource_docs.reduce((values: any, doc: any) => {
     const tag = doc.tags[0]
     ;(values[tag] = values[tag] || []).push(doc)

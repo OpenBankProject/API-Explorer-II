@@ -93,7 +93,7 @@ const routeToFirstAPI = () => {
   if (element) {
     element.click()
   } else {
-    elements.item(0).click()
+    if (elements.item(0)) elements.item(0).click()
   }
 }
 
