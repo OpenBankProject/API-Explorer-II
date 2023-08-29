@@ -11,7 +11,7 @@ const app: Application = express()
 app.use(express.json())
 app.use(
   session({
-    secret: 'very secret',
+    secret: process.env.VITE_OPB_SERVER_SESSION_PASSWORD,
     resave: false,
     saveUninitialized: true
   })

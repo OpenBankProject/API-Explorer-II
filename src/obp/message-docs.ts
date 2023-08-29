@@ -1,12 +1,4 @@
-import { Any, GetAny, Version, API, get } from 'obp-typescript'
-import type { APIClientConfig } from 'obp-typescript'
-import { version } from '../obp'
-
-const clientConfig: APIClientConfig = {
-  baseUri: import.meta.env.VITE_OBP_API_HOST,
-  version: version as Version,
-  withFixedVersion: true
-}
+import { version, get } from '../obp'
 
 export const connectors = [
   'kafka_vSept2018',
@@ -17,10 +9,10 @@ export const connectors = [
 
 // Get Message Docs
 export async function getOBPMessageDocs(item: string): Promise<any> {
-  return await get<API.Any>(clientConfig, Any)(GetAny)(`/message-docs/${item}`)
+  return await get(`obp/${version}/message-docs/${item}`)
 }
 
-export async function getGroupedMessageDocs(docs: any): Promise<any> {
+export function getGroupedMessageDocs(docs: any): Promise<any> {
   return docs.message_docs.reduce((values: any, doc: any) => {
     const tag = doc.adapter_implementation.group.replace('-', '').trim()
     ;(values[tag] = values[tag] || []).push(doc)
@@ -32,7 +24,7 @@ export async function cacheDoc(messageDocsCache: any): Promise<any> {
   const messageDocs = await connectors.reduce(async (agroup: any, connector: any) => {
     const group = await agroup
     const docs = await getOBPMessageDocs(connector)
-    group[connector] = await getGroupedMessageDocs(docs)
+    group[connector] = getGroupedMessageDocs(docs)
     return group
   }, Promise.resolve({}))
   await messageDocsCache.put('/message-docs', new Response(JSON.stringify(messageDocs)))

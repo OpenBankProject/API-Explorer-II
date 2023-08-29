@@ -1,11 +1,12 @@
 <script lang="ts">
-import { reactive, ref, onBeforeMount, onMounted, inject } from 'vue'
+import { reactive, ref, watch, onBeforeMount, onMounted, inject } from 'vue'
 import { Search, Star } from '@element-plus/icons-vue'
 import { useRoute } from 'vue-router'
-import { getMyAPICollections, getMyAPICollectionsEndpoint } from '../obp'
+import { version, getMyAPICollections, getMyAPICollectionsEndpoint } from '../obp'
+import { getGroupedResourceDocs } from '../obp/resource-docs'
 import { searchLinksColor as searchLinksColorSetting } from '../obp/style-setting'
-
 const operationIdTitle = {}
+const resourceDocs = ref({})
 const docs = ref({})
 const groups = ref({})
 const sortedKeys = ref([])
@@ -51,8 +52,10 @@ export const initializeAPICollections = async () => {
 
 <script setup lang="ts">
 const route = useRoute()
+let selectedVersion = 'OBP' + version
 onBeforeMount(async () => {
-  docs.value = inject('OBP-GroupedResourceDocs')!
+  resourceDocs.value = inject('OBP-ResourceDocs')!
+  docs.value = getGroupedResourceDocs(selectedVersion, resourceDocs.value)
   groups.value = JSON.parse(JSON.stringify(docs.value))
   activeKeys.value = Object.keys(groups.value)
   sortedKeys.value = activeKeys.value.sort()
@@ -61,6 +64,23 @@ onBeforeMount(async () => {
 })
 
 onMounted(() => {
+  routeToFirstAPI()
+})
+
+watch(
+  () => route.query.version,
+  async (version) => {
+    selectedVersion = version
+    docs.value = getGroupedResourceDocs(version, resourceDocs.value)
+    groups.value = JSON.parse(JSON.stringify(docs.value))
+    activeKeys.value = Object.keys(groups.value)
+    sortedKeys.value = activeKeys.value.sort()
+    await initializeAPICollections()
+    routeToFirstAPI()
+  }
+)
+
+const routeToFirstAPI = () => {
   let element
   const elements = document.getElementsByClassName('api-router-link')
   const id = route.params.id
@@ -73,9 +93,9 @@ onMounted(() => {
   if (element) {
     element.click()
   } else {
-    elements.item(0).click()
+    if (elements.item(0)) elements.item(0).click()
   }
-})
+}
 
 const sortLinks = (items: any) => {
   const uniqueLinks = {}
@@ -179,7 +199,7 @@ const searchEvent = (value) => {
             active-class="active-api-router-link"
             class="api-router-link"
             :id="value"
-            :to="{ name: 'api', params: { id: value } }"
+            :to="{ name: 'api', params: { id: value }, query: { version: selectedVersion } }"
             >{{ key }}</RouterLink
           >
         </div>
