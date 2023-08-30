@@ -25,7 +25,7 @@
     "express-session": "^1.17.3",
     "highlight.js": "^11.7.0",
     "oauth": "^0.10.0",
-    "obp-typescript": "1.0.35",
+    "obp-typescript": "^1.0.36",
     "pinia": "^2.0.32",
     "reflect-metadata": "^0.1.13",
     "routing-controllers": "^0.10.3",

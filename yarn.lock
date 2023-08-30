@@ -3777,10 +3777,10 @@ object.assign@^4.1.4:
     has-symbols "^1.0.3"
     object-keys "^1.1.1"
 
-obp-typescript@1.0.35:
-  version "1.0.35"
-  resolved "https://registry.yarnpkg.com/obp-typescript/-/obp-typescript-1.0.35.tgz#b5ef5b5c719eb6a46912a9b35cafdbf9082f4dfb"
-  integrity sha512-+F6z/HO1829xWzM/R/U+wG3/hxiCdhBNYWyOHM99hupQjNlPk0qpZmy/+kqLg6DkS6bdNuJU5pjAXDdE5NM/hQ==
+obp-typescript@^1.0.36:
+  version "1.0.36"
+  resolved "https://registry.yarnpkg.com/obp-typescript/-/obp-typescript-1.0.36.tgz#3266b37b0fdbbfc88dfb4cddeb35ba00582052bb"
+  integrity sha512-NMPdwsobb3sD/1b+rjZBsBMQdyE1QZJ2AbSJ7dHbEpWWcMh3HQi0i+umh9PEIlYiRrkFmm79XXYjiMy5zhbTsw==
   dependencies:
     global "^4.4.0"
     multer "^1.4.5-lts.1"
