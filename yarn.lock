@@ -3777,10 +3777,10 @@ object.assign@^4.1.4:
     has-symbols "^1.0.3"
     object-keys "^1.1.1"
 
-obp-typescript@^1.0.34:
-  version "1.0.34"
-  resolved "https://registry.yarnpkg.com/obp-typescript/-/obp-typescript-1.0.34.tgz#dd0a95288fdb41b5f80e0e1d9f2aba4f67eef2fa"
-  integrity sha512-85ivAM3icWAd0pxV1goH0pdN1et7CcOVyKxdOMtFiGyH0+LGOTWzMz/odz94eUscIbSqf+LbfGp8+NgpcowdDg==
+obp-typescript@^1.0.36:
+  version "1.0.36"
+  resolved "https://registry.yarnpkg.com/obp-typescript/-/obp-typescript-1.0.36.tgz#3266b37b0fdbbfc88dfb4cddeb35ba00582052bb"
+  integrity sha512-NMPdwsobb3sD/1b+rjZBsBMQdyE1QZJ2AbSJ7dHbEpWWcMh3HQi0i+umh9PEIlYiRrkFmm79XXYjiMy5zhbTsw==
   dependencies:
     global "^4.4.0"
     multer "^1.4.5-lts.1"
@@ -4696,10 +4696,10 @@ strip-literal@^1.0.0, strip-literal@^1.0.1:
   dependencies:
     acorn "^8.8.2"
 
-superagent@^8.0.9:
-  version "8.0.9"
-  resolved "https://registry.yarnpkg.com/superagent/-/superagent-8.0.9.tgz#2c6fda6fadb40516515f93e9098c0eb1602e0535"
-  integrity sha512-4C7Bh5pyHTvU33KpZgwrNKh/VQnvgtCSqPRfJAUdmrtSYePVzVg4E4OzsrbkhJj9O7SO6Bnv75K/F8XVZT8YHA==
+superagent@^8.0.9, superagent@^8.1.2:
+  version "8.1.2"
+  resolved "https://registry.yarnpkg.com/superagent/-/superagent-8.1.2.tgz#03cb7da3ec8b32472c9d20f6c2a57c7f3765f30b"
+  integrity sha512-6WTxW1EB6yCxV5VFOIPQruWGHqc3yI7hEmZK6h+pyk69Lk/Ut7rLUY6W/ONF2MjBuGjvmMiIpsrVJ2vjrHlslA==
   dependencies:
     component-emitter "^1.3.0"
     cookiejar "^2.1.4"
