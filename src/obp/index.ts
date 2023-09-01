@@ -3,12 +3,17 @@ import superagent from 'superagent'
 export const version = import.meta.env.VITE_OBP_API_VERSION
 const default_collection_name = 'Favourites'
 
+export async function checkServerStatus(): Promise<boolean> {
+  const status = (await superagent.get(`/api/status`)).body['status']
+  return status
+}
+
 export async function get(path: string): Promise<any> {
   try {
     return (await superagent.get(`/api/get?path=${path}`)).body
   } catch (error) {
     console.log(error)
-    return error
+    return { error }
   }
 }
 
@@ -17,7 +22,7 @@ export async function create(path: string, body: any): Promise<any> {
     return (await superagent.post(`/api/create?path=${path}`).send(JSON.parse(body))).body
   } catch (error) {
     console.log(error)
-    return error
+    return { error }
   }
 }
 
@@ -26,7 +31,7 @@ export async function update(path: string, body: any): Promise<any> {
     return (await superagent.put(`/api/update?path=${path}`).send(JSON.parse(body))).body
   } catch (error) {
     console.log(error)
-    return error
+    return { error }
   }
 }
 
@@ -35,7 +40,7 @@ export async function discard(path: string): Promise<any> {
     return (await superagent.delete(`/api/delete?path=${path}`)).body
   } catch (error) {
     console.log(error)
-    return error
+    return { error }
   }
 }
 
@@ -44,6 +49,7 @@ export async function getCurrentUser(): Promise<any> {
     return (await superagent.get(`/api/user/current`)).body
   } catch (error) {
     console.log(error)
+    return { error }
   }
 }
 

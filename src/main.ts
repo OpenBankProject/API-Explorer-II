@@ -3,7 +3,7 @@ import { createPinia } from 'pinia'
 import ElementPlus from 'element-plus'
 
 import App from './App.vue'
-import router from './router'
+import appRouter from './router'
 import { createI18n } from 'vue-i18n'
 import { languages, defaultLocale } from './language'
 
@@ -13,7 +13,12 @@ import {
   cacheDoc as cacheResourceDocsDoc
 } from './obp/resource-docs'
 import { cache as cacheMessageDocs, cacheDoc as cacheMessageDocsDoc } from './obp/message-docs'
-import { version as configVersion, getMyAPICollections, getMyAPICollectionsEndpoint } from './obp'
+import {
+  version as configVersion,
+  getMyAPICollections,
+  getMyAPICollectionsEndpoint,
+  checkServerStatus
+} from './obp'
 import { getOBPGlossary } from './obp/glossary'
 
 import 'element-plus/dist/index.css'
@@ -23,7 +28,38 @@ import '@fontsource/roboto/400.css'
 import '@fontsource/roboto/700.css'
 ;(async () => {
   const app = createApp(App)
+  const router = await appRouter()
+  try {
+    const isServerActive = false //(await checkServerStatus())
+    //if (isServerActive) await setupData(app)
 
+    const messages = Object.assign(languages)
+    const i18n = createI18n({
+      locale: defaultLocale,
+      fallbackLocale: 'ES',
+      messages
+    })
+    app.provide('i18n', i18n)
+
+    app.use(ElementPlus)
+    app.use(i18n)
+    app.use(createPinia())
+    app.use(router)
+
+    app.mount('#app')
+
+    if (!isServerActive) router.replace({ path: 'error' })
+    app.config.errorHandler = (error) => {
+      console.log(error)
+      router.replace({ path: 'error' })
+    }
+  } catch (error) {
+    console.log(error)
+    router.replace({ path: 'error' })
+  }
+})()
+
+async function setupData(app: App<Element>) {
   const worker = new Worker('/js/worker/web-worker.js')
   const resourceDocsCache = await caches.open('obp-resource-docs-cache')
   const resourceDocsCacheResponse = await resourceDocsCache.match('/operationid')
@@ -68,19 +104,4 @@ import '@fontsource/roboto/700.css'
   } else {
     app.provide('OBP-MyCollectionsEndpoint', undefined)
   }
-
-  const messages = Object.assign(languages)
-  const i18n = createI18n({
-    locale: defaultLocale,
-    fallbackLocale: 'ES',
-    messages
-  })
-  app.provide('i18n', i18n)
-
-  app.use(ElementPlus)
-  app.use(i18n)
-  app.use(createPinia())
-  app.use(router)
-
-  app.mount('#app')
-})()
+}
