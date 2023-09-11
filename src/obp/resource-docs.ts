@@ -33,11 +33,19 @@ export async function cacheDoc(resourceDocsCache: any): Promise<any> {
           resourceDocsMapping[version] = resourceDocs
       }
     }
-    await resourceDocsCache.put('/operationid', new Response(JSON.stringify(resourceDocsMapping)))
+    await resourceDocsCache.put('/', new Response(JSON.stringify(resourceDocsMapping)))
+    return resourceDocsMapping
   } else {
     const resourceDocs = { ['OBP' + configVersion]: await getOBPResourceDocs(configVersion) }
-    await resourceDocsCache.put('/operationid', new Response(JSON.stringify(resourceDocs)))
+    await resourceDocsCache.put('/', new Response(JSON.stringify(resourceDocs)))
+    return resourceDocs
   }
+}
+
+async function getCacheDoc(resourceDocsCache: any, worker: any): Promise<any> {
+  const docs = await cacheDoc(resourceDocsCache)
+  worker.postMessage('update-resource-docs')
+  return docs
 }
 
 export async function cache(
@@ -45,21 +53,15 @@ export async function cache(
   resourceDocsCacheResponse: any,
   worker: any
 ): Promise<any> {
-  let resourceDocs
-  if (resourceDocsCacheResponse) {
-    try {
-      resourceDocs = await resourceDocsCacheResponse.json()
-      if (!resourceDocs) {
-        resourceDocs = await cacheDoc(resourceDocsCache)
-      }
-    } catch (err) {
-      console.warn(err)
-      //If cache docs is malformed update with the latest resource docs.
-      resourceDocs = await cacheDoc(resourceDocsCache)
-    }
-    worker.postMessage('update-resource-docs')
-  } else {
-    resourceDocs = await cacheDoc(resourceDocsCache)
+  try {
+    const resourceDocs = await resourceDocsCacheResponse.json()
+    const groupedDocs = getGroupedResourceDocs('OBP' + configVersion, resourceDocs)
+    return { resourceDocs, groupedDocs }
+  } catch (error) {
+    console.warn('No resource docs cache or malformed cache.')
+    console.log('Caching resource docs...')
+    const resourceDocs = await getCacheDoc(resourceDocsCache, worker)
+    const groupedDocs = getGroupedResourceDocs('OBP' + configVersion, resourceDocs)
+    return { resourceDocs, groupedDocs }
   }
-  return resourceDocs
 }

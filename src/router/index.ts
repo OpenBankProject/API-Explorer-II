@@ -6,32 +6,33 @@ import Content from '../components/Content.vue'
 import Preview from '../components/Preview.vue'
 import NotFoundView from '../views/NotFoundView.vue'
 import InternalServerErrorView from '../views/InternalServerErrorView.vue'
-import { checkServerStatus } from '../obp'
+import APIServerErrorView from '../views/APIServerErrorView.vue'
+import { isServerUp } from '../obp'
 
 export default async function router(): Promise<any> {
-  const isServerUp = false //await checkServerStatus()
+  const isServerActive = await isServerUp()
   const router = createRouter({
     history: createWebHistory(),
     mode: 'history',
     routes: [
       {
         path: '/',
-        redirect: isServerUp ? '/operationid' : '/error'
+        redirect: isServerActive ? '/operationid' : '/api-server-error'
       },
       {
         path: '/glossary',
         name: 'glossary',
-        component: isServerUp ? GlossaryView : InternalServerErrorView
+        component: isServerActive ? GlossaryView : InternalServerErrorView
       },
       {
         path: '/message-docs/:id',
         name: 'message-docs',
-        component: isServerUp ? MessageDocsView : InternalServerErrorView
+        component: isServerActive ? MessageDocsView : InternalServerErrorView
       },
       {
         path: '/operationid',
         name: 'operationid',
-        component: isServerUp ? BodyView : InternalServerErrorView
+        component: isServerActive ? BodyView : InternalServerErrorView
       },
       {
         path: '/operationid/:id',
@@ -51,9 +52,10 @@ export default async function router(): Promise<any> {
       {
         path: '/callback',
         name: 'callback',
-        component: isServerUp ? BodyView : InternalServerErrorView
+        component: isServerActive ? BodyView : InternalServerErrorView
       },
       { path: '/error', name: 'error', component: InternalServerErrorView },
+      { path: '/api-server-error', name: 'apiServerError', component: APIServerErrorView },
       { path: '/:pathMatch(.*)*', name: 'notFound', component: NotFoundView }
     ]
   })

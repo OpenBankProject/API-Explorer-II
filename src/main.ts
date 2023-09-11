@@ -7,18 +7,9 @@ import appRouter from './router'
 import { createI18n } from 'vue-i18n'
 import { languages, defaultLocale } from './language'
 
-import {
-  getGroupedResourceDocs,
-  cache as cacheResourceDocs,
-  cacheDoc as cacheResourceDocsDoc
-} from './obp/resource-docs'
+import { cache as cacheResourceDocs, cacheDoc as cacheResourceDocsDoc } from './obp/resource-docs'
 import { cache as cacheMessageDocs, cacheDoc as cacheMessageDocsDoc } from './obp/message-docs'
-import {
-  version as configVersion,
-  getMyAPICollections,
-  getMyAPICollectionsEndpoint,
-  checkServerStatus
-} from './obp'
+import { version, getMyAPICollections, getMyAPICollectionsEndpoint, isServerUp } from './obp'
 import { getOBPGlossary } from './obp/glossary'
 
 import 'element-plus/dist/index.css'
@@ -29,9 +20,10 @@ import '@fontsource/roboto/700.css'
 ;(async () => {
   const app = createApp(App)
   const router = await appRouter()
+  app.provide('OBP-APIActiveVersions', [version])
   try {
-    const isServerActive = false //(await checkServerStatus())
-    //if (isServerActive) await setupData(app)
+    const isServerActive = await isServerUp()
+    if (isServerActive) await setupData(app)
 
     const messages = Object.assign(languages)
     const i18n = createI18n({
@@ -48,7 +40,7 @@ import '@fontsource/roboto/700.css'
 
     app.mount('#app')
 
-    if (!isServerActive) router.replace({ path: 'error' })
+    if (!isServerActive) router.replace({ path: 'api-server-error' })
     app.config.errorHandler = (error) => {
       console.log(error)
       router.replace({ path: 'error' })
@@ -62,10 +54,14 @@ import '@fontsource/roboto/700.css'
 async function setupData(app: App<Element>) {
   const worker = new Worker('/js/worker/web-worker.js')
   const resourceDocsCache = await caches.open('obp-resource-docs-cache')
-  const resourceDocsCacheResponse = await resourceDocsCache.match('/operationid')
+  const resourceDocsCacheResponse = await resourceDocsCache.match('/')
   const messageDocsCache = await caches.open('obp-message-docs-cache')
-  const messageDocsCacheResponse = await resourceDocsCache.match('/message-docs')
-  const resourceDocs = await cacheResourceDocs(resourceDocsCache, resourceDocsCacheResponse, worker)
+  const messageDocsCacheResponse = await messageDocsCache.match('/')
+  const { resourceDocs, groupedDocs } = await cacheResourceDocs(
+    resourceDocsCache,
+    resourceDocsCacheResponse,
+    worker
+  )
   const messageDocs = await cacheMessageDocs(messageDocsCache, messageDocsCacheResponse, worker)
 
   //Listen to Web worker
@@ -78,7 +74,6 @@ async function setupData(app: App<Element>) {
       await cacheMessageDocsDoc(messageDocsCache)
     }
   }
-  const groupedDocs = getGroupedResourceDocs('OBP' + configVersion, resourceDocs)
 
   app.provide('OBP-ResourceDocs', resourceDocs)
   app.provide('OBP-APIActiveVersions', Object.keys(resourceDocs).sort())
