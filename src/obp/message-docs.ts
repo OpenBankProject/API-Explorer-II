@@ -27,8 +27,14 @@ export async function cacheDoc(messageDocsCache: any): Promise<any> {
     group[connector] = getGroupedMessageDocs(docs)
     return group
   }, Promise.resolve({}))
-  await messageDocsCache.put('/message-docs', new Response(JSON.stringify(messageDocs)))
+  await messageDocsCache.put('/', new Response(JSON.stringify(messageDocs)))
   return messageDocs
+}
+
+async function getCacheDoc(messageDocsCache: any, worker: any): Promise<any> {
+  const docs = await cacheDoc(messageDocsCache)
+  worker.postMessage('update-message-docs')
+  return docs
 }
 
 export async function cache(
@@ -36,21 +42,11 @@ export async function cache(
   messageDocsCacheResponse: any,
   worker: any
 ): Promise<any> {
-  let messageDocs
-  if (messageDocsCacheResponse) {
-    try {
-      messageDocs = await messageDocsCacheResponse.json()
-      if (!messageDocs) {
-        messageDocs = await cacheDoc(messageDocsCache)
-      }
-    } catch (err) {
-      console.warn(err)
-      //If cache docs is malformed update with the latest resource docs.
-      messageDocs = await cacheDoc(messageDocsCache)
-    }
-    worker.postMessage('update-message-docs')
-  } else {
-    messageDocs = await cacheDoc(messageDocsCache)
+  try {
+    return await messageDocsCacheResponse.json()
+  } catch (error) {
+    console.warn('No message docs cache or malformed cache.')
+    console.log('Caching message docs...')
+    return await getCacheDoc(messageDocsCache, worker)
   }
-  return messageDocs
 }

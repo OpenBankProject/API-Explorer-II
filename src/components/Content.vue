@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, inject, provide, onActivated, onMounted } from 'vue'
+import { ref, inject, provide, onActivated, onMounted, watch } from 'vue'
 import { onBeforeRouteUpdate, useRoute } from 'vue-router'
 import { getOperationDetails } from '../obp/resource-docs'
 import { ArrowLeftBold, ArrowRightBold } from '@element-plus/icons-vue'
@@ -12,15 +12,15 @@ import {
 } from '../obp'
 import { setTabActive, initializeAPICollections } from './SearchNav.vue'
 import { summaryPagerLinksColor as summaryPagerLinksColorSetting } from '../obp/style-setting'
-import { version } from '../obp'
+import { version as configVersion } from '../obp'
 import { getGroupedResourceDocs } from '../obp/resource-docs'
 
 const route = useRoute()
-const configVersion = 'OBP' + version
+const obpVersion = 'OBP' + configVersion
 const description = ref('')
 const summary = ref('')
 const resourceDocs = inject('OBP-ResourceDocs')
-const docs = getGroupedResourceDocs(configVersion, resourceDocs)
+const docs = getGroupedResourceDocs(obpVersion, resourceDocs)
 const displayPrev = ref(true)
 const displayNext = ref(true)
 const prev = ref({ id: 'prev' })
@@ -28,6 +28,7 @@ const next = ref({ id: 'next' })
 const favoriteButtonStyle = ref('favorite favoriteButton')
 const summaryPagerLinksColor = ref(summaryPagerLinksColorSetting)
 let routeId = ''
+let version = obpVersion
 let isFavorite = false
 let apiCollectionsEndpoint = inject('OBP-MyCollectionsEndpoint')!
 
@@ -48,6 +49,7 @@ const setPager = (id: string): void => {
     const prevItem = prevElement.children.item(0)
     prev.value['title'] = prevItem.text
     prev.value['id'] = prevItem.id
+    prev.value['version'] = version
     displayPrev.value = true
   } else {
     displayPrev.value = false
@@ -56,6 +58,7 @@ const setPager = (id: string): void => {
     const nextItem = nextElement.children.item(0)
     next.value['title'] = nextItem.text
     next.value['id'] = nextItem.id
+    next.value['version'] = version
     displayNext.value = true
   } else {
     displayNext.value = false
@@ -115,14 +118,14 @@ const showNotification = (message: string, type: string): void => {
 
 onMounted(async () => {
   routeId = route.params.id
-  const version = route.query.version ? route.query.version : configVersion
+  version = route.query.version ? route.query.version : obpVersion
   setOperationDetails(routeId, version)
   setPager(routeId)
   await tagFavoriteButton(routeId)
 })
 onBeforeRouteUpdate(async (to) => {
   routeId = to.params.id
-  const version = route.query.version ? route.query.version : configVersion
+  version = route.query.version ? route.query.version : obpVersion
   setOperationDetails(routeId, version)
   setPager(routeId)
   await tagFavoriteButton(routeId)
@@ -152,7 +155,7 @@ onBeforeRouteUpdate(async (to) => {
             <RouterLink
               v-show="displayPrev"
               class="pager-router-link"
-              :to="{ name: 'api', params: { id: prev.id } }"
+              :to="{ name: 'api', params: { id: prev.id }, query: { version: prev.version } }"
               >{{ prev.title }}</RouterLink
             >
           </el-col>
@@ -160,7 +163,7 @@ onBeforeRouteUpdate(async (to) => {
             <RouterLink
               v-show="displayNext"
               class="pager-router-link"
-              :to="{ name: 'api', params: { id: next.id } }"
+              :to="{ name: 'api', params: { id: next.id }, query: { version: next.version } }"
               >{{ next.title }}</RouterLink
             >
             <el-icon v-show="displayNext"><ArrowRightBold /></el-icon>

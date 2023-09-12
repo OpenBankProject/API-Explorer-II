@@ -3,6 +3,7 @@ import { ArrowDown } from '@element-plus/icons-vue'
 import { searchLinksColor as searchLinksColorSetting } from '../obp/style-setting'
 import { inject, ref } from 'vue'
 
+const version = ref(__APP_VERSION__)
 const i18n = inject('i18n')
 const host = inject('OBP-API-Host')
 const searchLinksColor = ref(searchLinksColorSetting)
@@ -13,15 +14,18 @@ const handleLocale = (command: string) => {
 
 <template>
   <el-row>
-    <el-col :span="12" class="menu-left"></el-col>
-    <el-col :span="12" class="menu-right">
+    <el-col :span="10" class="menu-left">
+      &nbsp;&nbsp;
+      <span class="host"> App Version: {{ version }} </span>
+    </el-col>
+    <el-col :span="14" class="menu-right">
       <span class="host"
         >API Host:
         <a :href="host">
           {{ host }}
         </a>
       </span>
-      &nbsp;&nbsp;&nbsp;&nbsp;
+      &nbsp;&nbsp;
       <el-dropdown class="menu-right" @command="handleLocale">
         <span class="el-dropdown-link">
           {{ $i18n.locale }}
@@ -58,6 +62,7 @@ a:hover {
   font-size: 14px;
   font-family: 'Roboto';
 }
+.menu-left,
 .menu-right,
 .el-dropdown-menu {
   color: #7787a6;
