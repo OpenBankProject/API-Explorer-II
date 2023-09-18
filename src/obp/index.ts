@@ -3,8 +3,12 @@ import superagent from 'superagent'
 export const version = import.meta.env.VITE_OBP_API_VERSION
 const default_collection_name = 'Favourites'
 
+export async function serverStatus(): Promise<any> {
+  return (await superagent.get(`/api/status`)).body
+}
+
 export async function isServerUp(): Promise<boolean> {
-  return (await superagent.get(`/api/status`)).body['status']
+  return (await serverStatus())['status']
 }
 
 export async function get(path: string): Promise<any> {

@@ -177,7 +177,7 @@ const searchEvent = (value) => {
             @click="setActive"
           >
             <RouterLink
-              :to="{ name: 'api', params: { id: value } }"
+              :to="{ name: 'api', params: { id: value }, query: { version: selectedVersion } }"
               :id="value"
               active-class="active-api-router-link"
               class="api-router-link"
