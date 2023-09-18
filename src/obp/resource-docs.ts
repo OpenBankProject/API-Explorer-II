@@ -1,4 +1,4 @@
-import { get, version as configVersion } from '../obp'
+import { get, isServerUp, version as configVersion } from '../obp'
 import { getOBPAPIVersions } from '../obp/api-version'
 
 // Get Resource Docs
@@ -60,6 +60,8 @@ export async function cache(
   } catch (error) {
     console.warn('No resource docs cache or malformed cache.')
     console.log('Caching resource docs...')
+    const isServerActive = await isServerUp()
+    if (!isServerActive) throw new Error('API Server is not responding.')
     const resourceDocs = await getCacheDoc(resourceDocsCache, worker)
     const groupedDocs = getGroupedResourceDocs('OBP' + configVersion, resourceDocs)
     return { resourceDocs, groupedDocs }

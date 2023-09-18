@@ -1,4 +1,4 @@
-import { version, get } from '../obp'
+import { version, get, isServerUp } from '../obp'
 
 export const connectors = [
   'kafka_vSept2018',
@@ -47,6 +47,8 @@ export async function cache(
   } catch (error) {
     console.warn('No message docs cache or malformed cache.')
     console.log('Caching message docs...')
+    const isServerActive = await isServerUp()
+    if (!isServerActive) throw new Error('API Server is not responding.')
     return await getCacheDoc(messageDocsCache, worker)
   }
 }

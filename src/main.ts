@@ -9,7 +9,7 @@ import { languages, defaultLocale } from './language'
 
 import { cache as cacheResourceDocs, cacheDoc as cacheResourceDocsDoc } from './obp/resource-docs'
 import { cache as cacheMessageDocs, cacheDoc as cacheMessageDocsDoc } from './obp/message-docs'
-import { version, getMyAPICollections, getMyAPICollectionsEndpoint, isServerUp } from './obp'
+import { version, getMyAPICollections, getMyAPICollectionsEndpoint } from './obp'
 import { getOBPGlossary } from './obp/glossary'
 
 import 'element-plus/dist/index.css'
@@ -20,10 +20,8 @@ import '@fontsource/roboto/700.css'
 ;(async () => {
   const app = createApp(App)
   const router = await appRouter()
-  app.provide('OBP-APIActiveVersions', [version])
   try {
-    const isServerActive = await isServerUp()
-    if (isServerActive) await setupData(app)
+    const isDataSetup = await setupData(app)
 
     const messages = Object.assign(languages)
     const i18n = createI18n({
@@ -40,7 +38,7 @@ import '@fontsource/roboto/700.css'
 
     app.mount('#app')
 
-    if (!isServerActive) router.replace({ path: 'api-server-error' })
+    if (!isDataSetup) router.replace({ path: 'api-server-error' })
     app.config.errorHandler = (error) => {
       console.log(error)
       router.replace({ path: 'error' })
@@ -52,51 +50,57 @@ import '@fontsource/roboto/700.css'
 })()
 
 async function setupData(app: App<Element>) {
-  const worker = new Worker('/js/worker/web-worker.js')
-  const resourceDocsCache = await caches.open('obp-resource-docs-cache')
-  const resourceDocsCacheResponse = await resourceDocsCache.match('/')
-  const messageDocsCache = await caches.open('obp-message-docs-cache')
-  const messageDocsCacheResponse = await messageDocsCache.match('/')
-  const { resourceDocs, groupedDocs } = await cacheResourceDocs(
-    resourceDocsCache,
-    resourceDocsCacheResponse,
-    worker
-  )
-  const messageDocs = await cacheMessageDocs(messageDocsCache, messageDocsCacheResponse, worker)
+  try {
+    const worker = new Worker('/js/worker/web-worker.js')
+    const resourceDocsCache = await caches.open('obp-resource-docs-cache')
+    const resourceDocsCacheResponse = await resourceDocsCache.match('/')
+    const messageDocsCache = await caches.open('obp-message-docs-cache')
+    const messageDocsCacheResponse = await messageDocsCache.match('/')
+    const { resourceDocs, groupedDocs } = await cacheResourceDocs(
+      resourceDocsCache,
+      resourceDocsCacheResponse,
+      worker
+    )
+    const messageDocs = await cacheMessageDocs(messageDocsCache, messageDocsCacheResponse, worker)
 
-  //Listen to Web worker
-  worker.onmessage = async (event) => {
-    //Update cache docs data in the background
-    if (event.data === 'update-resource-docs') {
-      await cacheResourceDocsDoc(resourceDocsCache)
+    //Listen to Web worker
+    worker.onmessage = async (event) => {
+      //Update cache docs data in the background
+      if (event.data === 'update-resource-docs') {
+        await cacheResourceDocsDoc(resourceDocsCache)
+      }
+      if (event.data === 'update-message-docs') {
+        await cacheMessageDocsDoc(messageDocsCache)
+      }
     }
-    if (event.data === 'update-message-docs') {
-      await cacheMessageDocsDoc(messageDocsCache)
+
+    app.provide('OBP-ResourceDocs', resourceDocs)
+    app.provide('OBP-APIActiveVersions', Object.keys(resourceDocs).sort())
+    app.provide('OBP-GroupedResourceDocs', groupedDocs)
+    app.provide('OBP-GroupedMessageDocs', messageDocs)
+    app.provide('OBP-API-Host', import.meta.env.VITE_OBP_API_HOST)
+    const glossary = await getOBPGlossary()
+    app.provide('OBP-Glossary', glossary)
+
+    const apiCollections = (await getMyAPICollections()).api_collections
+    if (apiCollections && apiCollections.length > 0) {
+      //Uncomment this when other collection will be supported.
+      //for (const { api_collection_name } of apiCollections) {
+      //  const apiCollectionsEndpoint = (
+      //    await getMyAPICollectionsEndpoint(api_collection_name)
+      //  ).api_collection_endpoints.map((api) => api.operation_id)
+      //  app.provide('OBP-MyCollectionsEndpoint', apiCollectionsEndpoint)
+      //}
+      const apiCollectionsEndpoint = (
+        await getMyAPICollectionsEndpoint('Favourites')
+      ).api_collection_endpoints.map((api) => api.operation_id)
+      app.provide('OBP-MyCollectionsEndpoint', apiCollectionsEndpoint)
+    } else {
+      app.provide('OBP-MyCollectionsEndpoint', undefined)
     }
-  }
-
-  app.provide('OBP-ResourceDocs', resourceDocs)
-  app.provide('OBP-APIActiveVersions', Object.keys(resourceDocs).sort())
-  app.provide('OBP-GroupedResourceDocs', groupedDocs)
-  app.provide('OBP-GroupedMessageDocs', messageDocs)
-  app.provide('OBP-API-Host', import.meta.env.VITE_OBP_API_HOST)
-  const glossary = await getOBPGlossary()
-  app.provide('OBP-Glossary', glossary)
-
-  const apiCollections = (await getMyAPICollections()).api_collections
-  if (apiCollections && apiCollections.length > 0) {
-    //Uncomment this when other collection will be supported.
-    //for (const { api_collection_name } of apiCollections) {
-    //  const apiCollectionsEndpoint = (
-    //    await getMyAPICollectionsEndpoint(api_collection_name)
-    //  ).api_collection_endpoints.map((api) => api.operation_id)
-    //  app.provide('OBP-MyCollectionsEndpoint', apiCollectionsEndpoint)
-    //}
-    const apiCollectionsEndpoint = (
-      await getMyAPICollectionsEndpoint('Favourites')
-    ).api_collection_endpoints.map((api) => api.operation_id)
-    app.provide('OBP-MyCollectionsEndpoint', apiCollectionsEndpoint)
-  } else {
-    app.provide('OBP-MyCollectionsEndpoint', undefined)
+    return true
+  } catch (error) {
+    app.provide('OBP-APIActiveVersions', [version])
+    return false
   }
 }
