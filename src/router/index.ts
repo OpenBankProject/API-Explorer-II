@@ -7,6 +7,7 @@ import Preview from '../components/Preview.vue'
 import NotFoundView from '../views/NotFoundView.vue'
 import InternalServerErrorView from '../views/InternalServerErrorView.vue'
 import APIServerErrorView from '../views/APIServerErrorView.vue'
+import APIServerStatusView from '../views/APIServerStatusView.vue'
 import { isServerUp } from '../obp'
 
 export default async function router(): Promise<any> {
@@ -18,6 +19,11 @@ export default async function router(): Promise<any> {
       {
         path: '/',
         redirect: isServerActive ? '/operationid' : '/api-server-error'
+      },
+      {
+        path: '/status',
+        name: 'status',
+        component: APIServerStatusView
       },
       {
         path: '/glossary',

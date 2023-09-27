@@ -31,10 +31,8 @@ export async function cacheDoc(messageDocsCache: any): Promise<any> {
   return messageDocs
 }
 
-async function getCacheDoc(messageDocsCache: any, worker: any): Promise<any> {
-  const docs = await cacheDoc(messageDocsCache)
-  worker.postMessage('update-message-docs')
-  return docs
+async function getCacheDoc(messageDocsCache: any): Promise<any> {
+  return await cacheDoc(messageDocsCache)
 }
 
 export async function cache(
@@ -43,12 +41,13 @@ export async function cache(
   worker: any
 ): Promise<any> {
   try {
+    worker.postMessage('update-message-docs')
     return await messageDocsCacheResponse.json()
   } catch (error) {
     console.warn('No message docs cache or malformed cache.')
     console.log('Caching message docs...')
     const isServerActive = await isServerUp()
     if (!isServerActive) throw new Error('API Server is not responding.')
-    return await getCacheDoc(messageDocsCache, worker)
+    return await getCacheDoc(messageDocsCache)
   }
 }
