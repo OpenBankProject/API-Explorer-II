@@ -42,10 +42,8 @@ export async function cacheDoc(resourceDocsCache: any): Promise<any> {
   }
 }
 
-async function getCacheDoc(resourceDocsCache: any, worker: any): Promise<any> {
-  const docs = await cacheDoc(resourceDocsCache)
-  worker.postMessage('update-resource-docs')
-  return docs
+async function getCacheDoc(resourceDocsCache: any): Promise<any> {
+  return await cacheDoc(resourceDocsCache)
 }
 
 export async function cache(
@@ -54,6 +52,7 @@ export async function cache(
   worker: any
 ): Promise<any> {
   try {
+    worker.postMessage('update-resource-docs')
     const resourceDocs = await resourceDocsCacheResponse.json()
     const groupedDocs = getGroupedResourceDocs('OBP' + configVersion, resourceDocs)
     return { resourceDocs, groupedDocs }
@@ -62,7 +61,7 @@ export async function cache(
     console.log('Caching resource docs...')
     const isServerActive = await isServerUp()
     if (!isServerActive) throw new Error('API Server is not responding.')
-    const resourceDocs = await getCacheDoc(resourceDocsCache, worker)
+    const resourceDocs = await getCacheDoc(resourceDocsCache)
     const groupedDocs = getGroupedResourceDocs('OBP' + configVersion, resourceDocs)
     return { resourceDocs, groupedDocs }
   }

@@ -21,7 +21,8 @@ import '@fontsource/roboto/700.css'
   const app = createApp(App)
   const router = await appRouter()
   try {
-    const isDataSetup = await setupData(app)
+    const worker = new Worker('/js/worker/web-worker.js')
+    const isDataSetup = await setupData(app, worker)
 
     const messages = Object.assign(languages)
     const i18n = createI18n({
@@ -49,19 +50,12 @@ import '@fontsource/roboto/700.css'
   }
 })()
 
-async function setupData(app: App<Element>) {
+async function setupData(app: App<Element>, worker: Worker) {
   try {
-    const worker = new Worker('/js/worker/web-worker.js')
     const resourceDocsCache = await caches.open('obp-resource-docs-cache')
     const resourceDocsCacheResponse = await resourceDocsCache.match('/')
     const messageDocsCache = await caches.open('obp-message-docs-cache')
     const messageDocsCacheResponse = await messageDocsCache.match('/')
-    const { resourceDocs, groupedDocs } = await cacheResourceDocs(
-      resourceDocsCache,
-      resourceDocsCacheResponse,
-      worker
-    )
-    const messageDocs = await cacheMessageDocs(messageDocsCache, messageDocsCacheResponse, worker)
 
     //Listen to Web worker
     worker.onmessage = async (event) => {
@@ -73,6 +67,13 @@ async function setupData(app: App<Element>) {
         await cacheMessageDocsDoc(messageDocsCache)
       }
     }
+
+    const { resourceDocs, groupedDocs } = await cacheResourceDocs(
+      resourceDocsCache,
+      resourceDocsCacheResponse,
+      worker
+    )
+    const messageDocs = await cacheMessageDocs(messageDocsCache, messageDocsCacheResponse, worker)
 
     app.provide('OBP-ResourceDocs', resourceDocs)
     app.provide('OBP-APIActiveVersions', Object.keys(resourceDocs).sort())
