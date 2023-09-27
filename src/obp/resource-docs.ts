@@ -25,9 +25,9 @@ export async function cacheDoc(resourceDocsCache: any): Promise<any> {
   if (apiVersions) {
     const scannedAPIVersions = apiVersions.scanned_api_versions
     const resourceDocsMapping: any = {}
-    for (const { urlPrefix, API_VERSION } of scannedAPIVersions) {
-      if (urlPrefix) {
-        const version = `${urlPrefix.toUpperCase()}${API_VERSION}`
+    for (const { apiStandard, API_VERSION } of scannedAPIVersions) {
+      if (apiStandard) {
+        const version = `${apiStandard.toUpperCase()}${API_VERSION}`
         const resourceDocs = await getOBPResourceDocs(version)
         if (version && Object.keys(resourceDocs).includes('resource_docs'))
           resourceDocsMapping[version] = resourceDocs
