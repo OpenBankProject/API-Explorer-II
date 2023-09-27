@@ -18,6 +18,7 @@ const obpApiManagerHost = ref(import.meta.env.VITE_OBP_API_MANAGER_HOST)
 const loginUsername = ref('')
 const logoffurl = ref('')
 const obpApiVersions = ref(inject('OBP-APIActiveVersions')!)
+const obpMessageDocs = ref(Object.keys(inject('OBP-GroupedMessageDocs')!))
 const isShowLoginButton = ref(true)
 const isShowLogOffButton = ref(false)
 const logo = ref(logoSource)
@@ -110,17 +111,8 @@ watchEffect(() => {
               <el-dropdown-item v-for="value in obpApiVersions" :command="value" key="value">{{
                 value
               }}</el-dropdown-item>
-              <el-dropdown-item command="akka_vDec2018" key="akka_vDec2018"
-                >Message Docs for: Akka</el-dropdown-item
-              >
-              <el-dropdown-item command="kafka_vSept2018" key="kafka_vSept2018"
-                >Message Docs for: Kafka</el-dropdown-item
-              >
-              <el-dropdown-item command="rest_vMar2019" key="rest_vMar2019"
-                >Message Docs for: Rest</el-dropdown-item
-              >
-              <el-dropdown-item command="stored_procedure_vDec2019" key="stored_procedure_vDec2019"
-                >Message Docs for: Stored Procedue</el-dropdown-item
+              <el-dropdown-item v-for="value in obpMessageDocs" :command="value" key="value">
+                Message Docs for: {{ value }}</el-dropdown-item
               >
             </el-dropdown-menu>
           </template>

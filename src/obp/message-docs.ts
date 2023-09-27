@@ -24,7 +24,9 @@ export async function cacheDoc(messageDocsCache: any): Promise<any> {
   const messageDocs = await connectors.reduce(async (agroup: any, connector: any) => {
     const group = await agroup
     const docs = await getOBPMessageDocs(connector)
-    group[connector] = getGroupedMessageDocs(docs)
+    if (!Object.keys(docs).includes('code')) {
+      group[connector] = getGroupedMessageDocs(docs)
+    }
     return group
   }, Promise.resolve({}))
   await messageDocsCache.put('/', new Response(JSON.stringify(messageDocs)))
