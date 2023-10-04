@@ -8,7 +8,8 @@ export async function serverStatus(): Promise<any> {
 }
 
 export async function isServerUp(): Promise<boolean> {
-  return (await serverStatus())['status']
+  //Set the status to offline/down only if all the resource data is not availalbe.
+  return !Object.values(await serverStatus()).every((isTrue) => !isTrue)
 }
 
 export async function get(path: string): Promise<any> {

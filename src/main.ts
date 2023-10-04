@@ -62,9 +62,11 @@ async function setupData(app: App<Element>, worker: Worker) {
       //Update cache docs data in the background
       if (event.data === 'update-resource-docs') {
         await cacheResourceDocsDoc(resourceDocsCache)
+        console.log('Resource Docs cache was updated.')
       }
       if (event.data === 'update-message-docs') {
         await cacheMessageDocsDoc(messageDocsCache)
+        console.log('Message Docs cache was updated.')
       }
     }
 
