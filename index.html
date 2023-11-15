@@ -6,12 +6,63 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>API Explorer</title>
     <link rel="stylesheet" href="/styles/default.min.css">
+    <link rel="stylesheet" href="/styles/default.min.css">
     <link rel="stylesheet" href="/styles/androidstudio.min.css">
     <script src="/js/highlight.min.js"></script>
     <script src="/js/highlightjs-line-numbers.min.js"></script>
+    <style>
+      .loading-page {
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+      }
+
+      .messages {
+        width: 80%;
+        height: 100px;
+        background-color: #e3e3e3;
+        margin: 100px auto;
+        padding: 5px;
+      }
+
+      .lds-dual-ring {
+        display: inline-block;
+        position: relative;
+        width: 80px;
+        height: 80px;
+      }
+      .lds-dual-ring:after {
+        content: " ";
+        display: block;
+        width: 64px;
+        height: 64px;
+        margin: 8px;
+        border-radius: 50%;
+        border: 6px solid #50b164;
+        border-color: #50b164 transparent #50b164 transparent;
+        animation: lds-dual-ring 1.2s linear infinite;
+      }
+      @keyframes lds-dual-ring {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
   </head>
   <body>
-    <div id="app"><center>Loading...<center></div>
+    
+    
+    <div id="app">
+      <div class="loading-page">
+        <img src="/src/assets/logo2x-1.png" style="margin-top: 50px;">
+        <div class="lds-dual-ring"></div>
+        <div class="loading-messages"><p>Loading...</p></div>
+      </div>
+    </div>
+    
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

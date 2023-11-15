@@ -13,7 +13,12 @@ app.use(
   session({
     secret: process.env.VITE_OPB_SERVER_SESSION_PASSWORD,
     resave: false,
-    saveUninitialized: true
+    saveUninitialized: true,
+    cookie: {
+      httpOnly: true,
+      secure: true,
+      maxAge: 300*1000, // 5 minutes in milliseconds
+    }
   })
 )
 useContainer(Container)
