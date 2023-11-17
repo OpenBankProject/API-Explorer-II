@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import SearchNav from '../components/SearchNav.vue'
 import Menu from '../components/Menu.vue'
+import Collections from '../components/Collections.vue'
 </script>
 
 <template>
@@ -11,6 +12,9 @@ import Menu from '../components/Menu.vue'
     </el-aside>
     <el-main>
       <el-container class="main">
+        <el-header class="collections">
+          <Collections />
+        </el-header>
         <el-header class="menu">
           <Menu />
         </el-header>
@@ -48,5 +52,11 @@ import Menu from '../components/Menu.vue'
   color: white;
   background-color: #151d30;
   max-height: 100vh;
+}
+.collections {
+  margin-left: -20px;
+  margin-right: -20px;
+  padding-left: 20px;
+  padding-right: 20px;
 }
 </style>
