@@ -28,3 +28,14 @@ coverage
 *.njsproj
 *.sln
 *.sw?
+
+#files from npm-run-build
+package-lock.json
+tsconfig.app.tsbuildinfo
+tsconfig.vitest.tsbuildinfo
+tsconfig.node.tsbuildinfo
+vite.config.d.ts
+vite.config.js
+vitest.config.d.ts
+vitest.config.js
+components.d.ts
