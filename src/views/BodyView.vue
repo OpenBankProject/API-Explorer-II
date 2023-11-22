@@ -2,6 +2,8 @@
 import SearchNav from '../components/SearchNav.vue'
 import Menu from '../components/Menu.vue'
 import Collections from '../components/Collections.vue'
+import { inject } from 'vue'
+
 </script>
 
 <template>
@@ -12,9 +14,9 @@ import Collections from '../components/Collections.vue'
     </el-aside>
     <el-main>
       <el-container class="main">
-        <el-header class="collections">
+        <!--<el-header class="collections">
           <Collections />
-        </el-header>
+        </el-header>-->
         <el-header class="menu">
           <Menu />
         </el-header>
