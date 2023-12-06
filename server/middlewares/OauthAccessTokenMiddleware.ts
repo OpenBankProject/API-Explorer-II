@@ -16,6 +16,7 @@ export default class OauthAccessTokenMiddleware implements ExpressMiddlewareInte
     const consumer = oauthService.getConsumer()
     const oauthVerifier = request.query.oauth_verifier
     const session = request.session
+    console.log('OauthAccessTokenMiddleware.ts use says: Before consumer.getOAuthAccessToken')
     consumer.getOAuthAccessToken(
       oauthService.requestTokenKey,
       oauthService.requestTokenSecret,
@@ -34,6 +35,7 @@ export default class OauthAccessTokenMiddleware implements ExpressMiddlewareInte
             secret: oauthTokenSecret
           }
           session['clientConfig'] = clientConfig
+          console.log('OauthAccessTokenMiddleware.ts use says: Seems OK, redirecting..')
           response.redirect(`${process.env.VITE_OBP_EXPLORER_HOST}`)
         }
       }
