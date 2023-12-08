@@ -20,7 +20,7 @@ app.use(
     cookie: {
       httpOnly: true,
       secure: httpsOrNot,
-      maxAge: 10*1000, // 5 minutes in milliseconds
+      maxAge: 300*1000, // 5 minutes in milliseconds
     }
   })
 )
