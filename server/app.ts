@@ -8,6 +8,9 @@ import path from 'path'
 
 const port = 8085
 const app: Application = express()
+const host = process.env.VITE_OBP_EXPLORER_HOST
+const httpsOrNot = host ? host.indexOf("https://") == 0 ? true : false : true
+
 app.use(express.json())
 app.use(
   session({
@@ -16,7 +19,7 @@ app.use(
     saveUninitialized: true,
     cookie: {
       httpOnly: true,
-      secure: true,
+      secure: httpsOrNot,
       maxAge: 300*1000, // 5 minutes in milliseconds
     }
   })
