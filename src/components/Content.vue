@@ -88,7 +88,6 @@ const createDeleteFavorite = async (): void => {
   }
   if (isFavorite) { // Add the API endpoint to favorite
     const response = await deleteMyAPICollectionEndpoint(routeId)
-    console.log(response)
     favoriteButtonStyle.value = 'favorite favoriteButton'
     if (response) { // Success response returns <empty string>
       showNotification(response, 'error')
