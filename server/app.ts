@@ -19,7 +19,7 @@ app.use(
     saveUninitialized: true,
     cookie: {
       httpOnly: true,
-      secure: httpsOrNot,
+      secure: false,
       maxAge: 300*1000, // 5 minutes in milliseconds
     }
   })
