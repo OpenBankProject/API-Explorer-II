@@ -12,17 +12,22 @@ const host = process.env.VITE_OBP_EXPLORER_HOST
 const httpsOrNot = host ? host.indexOf("https://") == 0 ? true : false : true
 
 app.use(express.json())
+let sessionObject = {
+  secret: process.env.VITE_OPB_SERVER_SESSION_PASSWORD,
+  resave: false,
+  saveUninitialized: true,
+  cookie: {
+    httpOnly: true,
+    secure: false,
+    maxAge: 300*1000, // 5 minutes in milliseconds
+  }
+}
+if (app.get('env') === 'production') {
+  app.set('trust proxy', 1) // trust first proxy
+  sessionObject.cookie.secure = true // serve secure cookies
+}
 app.use(
-  session({
-    secret: process.env.VITE_OPB_SERVER_SESSION_PASSWORD,
-    resave: false,
-    saveUninitialized: true,
-    cookie: {
-      httpOnly: true,
-      secure: false,
-      maxAge: 300*1000, // 5 minutes in milliseconds
-    }
-  })
+  session(sessionObject)
 )
 useContainer(Container)
 
