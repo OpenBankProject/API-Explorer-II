@@ -31,15 +31,17 @@ app.use(
 )
 useContainer(Container)
 
+const routePrefix = '/api'
+
 const server = useExpressServer(app, {
   //routePrefix: '/api/v1',
-  routePrefix: '/api',
+  routePrefix: routePrefix,
   controllers: [path.join(__dirname + '/controllers/*.ts')],
   middlewares: [path.join(__dirname + '/middlewares/*.ts')]
 })
 
 export const instance = server.listen(port)
 
-console.log('Server running at http://localhost:' + port)
+console.log(`Backend is running. You can check a status at http://localhost:${port}${routePrefix}/status`)
 
 export default app
