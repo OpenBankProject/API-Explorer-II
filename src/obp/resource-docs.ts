@@ -26,12 +26,26 @@ export async function cacheDoc(resourceDocsCache: any): Promise<any> {
     const scannedAPIVersions = apiVersions.scanned_api_versions
     const resourceDocsMapping: any = {}
     for (const { apiStandard, API_VERSION } of scannedAPIVersions) {
+      const logMessage = `Loading API { standard: ${ apiStandard }, version: ${ API_VERSION } }`
+      console.log(logMessage)
       if (apiStandard) {
         const version = `${apiStandard.toUpperCase()}${API_VERSION}`
         const resourceDocs = await getOBPResourceDocs(version)
         if (version && Object.keys(resourceDocs).includes('resource_docs'))
           resourceDocsMapping[version] = resourceDocs
       }
+      // 1. Select the div element using the id property
+      const spinner = document.getElementById("loading-api-spinner");
+      // 2. Select the div element using the id property
+      let p = document.getElementById("loading-api-info");
+      // 3. Add the text content
+      if(p !== null) {
+        p.textContent = logMessage;
+      } else {
+        p = document.createElement("p")
+      }
+      // 4. Append the p element to the div element
+      spinner?.appendChild(p);
     }
     await resourceDocsCache.put('/', new Response(JSON.stringify(resourceDocsMapping)))
     return resourceDocsMapping

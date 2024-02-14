@@ -44,6 +44,10 @@ const setActive = (target) => {
 }
 
 const handleMore = (command: string) => {
+  let element = document.getElementById("selected-api-version")
+  if (element !== null) {
+    element.textContent = command;
+  }
   if (command.includes('_')) {
     router.push({ name: 'message-docs', params: { id: command } })
   } else {
@@ -86,12 +90,8 @@ watchEffect(() => {
       <a v-bind:href="obpApiHost" class="router-link" id="header-nav-home">
         {{ $t('header.portal_home') }}
       </a>
-      <RouterLink
-        class="router-link"
-        id="header-nav-tags"
-        :to="'/operationid?version=OBP' + version"
-        >{{ $t('header.api_explorer') }}</RouterLink
-      >
+      <RouterLink class="router-link" id="header-nav-tags" :to="'/operationid?version=OBP' + version">{{
+        $t('header.api_explorer') }}</RouterLink>
       <RouterLink class="router-link" id="header-nav-glossary" to="/glossary">{{
         $t('header.glossary')
       }}</RouterLink>
@@ -112,8 +112,7 @@ watchEffect(() => {
                 value
               }}</el-dropdown-item>
               <el-dropdown-item v-for="value in obpMessageDocs" :command="value" key="value">
-                Message Docs for: {{ value }}</el-dropdown-item
-              >
+                Message Docs for: {{ value }}</el-dropdown-item>
             </el-dropdown-menu>
           </template>
         </el-dropdown>
@@ -130,11 +129,7 @@ watchEffect(() => {
         {{ $t('header.login') }}
       </a>
       <span v-show="isShowLogOffButton" class="login-user">{{ loginUsername }}</span>
-      <a
-        v-bind:href="'/api/user/logoff'"
-        v-show="isShowLogOffButton"
-        class="logoff-button router-link"
-      >
+      <a v-bind:href="'/api/user/logoff'" v-show="isShowLogOffButton" class="logoff-button router-link">
         {{ $t('header.logoff') }}
       </a>
     </RouterView>

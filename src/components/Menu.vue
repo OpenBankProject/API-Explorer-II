@@ -16,9 +16,11 @@ const handleLocale = (command: string) => {
   <el-row>
     <el-col :span="10" class="menu-left">
       &nbsp;&nbsp;
-      <span class="host"> App Version: {{ version }} </span>
+      <span id="selected-api-version" class="host">OBPv5.1.0</span>
     </el-col>
     <el-col :span="14" class="menu-right">
+      <span class="host">App Version: {{ version }}</span>
+      &nbsp;&nbsp;
       <span class="host"
         >API Host:
         <a :href="host">
