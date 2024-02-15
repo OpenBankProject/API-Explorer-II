@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8">
-    <link rel="icon" href="/favicon.ico">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>API Explorer</title>
-    <link rel="stylesheet" href="/styles/default.min.css">
-    <link rel="stylesheet" href="/styles/default.min.css">
-    <link rel="stylesheet" href="/styles/androidstudio.min.css">
+    <link rel="stylesheet" href="/styles/default.min.css" />
+    <link rel="stylesheet" href="/styles/default.min.css" />
+    <link rel="stylesheet" href="/styles/androidstudio.min.css" />
     <script src="/js/highlight.min.js"></script>
     <script src="/js/highlightjs-line-numbers.min.js"></script>
     <style>
@@ -31,6 +31,7 @@
         padding: 5px;
         margin: 50px auto;
         text-align: center;
+        font-family: 'Roboto';
       }
 
       .lds-dual-ring {
@@ -41,7 +42,7 @@
         margin-top: 15px;
       }
       .lds-dual-ring:after {
-        content: " ";
+        content: ' ';
         display: block;
         width: 64px;
         height: 64px;
@@ -62,16 +63,14 @@
     </style>
   </head>
   <body>
-    
-    
     <div id="app">
       <div class="loading-page" id="loading-api-spinner">
-        <img src="/src/assets/logo2x-1.png" style="width: 304px; margin-top: 50px;">
+        <img src="/src/assets/logo2x-1.png" style="width: 304px; margin-top: 50px" />
         <div class="lds-dual-ring"></div>
         <div class="progress-info" id="loading-api-info"></div>
       </div>
     </div>
-    
+
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
