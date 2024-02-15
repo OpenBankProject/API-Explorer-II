@@ -1,9 +1,12 @@
 import { get, isServerUp, version as configVersion } from '../obp'
 import { getOBPAPIVersions } from '../obp/api-version'
+import { updateLoadingInfoMessage } from './common-functions'
 
 // Get Resource Docs
 export async function getOBPResourceDocs(version: string): Promise<any> {
-  return await get(`/obp/${configVersion}/resource-docs/${version}/obp`)
+  const logMessage = `Loading API { standard: ${configVersion}, version: ${configVersion} }`
+  updateLoadingInfoMessage(logMessage)
+  return await get(`/obp/${configVersion}/resource-docs/${configVersion}/obp`)
 }
 
 export function getGroupedResourceDocs(version: string, docs: any): Promise<any> {
@@ -26,7 +29,7 @@ export async function cacheDoc(resourceDocsCache: any): Promise<any> {
     const scannedAPIVersions = apiVersions.scanned_api_versions
     const resourceDocsMapping: any = {}
     for (const { apiStandard, API_VERSION } of scannedAPIVersions) {
-      const logMessage = `Loading API { standard: ${ apiStandard }, version: ${ API_VERSION } }`
+      const logMessage = `Caching API { standard: ${apiStandard}, version: ${API_VERSION} }`
       console.log(logMessage)
       if (apiStandard) {
         const version = `${apiStandard.toUpperCase()}${API_VERSION}`
@@ -34,18 +37,7 @@ export async function cacheDoc(resourceDocsCache: any): Promise<any> {
         if (version && Object.keys(resourceDocs).includes('resource_docs'))
           resourceDocsMapping[version] = resourceDocs
       }
-      // 1. Select the div element using the id property
-      const spinner = document.getElementById("loading-api-spinner");
-      // 2. Select the div element using the id property
-      let p = document.getElementById("loading-api-info");
-      // 3. Add the text content
-      if(p !== null) {
-        p.textContent = logMessage;
-      } else {
-        p = document.createElement("p")
-      }
-      // 4. Append the p element to the div element
-      spinner?.appendChild(p);
+      updateLoadingInfoMessage(logMessage)
     }
     await resourceDocsCache.put('/', new Response(JSON.stringify(resourceDocsMapping)))
     return resourceDocsMapping
