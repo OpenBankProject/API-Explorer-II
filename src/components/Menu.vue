@@ -2,6 +2,7 @@
 import { ArrowDown } from '@element-plus/icons-vue'
 import { searchLinksColor as searchLinksColorSetting } from '../obp/style-setting'
 import { inject, ref } from 'vue'
+import { updateServerStatus } from '@/obp/common-functions';
 
 const version = ref(__APP_VERSION__)
 const i18n = inject('i18n')
@@ -9,6 +10,9 @@ const host = inject('OBP-API-Host')
 const searchLinksColor = ref(searchLinksColorSetting)
 const handleLocale = (command: string) => {
   i18n.global.locale.value = command
+}
+const updateStatus = (event: any) => {
+  updateServerStatus()
 }
 </script>
 
@@ -22,7 +26,7 @@ const handleLocale = (command: string) => {
       <span class="host">App Version: {{ version }}</span>
       &nbsp;&nbsp;
       <span class="host"
-        >API Host:
+        ><span id="backend-status" @click="updateStatus" >API Host: </span>
         <a :href="host">
           {{ host }}
         </a>
@@ -68,5 +72,11 @@ a:hover {
 .menu-right,
 .el-dropdown-menu {
   color: #7787a6;
+}
+.server-is-online {
+  color: v-bind(searchLinksColor);
+}
+.server-is-offline {
+  color: red;
 }
 </style>
