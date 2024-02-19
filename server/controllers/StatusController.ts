@@ -38,22 +38,27 @@ export class StatusController {
     })
   }
 
-  isCodeError(response: any): boolean {
+  isCodeError(response: any, path: string): boolean {
+    console.log(`Validating ${path} response...`)
     if (!response || Object.keys(response).length == 0) return true
     if (Object.keys(response).includes('code')) {
       const code = response['code']
-      if (code >= 400) return true
+      if (code >= 400) {
+        console.log(response) // Log error responce
+        return true
+      }
     }
     return false
   }
 
   async checkResourceDocs(oauthConfig: OAuthConfig, version: string): Promise<boolean> {
     try {
+      const path = `/obp/${version}/resource-docs/${version}/obp`
       const resourceDocs = await this.obpClientService.get(
-        `/obp/${version}/resource-docs/${version}/obp`,
+        path,
         oauthConfig
       )
-      return !this.isCodeError(resourceDocs)
+      return !this.isCodeError(resourceDocs, path)
     } catch (error) {
       return false
     }
@@ -62,11 +67,13 @@ export class StatusController {
     try {
       const messageDocsCodeResult = await Promise.all(
         this.connectors.map(async (connector) => {
+          const path = `/obp/${version}/message-docs/${connector}`
           return !this.isCodeError(
             await this.obpClientService.get(
-              `/obp/${version}/message-docs/${connector}`,
+              path,
               oauthConfig
-            )
+            ),
+            path
           )
         })
       )
@@ -78,8 +85,9 @@ export class StatusController {
 
   async checkApiVersions(oauthConfig: OAuthConfig, version: string): Promise<boolean> {
     try {
-      const versions = await this.obpClientService.get(`/obp/${version}/api/versions`, oauthConfig)
-      return !this.isCodeError(versions)
+      const path = `/obp/${version}/api/versions`
+      const versions = await this.obpClientService.get(path, oauthConfig)
+      return !this.isCodeError(versions, path)
     } catch (error) {
       return false
     }
