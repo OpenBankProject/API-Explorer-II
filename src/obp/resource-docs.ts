@@ -1,12 +1,13 @@
-import { get, isServerUp, version as configVersion } from '../obp'
+import { version as configVersion, get, isServerUp } from '../obp'
 import { getOBPAPIVersions } from '../obp/api-version'
 import { updateLoadingInfoMessage } from './common-functions'
 
 // Get Resource Docs
 export async function getOBPResourceDocs(version: string): Promise<any> {
-  const logMessage = `Loading API { standard: ${configVersion}, version: ${configVersion} }`
+  const logMessage = `Loading API { standard: ${configVersion}, version: ${version} }`
+  console.log(logMessage)
   updateLoadingInfoMessage(logMessage)
-  return await get(`/obp/${configVersion}/resource-docs/${configVersion}/obp`)
+  return await get(`/obp/${configVersion}/resource-docs/${version}/obp`)
 }
 
 export function getGroupedResourceDocs(version: string, docs: any): Promise<any> {

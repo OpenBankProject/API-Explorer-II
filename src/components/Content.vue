@@ -34,34 +34,36 @@ let apiCollectionsEndpoint = inject('OBP-MyCollectionsEndpoint')!
 
 const setOperationDetails = (id: string, version: string): void => {
   const operation = getOperationDetails(version, id, resourceDocs)
-  description.value = operation.description
-  summary.value = operation.summary
+  description.value = operation?.description
+  summary.value = operation?.summary
 }
 
 const setPager = (id: string): void => {
-  const target = document.getElementById(id).parentElement
-  const prevElement = target.previousSibling
-  const nextElement = target.nextSibling
-  const active = document.querySelector('.active-api-router-tab')
-  if (active) active.classList.remove('active-api-router-tab')
-  target.classList.add('active-api-router-tab')
-  if (prevElement.className && prevElement.className.startsWith('api-router-tab')) {
-    const prevItem = prevElement.children.item(0)
-    prev.value['title'] = prevItem.text
-    prev.value['id'] = prevItem.id
-    prev.value['version'] = version
-    displayPrev.value = true
-  } else {
-    displayPrev.value = false
-  }
-  if (nextElement.className && nextElement.className.startsWith('api-router-tab')) {
-    const nextItem = nextElement.children.item(0)
-    next.value['title'] = nextItem.text
-    next.value['id'] = nextItem.id
-    next.value['version'] = version
-    displayNext.value = true
-  } else {
-    displayNext.value = false
+  const target = document.getElementById(id)?.parentElement
+  if (target) {
+    const prevElement = target.previousSibling
+    const nextElement = target.nextSibling
+    const active = document.querySelector('.active-api-router-tab')
+    if (active) active.classList.remove('active-api-router-tab')
+    target.classList.add('active-api-router-tab')
+    if (prevElement.className && prevElement.className.startsWith('api-router-tab')) {
+      const prevItem = prevElement.children.item(0)
+      prev.value['title'] = prevItem.text
+      prev.value['id'] = prevItem.id
+      prev.value['version'] = version
+      displayPrev.value = true
+    } else {
+      displayPrev.value = false
+    }
+    if (nextElement.className && nextElement.className.startsWith('api-router-tab')) {
+      const nextItem = nextElement.children.item(0)
+      next.value['title'] = nextItem.text
+      next.value['id'] = nextItem.id
+      next.value['version'] = version
+      displayNext.value = true
+    } else {
+      displayNext.value = false
+    }
   }
 }
 
@@ -148,22 +150,20 @@ onBeforeRouteUpdate(async (to) => {
         <el-divider class="divider" />
         <el-row>
           <el-col :span="12" class="pager-left">
-            <el-icon v-show="displayPrev"><ArrowLeftBold /></el-icon>
-            <RouterLink
-              v-show="displayPrev"
-              class="pager-router-link"
-              :to="{ name: 'api', params: { id: prev.id }, query: { version: prev.version } }"
-              >{{ prev.title }}</RouterLink
-            >
+            <el-icon v-show="displayPrev">
+              <ArrowLeftBold />
+            </el-icon>
+            <RouterLink v-show="displayPrev" class="pager-router-link"
+              :to="{ name: 'api', params: { id: prev.id }, query: { version: prev.version } }">{{ prev.title }}
+            </RouterLink>
           </el-col>
           <el-col :span="12" class="pager-right">
-            <RouterLink
-              v-show="displayNext"
-              class="pager-router-link"
-              :to="{ name: 'api', params: { id: next.id }, query: { version: next.version } }"
-              >{{ next.title }}</RouterLink
-            >
-            <el-icon v-show="displayNext"><ArrowRightBold /></el-icon>
+            <RouterLink v-show="displayNext" class="pager-router-link"
+              :to="{ name: 'api', params: { id: next.id }, query: { version: next.version } }">{{ next.title }}
+            </RouterLink>
+            <el-icon v-show="displayNext">
+              <ArrowRightBold />
+            </el-icon>
           </el-col>
         </el-row>
       </el-footer>
@@ -177,15 +177,19 @@ main {
   color: #39455f;
   font-family: 'Roboto';
 }
+
 span {
   font-size: 28px;
 }
+
 div {
   font-size: 14px;
 }
+
 .content :deep(strong) {
   font-family: 'Roboto';
 }
+
 .content :deep(p a) {
   line-height: 28px;
   padding: 5px;
@@ -197,38 +201,45 @@ div {
   border-radius: 5px;
   background-color: #eef0f4;
 }
+
 .pager {
   position: absolute;
   bottom: 0;
 }
+
 .pager-left {
   display: flex;
   justify-content: left;
   align-items: center;
 }
+
 .pager-right {
   display: flex;
   justify-content: right;
   align-items: center;
 }
+
 .footer {
   max-height: 30px;
 }
+
 .divider {
   margin-top: -15px;
 }
+
 .pager-router-link {
   font-family: 'Roboto';
   text-decoration: none;
   color: #39455f;
 }
+
 .pager-router-link:hover,
 .pager-left:hover,
 .pager-right:hover {
   color: v-bind(summaryPagerLinksColor);
 }
+
 .favorite {
   cursor: pointer;
   line-height: 1;
-}
-</style>
+}</style>
