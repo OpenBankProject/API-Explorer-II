@@ -4,7 +4,7 @@ import { updateLoadingInfoMessage } from './common-functions'
 
 // Get Resource Docs
 export async function getOBPResourceDocs(version: string): Promise<any> {
-  const logMessage = `Loading API { standard: ${configVersion}, version: ${version} }`
+  const logMessage = `Loading API ${version}`
   console.log(logMessage)
   updateLoadingInfoMessage(logMessage)
   return await get(`/obp/${configVersion}/resource-docs/${version}/obp`)
