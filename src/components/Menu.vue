@@ -23,16 +23,14 @@ const updateStatus = (event: any) => {
       <span id="selected-api-version" class="host">OBPv5.1.0</span>
     </el-col>
     <el-col :span="14" class="menu-right">
-      <span class="host"><v-chip>App Version: {{ version }}</v-chip></span>
+      <span class="host">App Version: {{ version }}</span>
       &nbsp;&nbsp;
-      <v-chip>
-        <span class="host"
+      <span class="host"
         ><span id="backend-status" @click="updateStatus" >API Host: </span>
         <a :href="host">
           {{ host }}
         </a>
       </span>
-      </v-chip>
       &nbsp;&nbsp;
       <el-dropdown class="menu-right" @command="handleLocale">
         <span class="el-dropdown-link">
