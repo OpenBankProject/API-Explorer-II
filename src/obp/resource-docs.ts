@@ -24,7 +24,7 @@ export function getOperationDetails(version: string, operation_id: string, docs:
   return docs[version].resource_docs.filter((doc: any) => doc.operation_id === operation_id)[0]
 }
 
-export async function cacheDoc(resourceDocsCache: any): Promise<any> {
+export async function cacheDoc(cacheStorageOfResourceDocs: any): Promise<any> {
   const apiVersions = await getOBPAPIVersions()
   if (apiVersions) {
     const scannedAPIVersions = apiVersions.scanned_api_versions
@@ -40,35 +40,35 @@ export async function cacheDoc(resourceDocsCache: any): Promise<any> {
       }
       updateLoadingInfoMessage(logMessage)
     }
-    await resourceDocsCache.put('/', new Response(JSON.stringify(resourceDocsMapping)))
+    await cacheStorageOfResourceDocs.put('/', new Response(JSON.stringify(resourceDocsMapping)))
     return resourceDocsMapping
   } else {
     const resourceDocs = { ['OBP' + configVersion]: await getOBPResourceDocs(configVersion) }
-    await resourceDocsCache.put('/', new Response(JSON.stringify(resourceDocs)))
+    await cacheStorageOfResourceDocs.put('/', new Response(JSON.stringify(resourceDocs)))
     return resourceDocs
   }
 }
 
-async function getCacheDoc(resourceDocsCache: any): Promise<any> {
-  return await cacheDoc(resourceDocsCache)
+async function getCacheDoc(cacheStorageOfResourceDocs: any): Promise<any> {
+  return await cacheDoc(cacheStorageOfResourceDocs)
 }
 
 export async function cache(
-  resourceDocsCache: any,
-  resourceDocsCacheResponse: any,
+  cachedStorage: any,
+  cachedResponse: any,
   worker: any
 ): Promise<any> {
   try {
     worker.postMessage('update-resource-docs')
-    const resourceDocs = await resourceDocsCacheResponse.json()
-    const groupedDocs = getGroupedResourceDocs('OBP' + configVersion, resourceDocs)
-    return { resourceDocs, groupedDocs }
+    const resourceDocs = await cachedResponse.json()
+    const groupedResourceDocs = getGroupedResourceDocs('OBP' + configVersion, resourceDocs)
+    return { resourceDocs, groupedDocs: groupedResourceDocs }
   } catch (error) {
     console.warn('No resource docs cache or malformed cache.')
     console.log('Caching resource docs...')
     const isServerActive = await isServerUp()
     if (!isServerActive) throw new Error('API Server is not responding.')
-    const resourceDocs = await getCacheDoc(resourceDocsCache)
+    const resourceDocs = await getCacheDoc(cachedStorage)
     const groupedDocs = getGroupedResourceDocs('OBP' + configVersion, resourceDocs)
     return { resourceDocs, groupedDocs }
   }

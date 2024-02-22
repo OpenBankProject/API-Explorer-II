@@ -24,7 +24,7 @@ export function getGroupedMessageDocs(docs: any): Promise<any> {
   }, {})
 }
 
-export async function cacheDoc(messageDocsCache: any): Promise<any> {
+export async function cacheDoc(cacheStorageOfMessageDocs: any): Promise<any> {
   const messageDocs = await connectors.reduce(async (agroup: any, connector: any) => {
     const logMessage = `Caching message docs { connector: ${connector} }`
     console.log(logMessage)
@@ -36,27 +36,27 @@ export async function cacheDoc(messageDocsCache: any): Promise<any> {
     }
     return group
   }, Promise.resolve({}))
-  await messageDocsCache.put('/', new Response(JSON.stringify(messageDocs)))
+  await cacheStorageOfMessageDocs.put('/', new Response(JSON.stringify(messageDocs)))
   return messageDocs
 }
 
-async function getCacheDoc(messageDocsCache: any): Promise<any> {
-  return await cacheDoc(messageDocsCache)
+async function getCacheDoc(cacheStorageOfMessageDocs: any): Promise<any> {
+  return await cacheDoc(cacheStorageOfMessageDocs)
 }
 
 export async function cache(
-  messageDocsCache: any,
-  messageDocsCacheResponse: any,
+  cacheStorage: any,
+  cachedResponse: any,
   worker: any
 ): Promise<any> {
   try {
     worker.postMessage('update-message-docs')
-    return await messageDocsCacheResponse.json()
+    return await cachedResponse.json()
   } catch (error) {
     console.warn('No message docs cache or malformed cache.')
     console.log('Caching message docs...')
     const isServerActive = await isServerUp()
     if (!isServerActive) throw new Error('API Server is not responding.')
-    return await getCacheDoc(messageDocsCache)
+    return await getCacheDoc(cacheStorage)
   }
 }

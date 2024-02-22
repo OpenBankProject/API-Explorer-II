@@ -52,30 +52,38 @@ import '@fontsource/roboto/700.css'
 
 async function setupData(app: App<Element>, worker: Worker) {
   try {
-    const resourceDocsCache = await caches.open('obp-resource-docs-cache')
-    const resourceDocsCacheResponse = await resourceDocsCache.match('/')
-    const messageDocsCache = await caches.open('obp-message-docs-cache')
-    const messageDocsCacheResponse = await messageDocsCache.match('/')
+    // 'open': Returns a Promise that resolves to the Cache object matching the cacheName(obp-resource-docs-cache) (a new cache is created if it doesn't already exist.)
+    const cacheStorageOfResourceDocs = await caches.open('obp-resource-docs-cache') // Please note: The global 'caches' read-only property returns the 'CacheStorage' object associated with the current context.
+    // 'match': Checks if a given Request is a key in any of the Cache objects that the CacheStorage object tracks, and returns a Promise that resolves to that match.
+    const cachedResponseOfResourceDocs = await cacheStorageOfResourceDocs.match('/')
+    // 'open': Returns a Promise that resolves to the Cache object matching the cacheName(obp-message-docs-cache) (a new cache is created if it doesn't already exist.)
+    const cacheStorageOfMessageDocs = await caches.open('obp-message-docs-cache') // Please note: The global 'caches' read-only property returns the 'CacheStorage' object associated with the current context.
+    // 'match': Checks if a given Request is a key in any of the Cache objects that the CacheStorage object tracks, and returns a Promise that resolves to that match.
+    const cachedResponseOfMessageDocs = await cacheStorageOfMessageDocs.match('/')
 
-    //Listen to Web worker
+    // Listen to Web worker
     worker.onmessage = async (event) => {
-      //Update cache docs data in the background
+      // Update cache docs data in the background
       if (event.data === 'update-resource-docs') {
-        await cacheResourceDocsDoc(resourceDocsCache)
+        await cacheResourceDocsDoc(cacheStorageOfResourceDocs)
         console.log('Resource Docs cache was updated.')
       }
       if (event.data === 'update-message-docs') {
-        await cacheMessageDocsDoc(messageDocsCache)
+        await cacheMessageDocsDoc(cacheStorageOfMessageDocs)
         console.log('Message Docs cache was updated.')
       }
     }
 
     const { resourceDocs, groupedDocs } = await cacheResourceDocs(
-      resourceDocsCache,
-      resourceDocsCacheResponse,
+      cacheStorageOfResourceDocs,
+      cachedResponseOfResourceDocs,
       worker
     )
-    const messageDocs = await cacheMessageDocs(messageDocsCache, messageDocsCacheResponse, worker)
+    const messageDocs = await cacheMessageDocs(
+      cacheStorageOfMessageDocs,
+      cachedResponseOfMessageDocs,
+      worker
+    )
 
     app.provide('OBP-ResourceDocs', resourceDocs)
     app.provide('OBP-APIActiveVersions', Object.keys(resourceDocs).sort())
