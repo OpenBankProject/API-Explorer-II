@@ -14,12 +14,13 @@ import { setTabActive, initializeAPICollections } from './SearchNav.vue'
 import { summaryPagerLinksColor as summaryPagerLinksColorSetting } from '../obp/style-setting'
 import { version as configVersion } from '../obp'
 import { getGroupedResourceDocs } from '../obp/resource-docs'
+import { obpMyCollectionsEndpointKey, obpResourceDocsKey } from '@/obp/keys'
 
 const route = useRoute()
 const obpVersion = 'OBP' + configVersion
 const description = ref('')
 const summary = ref('')
-const resourceDocs = inject('OBP-ResourceDocs')
+const resourceDocs = inject(obpResourceDocsKey)
 const docs = getGroupedResourceDocs(obpVersion, resourceDocs)
 const displayPrev = ref(true)
 const displayNext = ref(true)
@@ -30,7 +31,7 @@ const summaryPagerLinksColor = ref(summaryPagerLinksColorSetting)
 let routeId = ''
 let version = obpVersion
 let isFavorite = false
-let apiCollectionsEndpoint = inject('OBP-MyCollectionsEndpoint')!
+let apiCollectionsEndpoint = inject(obpMyCollectionsEndpointKey)!
 
 const setOperationDetails = (id: string, version: string): void => {
   const operation = getOperationDetails(version, id, resourceDocs)
@@ -102,7 +103,7 @@ const createDeleteFavorite = async (): void => {
     isFavorite = true
     apiCollectionsEndpoint.push(routeId)
   }
-  provide('OBP-MyCollectionsEndpoint', apiCollectionsEndpoint)
+  provide(obpMyCollectionsEndpointKey, apiCollectionsEndpoint)
   await initializeAPICollections()
   setTabActive(routeId)
 }

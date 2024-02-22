@@ -31,14 +31,14 @@ export function updateServerStatus() {
         oElem.className = 'server-is-offline'
       }
     })
-  updateCacheSizeStatus()
 }
 
-export function updateCacheSizeStatus() {
-  navigator.storage.estimate().then((estimate) => {
+export async function getCacheStorageInfo() {
+  const message = await navigator.storage.estimate().then((estimate) => {
     const percent = ((estimate.usage / estimate.quota) * 100).toFixed(2)
     const quota = (estimate.quota / 1024 / 1024).toFixed(2) + 'MB'
     const message = `You're currently using about ${percent}% of your estimated storage quota ${quota}`
-    console.log(message)
-  })
+    return message
+  }).catch((error) => {return `Cannot estimate Cache Storage quota. ${error}`})
+  return message
 }

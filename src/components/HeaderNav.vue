@@ -10,6 +10,7 @@ import {
   headerLinksHoverColor as headerLinksHoverColorSetting,
   headerLinksBackgroundColor as headerLinksBackgroundColorSetting
 } from '../obp/style-setting'
+import { obpApiActiveVersionsKey, obpGroupedMessageDocsKey, obpMyCollectionsEndpointKey } from '@/obp/keys'
 
 const route = useRoute()
 const router = useRouter()
@@ -17,8 +18,8 @@ const obpApiHost = ref(import.meta.env.VITE_OBP_API_HOST)
 const obpApiManagerHost = ref(import.meta.env.VITE_OBP_API_MANAGER_HOST)
 const loginUsername = ref('')
 const logoffurl = ref('')
-const obpApiVersions = ref(inject('OBP-APIActiveVersions')!)
-const obpMessageDocs = ref(Object.keys(inject('OBP-GroupedMessageDocs')!))
+const obpApiVersions = ref(inject(obpApiActiveVersionsKey)!)
+const obpMessageDocs = ref(Object.keys(inject(obpGroupedMessageDocsKey)!))
 const isShowLoginButton = ref(true)
 const isShowLogOffButton = ref(false)
 const logo = ref(logoSource)

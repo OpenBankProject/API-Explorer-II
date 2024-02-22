@@ -3,10 +3,11 @@ import { reactive, ref, onBeforeMount, onMounted, inject, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import SearchNav from '../components/MessageDocsSearchNav.vue'
 import { connectors } from '../obp/message-docs'
+import { obpGroupedMessageDocsKey } from '@/obp/keys';
 
 let connector = connectors[0]
 const route = useRoute()
-const groupedMessageDocs = ref(inject('OBP-GroupedMessageDocs')!)
+const groupedMessageDocs = ref(inject(obpGroupedMessageDocsKey)!)
 const messageDocs = ref({})
 
 onBeforeMount(() => {

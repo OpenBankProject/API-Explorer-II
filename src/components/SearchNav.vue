@@ -5,6 +5,7 @@ import { useRoute } from 'vue-router'
 import { version, getMyAPICollections, getMyAPICollectionsEndpoint } from '../obp'
 import { getGroupedResourceDocs } from '../obp/resource-docs'
 import { searchLinksColor as searchLinksColorSetting } from '../obp/style-setting'
+import { obpResourceDocsKey } from '@/obp/keys'
 const operationIdTitle = {}
 const resourceDocs = ref({})
 const docs = ref({})
@@ -54,7 +55,7 @@ export const initializeAPICollections = async () => {
 const route = useRoute()
 let selectedVersion = 'OBP' + version
 onBeforeMount(async () => {
-  resourceDocs.value = inject('OBP-ResourceDocs')!
+  resourceDocs.value = inject(obpResourceDocsKey)!
   docs.value = getGroupedResourceDocs(selectedVersion, resourceDocs.value)
   groups.value = JSON.parse(JSON.stringify(docs.value))
   activeKeys.value = Object.keys(groups.value)

@@ -3,10 +3,11 @@ import { ArrowDown } from '@element-plus/icons-vue'
 import { searchLinksColor as searchLinksColorSetting } from '../obp/style-setting'
 import { inject, ref } from 'vue'
 import { updateServerStatus } from '@/obp/common-functions';
+import { obpApiHostKey } from '@/obp/keys';
 
 const version = ref(__APP_VERSION__)
 const i18n = inject('i18n')
-const host = inject('OBP-API-Host')
+const host = inject(obpApiHostKey)
 const searchLinksColor = ref(searchLinksColorSetting)
 const handleLocale = (command: string) => {
   i18n.global.locale.value = command
