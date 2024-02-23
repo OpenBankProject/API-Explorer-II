@@ -9,7 +9,7 @@ import { languages, defaultLocale } from './language'
 
 import { cache as cacheResourceDocs, cacheDoc as cacheResourceDocsDoc } from './obp/resource-docs'
 import { cache as cacheMessageDocs, cacheDoc as cacheMessageDocsDoc } from './obp/message-docs'
-import { version, getMyAPICollections, getMyAPICollectionsEndpoint } from './obp'
+import { OBP_API_VERSION, getMyAPICollections, getMyAPICollectionsEndpoint } from './obp'
 import { getOBPGlossary } from './obp/glossary'
 
 import 'element-plus/dist/index.css'
@@ -17,7 +17,9 @@ import './assets/main.css'
 import '@fontsource/roboto/300.css'
 import '@fontsource/roboto/400.css'
 import '@fontsource/roboto/700.css'
-;(async () => {
+import { obpApiActiveVersionsKey, obpApiHostKey, obpGlossaryKey, obpGroupedMessageDocsKey, obpGroupedResourceDocsKey, obpMyCollectionsEndpointKey, obpResourceDocsKey } from './obp/keys'
+import { getCacheStorageInfo } from './obp/common-functions'
+(async () => {
   const app = createApp(App)
   const router = await appRouter()
   try {
@@ -67,6 +69,8 @@ async function setupData(app: App<Element>, worker: Worker) {
       if (event.data === 'update-resource-docs') {
         await cacheResourceDocsDoc(cacheStorageOfResourceDocs)
         console.log('Resource Docs cache was updated.')
+        const storageInfo = await getCacheStorageInfo()
+        console.log(storageInfo)
       }
       if (event.data === 'update-message-docs') {
         await cacheMessageDocsDoc(cacheStorageOfMessageDocs)
@@ -85,13 +89,16 @@ async function setupData(app: App<Element>, worker: Worker) {
       worker
     )
 
-    app.provide('OBP-ResourceDocs', resourceDocs)
-    app.provide('OBP-APIActiveVersions', Object.keys(resourceDocs).sort())
-    app.provide('OBP-GroupedResourceDocs', groupedDocs)
-    app.provide('OBP-GroupedMessageDocs', messageDocs)
-    app.provide('OBP-API-Host', import.meta.env.VITE_OBP_API_HOST)
+    // Provide data to a component's descendants
+    // App-level provides are available to all components rendered in the app
+    // Info: https://vuejs.org/guide/components/provide-inject.html
+    app.provide(obpResourceDocsKey, resourceDocs)
+    app.provide(obpApiActiveVersionsKey, Object.keys(resourceDocs).sort())
+    app.provide(obpGroupedResourceDocsKey, groupedDocs)
+    app.provide(obpGroupedMessageDocsKey, messageDocs)
+    app.provide(obpApiHostKey, import.meta.env.VITE_OBP_API_HOST)
     const glossary = await getOBPGlossary()
-    app.provide('OBP-Glossary', glossary)
+    app.provide(obpGlossaryKey, glossary)
 
     const apiCollections = (await getMyAPICollections()).api_collections
     if (apiCollections && apiCollections.length > 0) {
@@ -100,18 +107,18 @@ async function setupData(app: App<Element>, worker: Worker) {
       //  const apiCollectionsEndpoint = (
       //    await getMyAPICollectionsEndpoint(api_collection_name)
       //  ).api_collection_endpoints.map((api) => api.operation_id)
-      //  app.provide('OBP-MyCollectionsEndpoint', apiCollectionsEndpoint)
+      //  app.provide(obpMyCollectionsEndpointKey, apiCollectionsEndpoint)
       //}
       const apiCollectionsEndpoint = (
         await getMyAPICollectionsEndpoint('Favourites')
       ).api_collection_endpoints.map((api) => api.operation_id)
-      app.provide('OBP-MyCollectionsEndpoint', apiCollectionsEndpoint)
+      app.provide(obpMyCollectionsEndpointKey, apiCollectionsEndpoint)
     } else {
-      app.provide('OBP-MyCollectionsEndpoint', undefined)
+      app.provide(obpMyCollectionsEndpointKey, undefined)
     }
     return true
   } catch (error) {
-    app.provide('OBP-APIActiveVersions', [version])
+    app.provide(obpApiActiveVersionsKey, [OBP_API_VERSION])
     return false
   }
 }

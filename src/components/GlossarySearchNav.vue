@@ -3,6 +3,7 @@ import { reactive, ref, onBeforeMount, inject } from 'vue'
 import { Search } from '@element-plus/icons-vue'
 import { useRoute } from 'vue-router'
 import { searchLinksColor as searchLinksColorSetting } from '../obp/style-setting'
+import { obpGlossaryKey } from '@/obp/keys';
 
 const route = useRoute()
 const activeKeys = ref([])
@@ -17,7 +18,7 @@ const alphabetCharCodes = Array.from(Array(26)).map((e, i) => i + 65)
 alphabet.value = alphabetCharCodes.map((x) => String.fromCharCode(x))
 
 onBeforeMount(() => {
-  const glossary = inject('OBP-Glossary')!
+  const glossary = inject(obpGlossaryKey)!
   for (const item of glossary.glossary_items) {
     if (!activeKeys.value.includes(item.title)) {
       activeKeys.value.push(item.title)

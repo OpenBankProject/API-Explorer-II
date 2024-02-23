@@ -3,11 +3,12 @@ import { ref, reactive, inject, onBeforeMount } from 'vue'
 import { onBeforeRouteUpdate, useRoute } from 'vue-router'
 import { getOperationDetails } from '../obp/resource-docs'
 import type { ElNotification, FormInstance } from 'element-plus'
-import { version, get, create, update, discard, createEntitlement, getCurrentUser } from '../obp'
+import { OBP_API_VERSION, get, create, update, discard, createEntitlement, getCurrentUser } from '../obp'
 import { getGroupedResourceDocs } from '../obp/resource-docs'
+import { obpResourceDocsKey } from '@/obp/keys'
 
 const elMessageDuration = 5500
-const configVersion = 'OBP' + version
+const configVersion = 'OBP' + OBP_API_VERSION
 const url = ref('')
 const roleName = ref('')
 const method = ref('')
@@ -25,7 +26,7 @@ const showPossibleErrors = ref(true)
 const showConnectorMethods = ref(true)
 const isUserLogon = ref(true)
 const type = ref('')
-const resourceDocs = inject('OBP-ResourceDocs')
+const resourceDocs = inject(obpResourceDocsKey)
 const docs = getGroupedResourceDocs(configVersion, resourceDocs)
 const footNote = ref({
   operationId: '',
@@ -42,8 +43,8 @@ const roleForm = reactive({})
 
 const setOperationDetails = (id: string, version: string): void => {
   const operation = getOperationDetails(version, id, resourceDocs)
-  url.value = operation.specified_url
-  method.value = operation.request_verb
+  url.value = operation?.specified_url
+  method.value = operation?.request_verb
   exampleRequestBody.value = JSON.stringify(operation.example_request_body)
   requiredRoles.value = operation.roles || []
   possibleErrors.value = operation.error_response_bodies

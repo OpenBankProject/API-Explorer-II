@@ -4,10 +4,11 @@ import { Search } from '@element-plus/icons-vue'
 import { useRoute } from 'vue-router'
 import { searchLinksColor as searchLinksColorSetting } from '../obp/style-setting'
 import { connectors } from '../obp/message-docs'
+import { obpGroupedMessageDocsKey } from '@/obp/keys'
 
 let connector = connectors[0]
 const route = useRoute()
-const groupedMessageDocs = ref(inject('OBP-GroupedMessageDocs')!)
+const groupedMessageDocs = ref(inject(obpGroupedMessageDocsKey)!)
 const docs = ref({})
 const groups = ref({})
 const sortedKeys = ref([])

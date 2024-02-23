@@ -1,20 +1,20 @@
-import { version as configVersion, get, isServerUp } from '../obp'
+import { OBP_API_VERSION, get, isServerUp } from '../obp'
 import { getOBPAPIVersions } from '../obp/api-version'
 import { updateLoadingInfoMessage } from './common-functions'
 
 // Get Resource Docs
-export async function getOBPResourceDocs(version: string): Promise<any> {
-  const logMessage = `Loading API ${version}`
+export async function getOBPResourceDocs(apiStandardAndVersion: string): Promise<any> {
+  const logMessage = `Loading API ${apiStandardAndVersion}`
   console.log(logMessage)
   updateLoadingInfoMessage(logMessage)
-  return await get(`/obp/${configVersion}/resource-docs/${version}/obp`)
+  return await get(`/obp/${OBP_API_VERSION}/resource-docs/${apiStandardAndVersion}/obp`)
 }
 
-export function getGroupedResourceDocs(version: string, docs: any): Promise<any> {
-  if (version === undefined || docs === undefined) return Promise.resolve<any>({})
+export function getGroupedResourceDocs(apiStandardAndVersion: string, docs: any): Promise<any> {
+  if (apiStandardAndVersion === undefined || docs === undefined) return Promise.resolve<any>({})
 
-  return docs[version].resource_docs.reduce((values: any, doc: any) => {
-    const tag = doc.tags[0]
+  return docs[apiStandardAndVersion].resource_docs.reduce((values: any, doc: any) => {
+    const tag = doc.tags[0] // Group by the first tag at resorce doc
     ;(values[tag] = values[tag] || []).push(doc)
     return values
   }, {})
@@ -43,7 +43,7 @@ export async function cacheDoc(cacheStorageOfResourceDocs: any): Promise<any> {
     await cacheStorageOfResourceDocs.put('/', new Response(JSON.stringify(resourceDocsMapping)))
     return resourceDocsMapping
   } else {
-    const resourceDocs = { ['OBP' + configVersion]: await getOBPResourceDocs(configVersion) }
+    const resourceDocs = { ['OBP' + OBP_API_VERSION]: await getOBPResourceDocs(OBP_API_VERSION) }
     await cacheStorageOfResourceDocs.put('/', new Response(JSON.stringify(resourceDocs)))
     return resourceDocs
   }
@@ -61,7 +61,7 @@ export async function cache(
   try {
     worker.postMessage('update-resource-docs')
     const resourceDocs = await cachedResponse.json()
-    const groupedResourceDocs = getGroupedResourceDocs('OBP' + configVersion, resourceDocs)
+    const groupedResourceDocs = getGroupedResourceDocs('OBP' + OBP_API_VERSION, resourceDocs)
     return { resourceDocs, groupedDocs: groupedResourceDocs }
   } catch (error) {
     console.warn('No resource docs cache or malformed cache.')
@@ -69,7 +69,7 @@ export async function cache(
     const isServerActive = await isServerUp()
     if (!isServerActive) throw new Error('API Server is not responding.')
     const resourceDocs = await getCacheDoc(cachedStorage)
-    const groupedDocs = getGroupedResourceDocs('OBP' + configVersion, resourceDocs)
+    const groupedDocs = getGroupedResourceDocs('OBP' + OBP_API_VERSION, resourceDocs)
     return { resourceDocs, groupedDocs }
   }
 }

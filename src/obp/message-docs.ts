@@ -1,4 +1,4 @@
-import { version, get, isServerUp } from '../obp'
+import { OBP_API_VERSION, get, isServerUp } from '../obp'
 import { updateLoadingInfoMessage } from './common-functions'
 
 export const connectors = [
@@ -13,7 +13,7 @@ export async function getOBPMessageDocs(item: string): Promise<any> {
   const logMessage = `Loading message docs { connector: ${item} }`
   console.log(logMessage)
   updateLoadingInfoMessage(logMessage)
-  return await get(`obp/${version}/message-docs/${item}`)
+  return await get(`obp/${OBP_API_VERSION}/message-docs/${item}`)
 }
 
 export function getGroupedMessageDocs(docs: any): Promise<any> {
