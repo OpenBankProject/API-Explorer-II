@@ -9,7 +9,7 @@ import { languages, defaultLocale } from './language'
 
 import { cache as cacheResourceDocs, cacheDoc as cacheResourceDocsDoc } from './obp/resource-docs'
 import { cache as cacheMessageDocs, cacheDoc as cacheMessageDocsDoc } from './obp/message-docs'
-import { version, getMyAPICollections, getMyAPICollectionsEndpoint } from './obp'
+import { OBP_API_VERSION, getMyAPICollections, getMyAPICollectionsEndpoint } from './obp'
 import { getOBPGlossary } from './obp/glossary'
 
 import 'element-plus/dist/index.css'
@@ -118,7 +118,7 @@ async function setupData(app: App<Element>, worker: Worker) {
     }
     return true
   } catch (error) {
-    app.provide(obpApiActiveVersionsKey, [version])
+    app.provide(obpApiActiveVersionsKey, [OBP_API_VERSION])
     return false
   }
 }

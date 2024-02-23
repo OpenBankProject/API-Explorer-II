@@ -5,9 +5,9 @@ import { inject, ref } from 'vue'
 import { updateServerStatus } from '@/obp/common-functions';
 import { obpApiHostKey } from '@/obp/keys';
 
-const version = ref(__APP_VERSION__)
+const APP_VERSION = ref(__APP_VERSION__)
 const i18n = inject('i18n')
-const host = inject(obpApiHostKey)
+const OBP_API_HOST = inject(obpApiHostKey)
 const searchLinksColor = ref(searchLinksColorSetting)
 const handleLocale = (command: string) => {
   i18n.global.locale.value = command
@@ -24,12 +24,12 @@ const updateStatus = (event: any) => {
       <span id="selected-api-version" class="host">OBPv5.1.0</span>
     </el-col>
     <el-col :span="14" class="menu-right">
-      <span class="host">App Version: {{ version }}</span>
+      <span class="host">App Version: {{ APP_VERSION }}</span>
       &nbsp;&nbsp;
       <span class="host"
         ><span id="backend-status" @click="updateStatus" >API Host: </span>
-        <a :href="host">
-          {{ host }}
+        <a :href="OBP_API_HOST">
+          {{ OBP_API_HOST }}
         </a>
       </span>
       &nbsp;&nbsp;

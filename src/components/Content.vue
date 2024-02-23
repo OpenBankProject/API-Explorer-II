@@ -12,12 +12,12 @@ import {
 } from '../obp'
 import { setTabActive, initializeAPICollections } from './SearchNav.vue'
 import { summaryPagerLinksColor as summaryPagerLinksColorSetting } from '../obp/style-setting'
-import { version as configVersion } from '../obp'
+import { OBP_API_VERSION } from '../obp'
 import { getGroupedResourceDocs } from '../obp/resource-docs'
 import { obpMyCollectionsEndpointKey, obpResourceDocsKey } from '@/obp/keys'
 
 const route = useRoute()
-const obpVersion = 'OBP' + configVersion
+const obpVersion = 'OBP' + OBP_API_VERSION
 const description = ref('')
 const summary = ref('')
 const resourceDocs = inject(obpResourceDocsKey)

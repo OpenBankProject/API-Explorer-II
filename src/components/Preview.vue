@@ -3,12 +3,12 @@ import { ref, reactive, inject, onBeforeMount } from 'vue'
 import { onBeforeRouteUpdate, useRoute } from 'vue-router'
 import { getOperationDetails } from '../obp/resource-docs'
 import type { ElNotification, FormInstance } from 'element-plus'
-import { version, get, create, update, discard, createEntitlement, getCurrentUser } from '../obp'
+import { OBP_API_VERSION, get, create, update, discard, createEntitlement, getCurrentUser } from '../obp'
 import { getGroupedResourceDocs } from '../obp/resource-docs'
 import { obpResourceDocsKey } from '@/obp/keys'
 
 const elMessageDuration = 5500
-const configVersion = 'OBP' + version
+const configVersion = 'OBP' + OBP_API_VERSION
 const url = ref('')
 const roleName = ref('')
 const method = ref('')

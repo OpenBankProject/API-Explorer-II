@@ -2,7 +2,7 @@
 import { reactive, ref, watch, onBeforeMount, onMounted, inject } from 'vue'
 import { Search, Star } from '@element-plus/icons-vue'
 import { useRoute } from 'vue-router'
-import { version, getMyAPICollections, getMyAPICollectionsEndpoint } from '../obp'
+import { OBP_API_VERSION, getMyAPICollections, getMyAPICollectionsEndpoint } from '../obp'
 import { getGroupedResourceDocs } from '../obp/resource-docs'
 import { searchLinksColor as searchLinksColorSetting } from '../obp/style-setting'
 import { obpResourceDocsKey } from '@/obp/keys'
@@ -53,7 +53,7 @@ export const initializeAPICollections = async () => {
 
 <script setup lang="ts">
 const route = useRoute()
-let selectedVersion = 'OBP' + version
+let selectedVersion = 'OBP' + OBP_API_VERSION
 onBeforeMount(async () => {
   resourceDocs.value = inject(obpResourceDocsKey)!
   docs.value = getGroupedResourceDocs(selectedVersion, resourceDocs.value)
