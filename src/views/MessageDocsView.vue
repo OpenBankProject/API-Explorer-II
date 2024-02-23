@@ -42,46 +42,38 @@ const setDoc = () => {
             <el-backtop :right="100" :bottom="100" target="main" />
             <div v-for="(group, key) of messageDocs" :key="key">
               <div v-for="(value, key) of group" :key="value">
+                <el-divider content-position="left">{{value.process}}</el-divider>
                 <a v-bind:href="`#${value.process}`" :id="value.process">
-                  <b>{{ value.description }}</b>
+                  <h2>{{ value.description }}</h2>
                 </a>
-                <br /><br />
-                <el-descriptions direction="vertical" :column="3" border>
-                  <el-descriptions-item label="Kafka/Akka">
-                    <b>Topic</b>
-                  </el-descriptions-item>
-                  <el-descriptions-item label="Outbound">
+                <el-descriptions direction="vertical" :column="1" border>
+                  <el-descriptions-item label="Outbound Topic">
                     {{ value.outbound_topic }}
                   </el-descriptions-item>
-                  <el-descriptions-item label="Inbound">
+                  <el-descriptions-item label="Inbound Topic">
                     {{ value.inbound_topic }}
                   </el-descriptions-item>
-                  <el-descriptions-item>
-                    <b>Message</b>
-                  </el-descriptions-item>
-                  <el-descriptions-item>
+                  <el-descriptions-item label="Outbound Message">
                     <pre>{{ JSON.stringify(value.example_outbound_message, null, 4) }}</pre>
                   </el-descriptions-item>
-                  <el-descriptions-item>
+                  <el-descriptions-item label="Inbound Message">
                     <pre>{{ JSON.stringify(value.example_inbound_message, null, 4) }}</pre>
                   </el-descriptions-item>
-                  <el-descriptions-item>
-                    <b>Required Fields</b>
+                  <el-descriptions-item label="Required Fields">
+                    <pre>{{ JSON.stringify(value.requiredFieldInfo, null, 4) }}</pre>
                   </el-descriptions-item>
-                  <el-descriptions-item> </el-descriptions-item>
-                  <el-descriptions-item> </el-descriptions-item>
-                  <el-descriptions-item>
-                    <b>Dependent Endpoints</b>
-                  </el-descriptions-item>
-                  <el-descriptions-item>
+                  <el-descriptions-item label="Dependent Endpoints">
                     <ul>
                       <li v-for="(endpoint, key) of value.dependent_endpoints">
                         {{ endpoint.version }}: {{ endpoint.name }}
                       </li>
                     </ul>
                   </el-descriptions-item>
-                  <el-descriptions-item> </el-descriptions-item>
                 </el-descriptions>
+                <el-divider content-position="right">{{value.process}}</el-divider>
+                <br />
+                <br />
+                <br />
                 <br />
               </div>
             </div>
@@ -96,28 +88,35 @@ const setDoc = () => {
 .main {
   max-height: 90vh;
 }
+
 template {
   overflow: auto;
   max-height: 900px;
 }
+
 main {
   margin: 25px;
   color: #39455f;
   font-family: 'Roboto';
 }
+
 span {
   font-size: 28px;
 }
+
 div {
   font-size: 14px;
 }
+
 .content :deep(strong) {
   font-family: 'Roboto';
 }
+
 a {
   text-decoration: none;
   color: #39455f;
 }
+
 .content :deep(a) {
   text-decoration: none;
   color: #ffffff;
@@ -127,6 +126,7 @@ a {
   background-color: #52b165;
   padding: 1px;
 }
+
 .content :deep(a):hover {
   background-color: #39455f;
 }
