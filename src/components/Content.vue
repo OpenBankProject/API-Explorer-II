@@ -1,20 +1,19 @@
 <script setup lang="ts">
-import { ref, inject, provide, onActivated, onMounted, watch } from 'vue'
-import { onBeforeRouteUpdate, useRoute } from 'vue-router'
-import { getOperationDetails } from '../obp/resource-docs'
-import { ArrowLeftBold, ArrowRightBold } from '@element-plus/icons-vue'
-import type { ElNotification } from 'element-plus'
-import {
-  createMyAPICollection,
-  createMyAPICollectionEndpoint,
-  deleteMyAPICollectionEndpoint,
-  getCurrentUser
-} from '../obp'
-import { setTabActive, initializeAPICollections } from './SearchNav.vue'
-import { SUMMARY_PAGER_LINKS_COLOR as summaryPagerLinksColorSetting } from '../obp/style-setting'
-import { OBP_API_VERSION } from '../obp'
-import { getGroupedResourceDocs } from '../obp/resource-docs'
 import { obpMyCollectionsEndpointKey, obpResourceDocsKey } from '@/obp/keys'
+import { ArrowLeftBold, ArrowRightBold } from '@element-plus/icons-vue'
+import { ElNotification } from 'element-plus'
+import { inject, onMounted, provide, ref } from 'vue'
+import { onBeforeRouteUpdate, useRoute } from 'vue-router'
+import {
+OBP_API_VERSION,
+createMyAPICollection,
+createMyAPICollectionEndpoint,
+deleteMyAPICollectionEndpoint,
+getCurrentUser
+} from '../obp'
+import { getGroupedResourceDocs, getOperationDetails } from '../obp/resource-docs'
+import { SUMMARY_PAGER_LINKS_COLOR as summaryPagerLinksColorSetting } from '../obp/style-setting'
+import { initializeAPICollections, setTabActive } from './SearchNav.vue'
 
 const route = useRoute()
 const obpVersion = 'OBP' + OBP_API_VERSION
