@@ -4,7 +4,7 @@ import { Search, Star } from '@element-plus/icons-vue'
 import { useRoute } from 'vue-router'
 import { OBP_API_VERSION, getMyAPICollections, getMyAPICollectionsEndpoint } from '../obp'
 import { getGroupedResourceDocs } from '../obp/resource-docs'
-import { searchLinksColor as searchLinksColorSetting } from '../obp/style-setting'
+import { SEARCH_LINKS_COLOR as searchLinksColorSetting } from '../obp/style-setting'
 import { obpResourceDocsKey } from '@/obp/keys'
 const operationIdTitle = {}
 const resourceDocs = ref({})

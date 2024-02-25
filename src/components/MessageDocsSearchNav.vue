@@ -2,7 +2,7 @@
 import { reactive, ref, onBeforeMount, inject, watch } from 'vue'
 import { Search } from '@element-plus/icons-vue'
 import { useRoute } from 'vue-router'
-import { searchLinksColor as searchLinksColorSetting } from '../obp/style-setting'
+import { SEARCH_LINKS_COLOR as searchLinksColorSetting } from '../obp/style-setting'
 import { connectors } from '../obp/message-docs'
 import { obpGroupedMessageDocsKey } from '@/obp/keys'
 

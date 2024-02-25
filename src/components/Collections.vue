@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { searchLinksColor as searchLinksColorSetting } from '../obp/style-setting'
+import { SEARCH_LINKS_COLOR as searchLinksColorSetting } from '../obp/style-setting'
 import { inject, ref } from 'vue'
 
 const searchLinksColor = ref(searchLinksColorSetting);

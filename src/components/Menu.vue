@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ArrowDown } from '@element-plus/icons-vue'
-import { searchLinksColor as searchLinksColorSetting } from '../obp/style-setting'
+import { SEARCH_LINKS_COLOR as searchLinksColorSetting } from '../obp/style-setting'
 import { inject, ref } from 'vue'
 import { updateServerStatus } from '@/obp/common-functions';
 import { obpApiHostKey } from '@/obp/keys';

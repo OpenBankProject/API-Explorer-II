@@ -11,7 +11,7 @@ import {
   getCurrentUser
 } from '../obp'
 import { setTabActive, initializeAPICollections } from './SearchNav.vue'
-import { summaryPagerLinksColor as summaryPagerLinksColorSetting } from '../obp/style-setting'
+import { SUMMARY_PAGER_LINKS_COLOR as summaryPagerLinksColorSetting } from '../obp/style-setting'
 import { OBP_API_VERSION } from '../obp'
 import { getGroupedResourceDocs } from '../obp/resource-docs'
 import { obpMyCollectionsEndpointKey, obpResourceDocsKey } from '@/obp/keys'
