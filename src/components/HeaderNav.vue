@@ -5,10 +5,10 @@ import { useRoute, useRouter } from 'vue-router'
 import { OBP_API_VERSION, getCurrentUser } from '../obp'
 import { getOBPAPIVersions } from '../obp/api-version'
 import {
-  logo as logoSource,
-  headerLinksColor,
-  headerLinksHoverColor as headerLinksHoverColorSetting,
-  headerLinksBackgroundColor as headerLinksBackgroundColorSetting
+  LOGO_URL as logoSource,
+  HEADER_LINKS_COLOR,
+  HEADER_LINKS_HOVER_COLOR as headerLinksHoverColorSetting,
+  HEADER_LINKS_BACKGROUND_COLOR as headerLinksBackgroundColorSetting
 } from '../obp/style-setting'
 import { obpApiActiveVersionsKey, obpGroupedMessageDocsKey, obpMyCollectionsEndpointKey } from '@/obp/keys'
 
@@ -40,7 +40,7 @@ const setActive = (target) => {
   if (target) {
     clearActiveTab()
     target.style.backgroundColor = headerLinksBackgroundColor.value
-    target.style.color = headerLinksColor
+    target.style.color = HEADER_LINKS_COLOR
   }
 }
 

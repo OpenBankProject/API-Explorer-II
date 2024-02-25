@@ -28,6 +28,12 @@ const setDoc = () => {
   }
   messageDocs.value = groupedMessageDocs.value[connector]
 }
+function showRequiredFieldInfo(value: any) {
+  return (JSON.stringify(value, null) === '{}' || JSON.stringify(value, null) === '')
+}
+function showDependentEndpoints(value: any) {
+  return value.lengtt > 0
+}
 </script>
 
 <template>
@@ -42,7 +48,7 @@ const setDoc = () => {
             <el-backtop :right="100" :bottom="100" target="main" />
             <div v-for="(group, key) of messageDocs" :key="key">
               <div v-for="(value, key) of group" :key="value">
-                <el-divider content-position="left">{{value.process}}</el-divider>
+                <el-divider content-position="left">{{ value.process }}</el-divider>
                 <a v-bind:href="`#${value.process}`" :id="value.process">
                   <h2>{{ value.description }}</h2>
                 </a>
@@ -59,10 +65,11 @@ const setDoc = () => {
                   <el-descriptions-item label="Inbound Message">
                     <pre>{{ JSON.stringify(value.example_inbound_message, null, 4) }}</pre>
                   </el-descriptions-item>
-                  <el-descriptions-item label="Required Fields">
+                  <el-descriptions-item v-if="showRequiredFieldInfo(value.requiredFieldInfo)" label="Required Fields">
                     <pre>{{ JSON.stringify(value.requiredFieldInfo, null, 4) }}</pre>
                   </el-descriptions-item>
-                  <el-descriptions-item label="Dependent Endpoints">
+                  <el-descriptions-item v-if="showDependentEndpoints(value.dependent_endpoints)"
+                    label="Dependent Endpoints">
                     <ul>
                       <li v-for="(endpoint, key) of value.dependent_endpoints">
                         {{ endpoint.version }}: {{ endpoint.name }}
@@ -70,7 +77,7 @@ const setDoc = () => {
                     </ul>
                   </el-descriptions-item>
                 </el-descriptions>
-                <el-divider content-position="right">{{value.process}}</el-divider>
+                <el-divider content-position="right">{{ value.process }}</el-divider>
                 <br />
                 <br />
                 <br />
@@ -106,6 +113,9 @@ span {
 
 div {
   font-size: 14px;
+}
+pre {
+  font-family: 'Roboto';
 }
 
 .content :deep(strong) {

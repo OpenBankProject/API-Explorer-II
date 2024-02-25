@@ -4,7 +4,7 @@ import { Search, Star } from '@element-plus/icons-vue'
 import { useRoute } from 'vue-router'
 import { OBP_API_VERSION, getMyAPICollections, getMyAPICollectionsEndpoint } from '../obp'
 import { getGroupedResourceDocs } from '../obp/resource-docs'
-import { searchLinksColor as searchLinksColorSetting } from '../obp/style-setting'
+import { SEARCH_LINKS_COLOR as searchLinksColorSetting } from '../obp/style-setting'
 import { obpResourceDocsKey } from '@/obp/keys'
 const operationIdTitle = {}
 const resourceDocs = ref({})
@@ -53,7 +53,7 @@ export const initializeAPICollections = async () => {
 
 <script setup lang="ts">
 const route = useRoute()
-let selectedVersion = 'OBP' + OBP_API_VERSION
+let selectedVersion = route.query.version ? route.query.version : `OBP${OBP_API_VERSION}`
 onBeforeMount(async () => {
   resourceDocs.value = inject(obpResourceDocsKey)!
   docs.value = getGroupedResourceDocs(selectedVersion, resourceDocs.value)
@@ -153,56 +153,27 @@ const searchEvent = (value) => {
 <template>
   <el-row>
     <el-col :span="24">
-      <el-input
-        v-model="form.search"
-        placeholder="Search"
-        :prefix-icon="Search"
-        @input="searchEvent"
-      />
+      <el-input v-model="form.search" placeholder="Search" :prefix-icon="Search" @input="searchEvent" />
     </el-col>
   </el-row>
   <el-collapse v-model="activeKeys">
     <el-collapse-item title="My Collections" v-show="showMyCollections" name="my-collections">
-      <el-collapse-item
-        v-for="(api, key) of apiCollections"
-        :key="key"
-        :title="api.api_collection_name"
-        :name="api.api_collection_name"
-        class="child-collapse"
-      >
+      <el-collapse-item v-for="(api, key) of apiCollections" :key="key" :title="api.api_collection_name"
+        :name="api.api_collection_name" class="child-collapse">
         <div class="el-tabs--right">
-          <div
-            v-for="(value, key) of apiCollectionsEndpoint[api.api_collection_name]"
-            :key="key"
-            class="api-router-tab"
-            @click="setActive"
-          >
-            <RouterLink
-              :to="{ name: 'api', params: { id: value }, query: { version: selectedVersion } }"
-              :id="value"
-              active-class="active-api-router-link"
-              class="api-router-link"
-              >{{ operationIdTitle[value] }}</RouterLink
-            >
+          <div v-for="(value, key) of apiCollectionsEndpoint[api.api_collection_name]" :key="key" class="api-router-tab"
+            @click="setActive">
+            <RouterLink :to="{ name: 'api', params: { id: value }, query: { version: selectedVersion } }" :id="value"
+              active-class="active-api-router-link" class="api-router-link">{{ operationIdTitle[value] }}</RouterLink>
           </div>
         </div>
       </el-collapse-item>
     </el-collapse-item>
     <el-collapse-item v-for="key in sortedKeys" :title="key" :key="key" :name="key">
       <div class="el-tabs--right">
-        <div
-          v-for="(value, key) of sortLinks(groups[key])"
-          :key="value"
-          class="api-router-tab"
-          @click="setActive"
-        >
-          <RouterLink
-            active-class="active-api-router-link"
-            class="api-router-link"
-            :id="value"
-            :to="{ name: 'api', params: { id: value }, query: { version: selectedVersion } }"
-            >{{ key }}</RouterLink
-          >
+        <div v-for="(value, key) of sortLinks(groups[key])" :key="value" class="api-router-tab" @click="setActive">
+          <RouterLink active-class="active-api-router-link" class="api-router-link" :id="value"
+            :to="{ name: 'api', params: { id: value }, query: { version: selectedVersion } }">{{ key }}</RouterLink>
         </div>
       </div>
     </el-collapse-item>
@@ -239,6 +210,7 @@ const searchEvent = (value) => {
 .active-api-router-link {
   color: v-bind(searchLinksColor);
 }
+
 .favorite {
   cursor: pointer;
   line-height: 2;
@@ -248,6 +220,7 @@ const searchEvent = (value) => {
   padding: 12px;
   color: #39455f;
 }
+
 .child-collapse {
   margin-left: 15px;
 }
