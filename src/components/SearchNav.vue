@@ -1,11 +1,11 @@
 <script lang="ts">
-import { reactive, ref, watch, onBeforeMount, onMounted, inject } from 'vue'
-import { Search, Star } from '@element-plus/icons-vue'
+import { obpResourceDocsKey } from '@/obp/keys'
+import { Search } from '@element-plus/icons-vue'
+import { inject, onBeforeMount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { OBP_API_VERSION, getMyAPICollections, getMyAPICollectionsEndpoint } from '../obp'
 import { getGroupedResourceDocs } from '../obp/resource-docs'
 import { SEARCH_LINKS_COLOR as searchLinksColorSetting } from '../obp/style-setting'
-import { obpResourceDocsKey } from '@/obp/keys'
 const operationIdTitle = {}
 const resourceDocs = ref({})
 const docs = ref({})
@@ -62,6 +62,10 @@ onBeforeMount(async () => {
   sortedKeys.value = activeKeys.value.sort()
   await initializeAPICollections()
   setTabActive(route.params.id)
+  let element = document.getElementById("selected-api-version")
+  if (element !== null) {
+    element.textContent = selectedVersion;
+  }
 })
 
 onMounted(() => {
