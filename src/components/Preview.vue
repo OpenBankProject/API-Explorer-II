@@ -126,7 +126,9 @@ const submit = async (form: FormInstance, fn: () => void) => {
   fn(form).then(() => {})
 }
 const highlightCode = (json) => {
-  if (json) {
+  if (json.error) {
+    successResponseBody.value = json.error.message
+  } else if (json) {
     successResponseBody.value = hljs.lineNumbersValue(
       hljs.highlightAuto(JSON.stringify(json, null, 4), ['JSON']).value
     )
