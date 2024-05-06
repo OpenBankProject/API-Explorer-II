@@ -1,12 +1,15 @@
 <script setup lang="ts">
-import { reactive, ref, onBeforeMount, inject } from 'vue'
-import { Search } from '@element-plus/icons-vue'
-import { useRoute } from 'vue-router'
+import { obpGlossaryKey } from '@/obp/keys';
+import { Search } from '@element-plus/icons-vue';
+import { inject, onBeforeMount, onMounted, reactive, ref } from 'vue';
+import { useRoute } from 'vue-router';
+import { SEARCH_LINKS_COLOR as searchLinksColorSetting } from '../obp/style-setting';
 
 const route = useRoute()
 const activeKeys = ref([])
 const glossaryKeys = ref([])
 const alphabet = ref([])
+const searchLinksColor = ref(searchLinksColorSetting)
 const form = reactive({
   search: ''
 })
@@ -15,13 +18,23 @@ const alphabetCharCodes = Array.from(Array(26)).map((e, i) => i + 65)
 alphabet.value = alphabetCharCodes.map((x) => String.fromCharCode(x))
 
 onBeforeMount(() => {
-  const glossary = inject('OBP-Glossary')!
+  const glossary = inject(obpGlossaryKey)!
   for (const item of glossary.glossary_items) {
     if (!activeKeys.value.includes(item.title)) {
       activeKeys.value.push(item.title)
     }
   }
   glossaryKeys.value = activeKeys.value
+})
+
+
+
+onMounted(() => {
+  let hash = route.hash;
+  let elements = document.querySelectorAll(`a[href="${hash}"][class="glossary-router-link"]`)
+  if (elements.length == 1) {
+    elements[0].click()
+  }
 })
 
 const filterKeys = (keys, key) => {
@@ -40,21 +53,11 @@ const searchEvent = (event) => {
 </script>
 
 <template>
-  <el-input
-    v-model="form.search"
-    class="w-50 m-1"
-    placeholder="Search"
-    :prefix-icon="Search"
-    @input="searchEvent"
-  />
+  <el-input v-model="form.search" class="w-50 m-1" placeholder="Search" :prefix-icon="Search" @input="searchEvent" />
   <div class="tabs">
     <div class="alphabet">
       <div v-for="value of alphabet" :key="value">
-        <a
-          :id="value"
-          class="alphabet-router-link"
-          v-bind:href="`#${value.toLowerCase()}-quick-nav`"
-        >
+        <a :id="value" class="alphabet-router-link" v-bind:href="`#${value.toLowerCase()}-quick-nav`">
           <div class="alphabet-link">
             {{ value }}
           </div>
@@ -64,11 +67,7 @@ const searchEvent = (event) => {
     <div class="tab-items">
       <div class="el-tabs--right">
         <div v-for="value of glossaryKeys" :key="value" class="glossary-router-tab">
-          <a
-            class="glossary-router-link"
-            :id="`${value.charAt(0).toLowerCase()}-quick-nav`"
-            v-bind:href="`#${value}`"
-          >
+          <a class="glossary-router-link" :id="`${value.charAt(0).toLowerCase()}-quick-nav`" v-bind:href="`#${value}`">
             {{ value }}
           </a>
         </div>
@@ -77,31 +76,29 @@ const searchEvent = (event) => {
   </div>
 </template>
 
-<style>
+<style scoped>
 .tabs {
   display: flex;
   max-height: 90vh;
 }
+
 .alphabet {
   padding: 10px 5px 5px 5px;
   min-width: 25px;
 }
+
 .alphabet-link {
   padding: 5px 0px 5px 0px;
   width: 100%;
   text-align: center;
   cursor: pointer;
 }
+
 .alphabet-router-link {
   font-size: 13px;
   font-family: 'Roboto';
   color: #39455f;
   text-decoration: none;
-}
-.search-nav {
-  background-color: #f8f9fb;
-  padding: 8px;
-  border-right: solid 1px var(--el-menu-border-color);
 }
 
 .glossary-router-link {
@@ -120,15 +117,16 @@ const searchEvent = (event) => {
 
 .glossary-router-tab:hover,
 .active-glossary-router-tab {
-  border-left: 2px solid #52b165;
+  border-left: 2px solid v-bind(searchLinksColor);
 }
 
 .glossary-router-tab:hover .glossary-router-link,
 .active-glossary-router-link,
 .alphabet-router-link:hover,
 .alphabet-link:hover .alphabet-router-link {
-  color: #52b165;
+  color: v-bind(searchLinksColor);
 }
+
 .tab-items {
   overflow: auto;
   max-height: 100vh;

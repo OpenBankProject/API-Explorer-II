@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { reactive, ref, onBeforeMount, onMounted, inject } from 'vue'
 import SearchNav from '../components/GlossarySearchNav.vue'
+import { obpGlossaryKey } from '@/obp/keys';
 
-const glossary = ref(inject('OBP-Glossary')!.glossary_items)
+const glossary = ref(inject(obpGlossaryKey)!.glossary_items)
 </script>
 
 <template>

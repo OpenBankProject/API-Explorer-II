@@ -34,3 +34,9 @@ main {
 .favoriteButton:hover {
   color: #fcc406;
 }
+
+.search-nav {
+  background-color: #f8f9fb;
+  padding: 8px;
+  border-right: solid 1px var(--el-menu-border-color);
+}

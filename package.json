@@ -1,6 +1,6 @@
 {
   "name": "api-explorer",
-  "version": "0.0.0",
+  "version": "1.0.14",
   "private": true,
   "scripts": {
     "dev": "vite & ts-node server/app.ts",
@@ -25,7 +25,7 @@
     "express-session": "^1.17.3",
     "highlight.js": "^11.7.0",
     "oauth": "^0.10.0",
-    "obp-typescript": "^1.0.34",
+    "obp-typescript": "^1.0.36",
     "pinia": "^2.0.32",
     "reflect-metadata": "^0.1.13",
     "routing-controllers": "^0.10.3",
@@ -49,6 +49,7 @@
     "jsdom": "^21.1.0",
     "npm-run-all": "^4.1.5",
     "prettier": "^2.8.4",
+    "superagent": "^8.1.2",
     "ts-node": "^10.9.1",
     "typescript": "~4.8.4",
     "unplugin-auto-import": "^0.15.1",

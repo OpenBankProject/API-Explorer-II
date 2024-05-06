@@ -3,9 +3,12 @@ import { ref, reactive, inject, onBeforeMount } from 'vue'
 import { onBeforeRouteUpdate, useRoute } from 'vue-router'
 import { getOperationDetails } from '../obp/resource-docs'
 import type { ElNotification, FormInstance } from 'element-plus'
-import { get, create, update, discard, createEntitlement, getCurrentUser } from '../obp'
+import { OBP_API_VERSION, get, create, update, discard, createEntitlement, getCurrentUser } from '../obp'
+import { getGroupedResourceDocs } from '../obp/resource-docs'
+import { obpResourceDocsKey } from '@/obp/keys'
 
 const elMessageDuration = 5500
+const configVersion = 'OBP' + OBP_API_VERSION
 const url = ref('')
 const roleName = ref('')
 const method = ref('')
@@ -23,7 +26,14 @@ const showPossibleErrors = ref(true)
 const showConnectorMethods = ref(true)
 const isUserLogon = ref(true)
 const type = ref('')
-const docs = inject('OBP-ResourceDocs')
+const resourceDocs = inject(obpResourceDocsKey)
+const docs = getGroupedResourceDocs(configVersion, resourceDocs)
+const footNote = ref({
+  operationId: '',
+  version: '',
+  functionName: '',
+  messageTags: ''
+})
 
 const requestFormRef = reactive<FormInstance>({})
 const requestForm = reactive({ url: '' })
@@ -31,10 +41,10 @@ const requestForm = reactive({ url: '' })
 const roleFormRef = reactive<FormInstance>({})
 const roleForm = reactive({})
 
-const setOperationDetails = (id: string): void => {
-  const operation = getOperationDetails(docs, id)
-  url.value = operation.specified_url
-  method.value = operation.request_verb
+const setOperationDetails = (id: string, version: string): void => {
+  const operation = getOperationDetails(version, id, resourceDocs)
+  url.value = operation?.specified_url
+  method.value = operation?.request_verb
   exampleRequestBody.value = JSON.stringify(operation.example_request_body)
   requiredRoles.value = operation.roles || []
   possibleErrors.value = operation.error_response_bodies
@@ -43,6 +53,10 @@ const setOperationDetails = (id: string): void => {
   showValidations.value = validations.value.length > 0
   showPossibleErrors.value = possibleErrors.value.length > 0
   showConnectorMethods.value = connectorMethods.value.length > 0
+  footNote.value.version = operation.operation_id
+  footNote.value.version = operation.implemented_by.version
+  footNote.value.functionName = operation.implemented_by.function
+  footNote.value.messageTags = operation.tags.join(',')
 
   highlightCode(operation.success_response_body)
   setType(method.value)
@@ -103,8 +117,7 @@ const submitRequest = async () => {
     ElNotification({
       duration: elMessageDuration,
       message: 'URL path is required.',
-      type: 'error',
-      position: 'bottom-right'
+      type: 'error'
     })
   }
 }
@@ -113,7 +126,9 @@ const submit = async (form: FormInstance, fn: () => void) => {
   fn(form).then(() => {})
 }
 const highlightCode = (json) => {
-  if (json) {
+  if (json.error) {
+    successResponseBody.value = json.error.message
+  } else if (json) {
     successResponseBody.value = hljs.lineNumbersValue(
       hljs.highlightAuto(JSON.stringify(json, null, 4), ['JSON']).value
     )
@@ -151,14 +166,16 @@ const submitEntitlement = async () => {
 }
 onBeforeMount(async () => {
   const route = useRoute()
-  setOperationDetails(route.params.id)
+  const version = route.query.version ? route.query.version : configVersion
+  setOperationDetails(route.params.id, version)
 
   const currentUser = await getCurrentUser()
   isUserLogon.value = currentUser.username
   setRoleForm()
 })
 onBeforeRouteUpdate((to) => {
-  setOperationDetails(to.params.id)
+  const version = to.query.version ? to.query.version : configVersion
+  setOperationDetails(to.params.id, version)
   responseHeaderTitle.value = 'TYPICAL SUCCESSFUL RESPONSE'
   setRoleForm()
 })
@@ -183,7 +200,7 @@ onBeforeRouteUpdate((to) => {
       <input
         type="text"
         v-model="header"
-        placeholder="Request Header (Heeader1:Value1::Header2:Value2)"
+        placeholder="Request Header (Header1:Value1::Header2:Value2)"
       />
     </div>
     <div class="flex-preview-panel">
@@ -229,6 +246,7 @@ onBeforeRouteUpdate((to) => {
       </div>
     </el-form>
     <!--<div v-show="showValidations">-->
+    <el-divider class="divider" />
     <div>
       <p>{{ $t('preview.validations') }}:</p>
       <!--TODO: implementation; replace hard coded.-->
@@ -239,6 +257,7 @@ onBeforeRouteUpdate((to) => {
         </ul>
       </div>
     </div>
+    <el-divider class="divider" />
     <div v-show="showPossibleErrors">
       <p>{{ $t('preview.possible_errors') }}:</p>
       <ul>
@@ -247,6 +266,7 @@ onBeforeRouteUpdate((to) => {
         </li>
       </ul>
     </div>
+    <el-divider class="divider" />
     <div v-show="showConnectorMethods">
       <p>{{ $t('preview.connector_methods') }}:</p>
       <ul>
@@ -254,6 +274,13 @@ onBeforeRouteUpdate((to) => {
           {{ method }}
         </li>
       </ul>
+    </div>
+    <el-divider class="divider" />
+    <div>
+      <p class="footnote">
+        Version: {{ footNote.version }}, function_name: by {{ footNote.functionName }},
+        operation_id: {{ footNote.functionName }}, Message Tags: {{ footNote.messageTags }}
+      </p>
     </div>
     <br />
   </main>
@@ -329,6 +356,15 @@ li {
 .flex-request-preview-panel {
   display: flex;
   flex-direction: row;
+}
+.footnote {
+  color: var(--el-color-info);
+  font-size: 12px;
+}
+.divider {
+  border-top: 1px #253047 solid;
+  margin-left: -25px;
+  padding-right: 50px;
 }
 #search-input {
   -webkit-border-top-right-radius: 0;

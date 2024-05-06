@@ -19,6 +19,7 @@ export default class OauthRequestTokenMiddleware implements ExpressMiddlewareInt
       } else {
         oauthService.requestTokenKey = oauthTokenKey
         oauthService.requestTokenSecret = oauthTokenSecret
+        console.log('OauthRequestTokenMiddleware.ts consumer.getOAuthRequestToken says: Redirecting to /oauth/authorize?oauth_token=XXX')
         response.redirect(apiHost + '/oauth/authorize?oauth_token=' + oauthTokenKey)
       }
     })

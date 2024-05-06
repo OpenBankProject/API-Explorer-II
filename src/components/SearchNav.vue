@@ -1,10 +1,13 @@
 <script lang="ts">
-import { reactive, ref, onBeforeMount, onMounted, inject } from 'vue'
-import { Search, Star } from '@element-plus/icons-vue'
+import { obpResourceDocsKey } from '@/obp/keys'
+import { Search } from '@element-plus/icons-vue'
+import { inject, onBeforeMount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { getMyAPICollections, getMyAPICollectionsEndpoint } from '../obp'
-
+import { OBP_API_VERSION, getMyAPICollections, getMyAPICollectionsEndpoint } from '../obp'
+import { getGroupedResourceDocs } from '../obp/resource-docs'
+import { SEARCH_LINKS_COLOR as searchLinksColorSetting } from '../obp/style-setting'
 const operationIdTitle = {}
+const resourceDocs = ref({})
 const docs = ref({})
 const groups = ref({})
 const sortedKeys = ref([])
@@ -16,6 +19,7 @@ const form = reactive({
 const apiCollections = ref({})
 const apiCollectionsEndpointMapping = ref({})
 const apiCollectionsEndpoint = ref({})
+const searchLinksColor = ref(searchLinksColorSetting)
 
 const clearActiveTab = () => {
   const activeTabs = document.querySelectorAll('.active-api-router-tab')
@@ -49,16 +53,39 @@ export const initializeAPICollections = async () => {
 
 <script setup lang="ts">
 const route = useRoute()
+let selectedVersion = route.query.version ? route.query.version : `OBP${OBP_API_VERSION}`
 onBeforeMount(async () => {
-  docs.value = inject('OBP-GroupedResourceDocs')!
+  resourceDocs.value = inject(obpResourceDocsKey)!
+  docs.value = getGroupedResourceDocs(selectedVersion, resourceDocs.value)
   groups.value = JSON.parse(JSON.stringify(docs.value))
   activeKeys.value = Object.keys(groups.value)
   sortedKeys.value = activeKeys.value.sort()
   await initializeAPICollections()
   setTabActive(route.params.id)
+  let element = document.getElementById("selected-api-version")
+  if (element !== null) {
+    element.textContent = selectedVersion;
+  }
 })
 
 onMounted(() => {
+  routeToFirstAPI()
+})
+
+watch(
+  () => route.query.version,
+  async (version) => {
+    selectedVersion = version
+    docs.value = getGroupedResourceDocs(version, resourceDocs.value)
+    groups.value = JSON.parse(JSON.stringify(docs.value))
+    activeKeys.value = Object.keys(groups.value)
+    sortedKeys.value = activeKeys.value.sort()
+    await initializeAPICollections()
+    routeToFirstAPI()
+  }
+)
+
+const routeToFirstAPI = () => {
   let element
   const elements = document.getElementsByClassName('api-router-link')
   const id = route.params.id
@@ -71,9 +98,9 @@ onMounted(() => {
   if (element) {
     element.click()
   } else {
-    elements.item(0).click()
+    if (elements.item(0)) elements.item(0).click()
   }
-})
+}
 
 const sortLinks = (items: any) => {
   const uniqueLinks = {}
@@ -103,20 +130,23 @@ const setActive = (event) => {
   }
 }
 
+const isKeyFound = (keys, item) => keys.every((k) => item.toLowerCase().includes(k))
+
 const filterKeys = (keys, key) => {
+  const splitKey = key.split(' ').map((k) => k.toLowerCase())
   return keys.filter((title) => {
-    const isGroupFound = title.toLowerCase().includes(key.toLowerCase())
-    const items = docs.value[title].filter((item) =>
-      item.summary.toLowerCase().includes(key.toLowerCase())
+    const isGroupFound = isKeyFound(splitKey, title)
+    const items = docs.value[title].filter(
+      (item) => isGroupFound || isKeyFound(splitKey, item.summary)
     )
     groups.value[title] = items
     return isGroupFound || items.length > 0
   })
 }
 
-const searchEvent = (event) => {
-  if (event) {
-    sortedKeys.value = filterKeys(activeKeys.value, event)
+const searchEvent = (value) => {
+  if (value) {
+    sortedKeys.value = filterKeys(activeKeys.value, value)
   } else {
     groups.value = JSON.parse(JSON.stringify(docs.value))
     sortedKeys.value = Object.keys(groups.value).sort()
@@ -127,56 +157,27 @@ const searchEvent = (event) => {
 <template>
   <el-row>
     <el-col :span="24">
-      <el-input
-        v-model="form.search"
-        placeholder="Search"
-        :prefix-icon="Search"
-        @input="searchEvent"
-      />
+      <el-input v-model="form.search" placeholder="Search" :prefix-icon="Search" @input="searchEvent" />
     </el-col>
   </el-row>
   <el-collapse v-model="activeKeys">
     <el-collapse-item title="My Collections" v-show="showMyCollections" name="my-collections">
-      <el-collapse-item
-        v-for="(api, key) of apiCollections"
-        :key="key"
-        :title="api.api_collection_name"
-        :name="api.api_collection_name"
-        class="child-collapse"
-      >
+      <el-collapse-item v-for="(api, key) of apiCollections" :key="key" :title="api.api_collection_name"
+        :name="api.api_collection_name" class="child-collapse">
         <div class="el-tabs--right">
-          <div
-            v-for="(value, key) of apiCollectionsEndpoint[api.api_collection_name]"
-            :key="key"
-            class="api-router-tab"
-            @click="setActive"
-          >
-            <RouterLink
-              :to="{ name: 'api', params: { id: value } }"
-              :id="value"
-              active-class="active-api-router-link"
-              class="api-router-link"
-              >{{ operationIdTitle[value] }}</RouterLink
-            >
+          <div v-for="(value, key) of apiCollectionsEndpoint[api.api_collection_name]" :key="key" class="api-router-tab"
+            @click="setActive">
+            <RouterLink :to="{ name: 'api', params: { id: value }, query: { version: selectedVersion } }" :id="value"
+              active-class="active-api-router-link" class="api-router-link">{{ operationIdTitle[value] }}</RouterLink>
           </div>
         </div>
       </el-collapse-item>
     </el-collapse-item>
     <el-collapse-item v-for="key in sortedKeys" :title="key" :key="key" :name="key">
       <div class="el-tabs--right">
-        <div
-          v-for="(value, key) of sortLinks(groups[key])"
-          :key="value"
-          class="api-router-tab"
-          @click="setActive"
-        >
-          <RouterLink
-            active-class="active-api-router-link"
-            class="api-router-link"
-            :id="value"
-            :to="{ name: 'api', params: { id: value } }"
-            >{{ key }}</RouterLink
-          >
+        <div v-for="(value, key) of sortLinks(groups[key])" :key="value" class="api-router-tab" @click="setActive">
+          <RouterLink active-class="active-api-router-link" class="api-router-link" :id="value"
+            :to="{ name: 'api', params: { id: value }, query: { version: selectedVersion } }">{{ key }}</RouterLink>
         </div>
       </div>
     </el-collapse-item>
@@ -206,13 +207,14 @@ const searchEvent = (event) => {
 
 .api-router-tab:hover,
 .active-api-router-tab {
-  border-left: 2px solid #52b165;
+  border-left: 2px solid v-bind(searchLinksColor);
 }
 
 .api-router-tab:hover .api-router-link,
 .active-api-router-link {
-  color: #52b165;
+  color: v-bind(searchLinksColor);
 }
+
 .favorite {
   cursor: pointer;
   line-height: 2;
@@ -222,6 +224,7 @@ const searchEvent = (event) => {
   padding: 12px;
   color: #39455f;
 }
+
 .child-collapse {
   margin-left: 15px;
 }

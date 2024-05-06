@@ -1,28 +1,58 @@
 <script setup lang="ts">
-import { ref, watchEffect, onMounted } from 'vue'
+import { ref, inject, watchEffect, onMounted } from 'vue'
 import { ArrowDown } from '@element-plus/icons-vue'
-import { useRoute } from 'vue-router'
-import { getCurrentUser } from '../obp'
+import { useRoute, useRouter } from 'vue-router'
+import { OBP_API_VERSION, getCurrentUser } from '../obp'
+import { getOBPAPIVersions } from '../obp/api-version'
+import {
+  LOGO_URL as logoSource,
+  HEADER_LINKS_COLOR,
+  HEADER_LINKS_HOVER_COLOR as headerLinksHoverColorSetting,
+  HEADER_LINKS_BACKGROUND_COLOR as headerLinksBackgroundColorSetting
+} from '../obp/style-setting'
+import { obpApiActiveVersionsKey, obpGroupedMessageDocsKey, obpMyCollectionsEndpointKey } from '@/obp/keys'
 
 const route = useRoute()
+const router = useRouter()
 const obpApiHost = ref(import.meta.env.VITE_OBP_API_HOST)
 const obpApiManagerHost = ref(import.meta.env.VITE_OBP_API_MANAGER_HOST)
 const loginUsername = ref('')
-const logOffUrl = ref('')
+const logoffurl = ref('')
+const obpApiVersions = ref(inject(obpApiActiveVersionsKey)!)
+const obpMessageDocs = ref(Object.keys(inject(obpGroupedMessageDocsKey)!))
 const isShowLoginButton = ref(true)
 const isShowLogOffButton = ref(false)
+const logo = ref(logoSource)
+const headerLinksHoverColor = ref(headerLinksHoverColorSetting)
+const headerLinksBackgroundColor = ref(headerLinksBackgroundColorSetting)
 
 const clearActiveTab = () => {
   const activeLinks = document.querySelectorAll('.router-link')
   for (const active of activeLinks) {
-    if (active.id) active.style.backgroundColor = 'transparent'
+    if (active.id) {
+      active.style.backgroundColor = 'transparent'
+      active.style.color = '#39455f'
+    }
   }
 }
 
 const setActive = (target) => {
   if (target) {
     clearActiveTab()
-    target.style.backgroundColor = '#eef0f4'
+    target.style.backgroundColor = headerLinksBackgroundColor.value
+    target.style.color = HEADER_LINKS_COLOR
+  }
+}
+
+const handleMore = (command: string) => {
+  let element = document.getElementById("selected-api-version")
+  if (element !== null) {
+    element.textContent = command;
+  }
+  if (command.includes('_')) {
+    router.push({ name: 'message-docs', params: { id: command } })
+  } else {
+    router.replace({ path: '/operationid', query: { version: command } })
   }
 }
 
@@ -44,21 +74,25 @@ watchEffect(() => {
   if (path && route.params && !route.params.id) {
     setActive(document.getElementById('header-nav-' + path))
   } else {
-    setActive(document.getElementById('header-nav-tags'))
+    if (path == 'message-docs') {
+      clearActiveTab()
+    } else {
+      setActive(document.getElementById('header-nav-tags'))
+    }
   }
 })
 </script>
 
 <template>
-  <img alt="OBP logo" class="logo" src="@/assets/logo2x-1.png" />
+  <img alt="OBP logo" class="logo" v-show="logo" :src="logo" />
+  <img alt="OBP logo" class="logo" v-show="!logo" src="@/assets/logo2x-1.png" />
   <nav id="nav">
     <RouterView name="header">
       <a v-bind:href="obpApiHost" class="router-link" id="header-nav-home">
         {{ $t('header.portal_home') }}
       </a>
-      <RouterLink class="router-link" id="header-nav-tags" to="/operationid">{{
-        $t('header.api_explorer')
-      }}</RouterLink>
+      <RouterLink class="router-link" id="header-nav-tags" :to="'/operationid?version=OBP' + OBP_API_VERSION">{{
+        $t('header.api_explorer') }}</RouterLink>
       <RouterLink class="router-link" id="header-nav-glossary" to="/glossary">{{
         $t('header.glossary')
       }}</RouterLink>
@@ -66,7 +100,7 @@ watchEffect(() => {
         {{ $t('header.api_manager') }}
       </a>
       <span class="el-dropdown-link">
-        <el-dropdown class="menu-right router-link" id="header-nav-spaces">
+        <el-dropdown class="menu-right router-link" id="header-nav-more" @command="handleMore">
           <span class="el-dropdown-link">
             {{ $t('header.more') }}
             <el-icon class="el-icon--right">
@@ -75,7 +109,11 @@ watchEffect(() => {
           </span>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item key="messageDocs">Message Docs</el-dropdown-item>
+              <el-dropdown-item v-for="value in obpApiVersions" :command="value" key="value">{{
+                value
+              }}</el-dropdown-item>
+              <el-dropdown-item v-for="value in obpMessageDocs" :command="value" key="value">
+                Message Docs for: {{ value }}</el-dropdown-item>
             </el-dropdown-menu>
           </template>
         </el-dropdown>
@@ -92,11 +130,7 @@ watchEffect(() => {
         {{ $t('header.login') }}
       </a>
       <span v-show="isShowLogOffButton" class="login-user">{{ loginUsername }}</span>
-      <a
-        v-bind:href="'/api/user/logoff'"
-        v-show="isShowLogOffButton"
-        class="logoff-button router-link"
-      >
+      <a v-bind:href="'/api/user/logoff'" v-show="isShowLogOffButton" class="logoff-button router-link">
         {{ $t('header.logoff') }}
       </a>
     </RouterView>
@@ -152,7 +186,8 @@ nav {
 }
 
 .router-link:hover {
-  background-color: #eef0f4 !important;
+  background-color: v-bind(headerLinksBackgroundColor) !important;
+  color: v-bind(headerLinksHoverColor) !important;
 }
 
 .logo {
@@ -172,5 +207,10 @@ nav {
 .login-button:hover,
 .logoff-button:hover {
   color: #39455f;
+}
+
+/*override element plus*/
+.el-dropdown-menu__item:hover {
+  color: v-bind(headerLinksHoverColor) !important;
 }
 </style>

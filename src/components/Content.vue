@@ -1,58 +1,69 @@
 <script setup lang="ts">
-import { ref, inject, provide, onActivated, onMounted } from 'vue'
-import { onBeforeRouteUpdate, useRoute } from 'vue-router'
-import { getOperationDetails } from '../obp/resource-docs'
+import { obpMyCollectionsEndpointKey, obpResourceDocsKey } from '@/obp/keys'
 import { ArrowLeftBold, ArrowRightBold } from '@element-plus/icons-vue'
-import type { ElNotification } from 'element-plus'
+import { ElNotification } from 'element-plus'
+import { inject, onMounted, provide, ref } from 'vue'
+import { onBeforeRouteUpdate, useRoute } from 'vue-router'
 import {
-  createMyAPICollection,
-  createMyAPICollectionEndpoint,
-  deleteMyAPICollectionEndpoint,
-  getCurrentUser
+OBP_API_VERSION,
+createMyAPICollection,
+createMyAPICollectionEndpoint,
+deleteMyAPICollectionEndpoint,
+getCurrentUser
 } from '../obp'
-import { setTabActive, initializeAPICollections } from './SearchNav.vue'
+import { getGroupedResourceDocs, getOperationDetails } from '../obp/resource-docs'
+import { SUMMARY_PAGER_LINKS_COLOR as summaryPagerLinksColorSetting } from '../obp/style-setting'
+import { initializeAPICollections, setTabActive } from './SearchNav.vue'
 
 const route = useRoute()
+const obpVersion = 'OBP' + OBP_API_VERSION
 const description = ref('')
 const summary = ref('')
-const docs = inject('OBP-ResourceDocs')
+const resourceDocs = inject(obpResourceDocsKey)
+const docs = getGroupedResourceDocs(obpVersion, resourceDocs)
 const displayPrev = ref(true)
 const displayNext = ref(true)
 const prev = ref({ id: 'prev' })
 const next = ref({ id: 'next' })
 const favoriteButtonStyle = ref('favorite favoriteButton')
+const summaryPagerLinksColor = ref(summaryPagerLinksColorSetting)
 let routeId = ''
+let version = obpVersion
 let isFavorite = false
-let apiCollectionsEndpoint = inject('OBP-MyCollectionsEndpoint')!
+let apiCollectionsEndpoint = inject(obpMyCollectionsEndpointKey)!
 
-const setOperationDetails = (id: string): void => {
-  const operation = getOperationDetails(docs, id)
-  description.value = operation.description
-  summary.value = operation.summary
+const setOperationDetails = (id: string, version: string): void => {
+  const operation = getOperationDetails(version, id, resourceDocs)
+  description.value = operation?.description
+  summary.value = operation?.summary
 }
 
 const setPager = (id: string): void => {
-  const target = document.getElementById(id).parentElement
-  const prevElement = target.previousSibling
-  const nextElement = target.nextSibling
-  const active = document.querySelector('.active-api-router-tab')
-  if (active) active.classList.remove('active-api-router-tab')
-  target.classList.add('active-api-router-tab')
-  if (prevElement.className && prevElement.className.startsWith('api-router-tab')) {
-    const prevItem = prevElement.children.item(0)
-    prev.value['title'] = prevItem.text
-    prev.value['id'] = prevItem.id
-    displayPrev.value = true
-  } else {
-    displayPrev.value = false
-  }
-  if (nextElement.className && nextElement.className.startsWith('api-router-tab')) {
-    const nextItem = nextElement.children.item(0)
-    next.value['title'] = nextItem.text
-    next.value['id'] = nextItem.id
-    displayNext.value = true
-  } else {
-    displayNext.value = false
+  const target = document.getElementById(id)?.parentElement
+  if (target) {
+    const prevElement = target.previousSibling
+    const nextElement = target.nextSibling
+    const active = document.querySelector('.active-api-router-tab')
+    if (active) active.classList.remove('active-api-router-tab')
+    target.classList.add('active-api-router-tab')
+    if (prevElement.className && prevElement.className.startsWith('api-router-tab')) {
+      const prevItem = prevElement.children.item(0)
+      prev.value['title'] = prevItem.text
+      prev.value['id'] = prevItem.id
+      prev.value['version'] = version
+      displayPrev.value = true
+    } else {
+      displayPrev.value = false
+    }
+    if (nextElement.className && nextElement.className.startsWith('api-router-tab')) {
+      const nextItem = nextElement.children.item(0)
+      next.value['title'] = nextItem.text
+      next.value['id'] = nextItem.id
+      next.value['version'] = version
+      displayNext.value = true
+    } else {
+      displayNext.value = false
+    }
   }
 }
 
@@ -77,20 +88,21 @@ const createDeleteFavorite = async (): void => {
     createMyAPICollection()
     apiCollectionsEndpoint = []
   }
-  if (isFavorite) {
-    await deleteMyAPICollectionEndpoint(routeId)
+  if (isFavorite) { // Add the API endpoint to favorite
+    const response = await deleteMyAPICollectionEndpoint(routeId)
     favoriteButtonStyle.value = 'favorite favoriteButton'
-    showNotification('Removed from favourites.', 'success')
+    if (response) { // Success response returns <empty string>
+      showNotification(response, 'error')
+    }
     isFavorite = false
     apiCollectionsEndpoint = apiCollectionsEndpoint.filter((api) => api != routeId)
-  } else {
-    await createMyAPICollectionEndpoint(routeId)
+  } else { // Remove the API endpoint from favorite
+    const response = await createMyAPICollectionEndpoint(routeId)
     favoriteButtonStyle.value = 'favorite activeFavoriteButton'
-    showNotification('Added to favourites.', 'success')
     isFavorite = true
     apiCollectionsEndpoint.push(routeId)
   }
-  provide('OBP-MyCollectionsEndpoint', apiCollectionsEndpoint)
+  provide(obpMyCollectionsEndpointKey, apiCollectionsEndpoint)
   await initializeAPICollections()
   setTabActive(routeId)
 }
@@ -98,7 +110,6 @@ const createDeleteFavorite = async (): void => {
 const showNotification = (message: string, type: string): void => {
   ElNotification({
     duration: 5500,
-    position: 'bottom-right',
     message,
     type
   })
@@ -106,13 +117,15 @@ const showNotification = (message: string, type: string): void => {
 
 onMounted(async () => {
   routeId = route.params.id
-  setOperationDetails(routeId)
+  version = route.query.version ? route.query.version : obpVersion
+  setOperationDetails(routeId, version)
   setPager(routeId)
   await tagFavoriteButton(routeId)
 })
 onBeforeRouteUpdate(async (to) => {
   routeId = to.params.id
-  setOperationDetails(routeId)
+  version = route.query.version ? route.query.version : obpVersion
+  setOperationDetails(routeId, version)
   setPager(routeId)
   await tagFavoriteButton(routeId)
 })
@@ -137,22 +150,20 @@ onBeforeRouteUpdate(async (to) => {
         <el-divider class="divider" />
         <el-row>
           <el-col :span="12" class="pager-left">
-            <el-icon v-show="displayPrev"><ArrowLeftBold /></el-icon>
-            <RouterLink
-              v-show="displayPrev"
-              class="pager-router-link"
-              :to="{ name: 'api', params: { id: prev.id } }"
-              >{{ prev.title }}</RouterLink
-            >
+            <el-icon v-show="displayPrev">
+              <ArrowLeftBold />
+            </el-icon>
+            <RouterLink v-show="displayPrev" class="pager-router-link"
+              :to="{ name: 'api', params: { id: prev.id }, query: { version: prev.version } }">{{ prev.title }}
+            </RouterLink>
           </el-col>
           <el-col :span="12" class="pager-right">
-            <RouterLink
-              v-show="displayNext"
-              class="pager-router-link"
-              :to="{ name: 'api', params: { id: next.id } }"
-              >{{ next.title }}</RouterLink
-            >
-            <el-icon v-show="displayNext"><ArrowRightBold /></el-icon>
+            <RouterLink v-show="displayNext" class="pager-router-link"
+              :to="{ name: 'api', params: { id: next.id }, query: { version: next.version } }">{{ next.title }}
+            </RouterLink>
+            <el-icon v-show="displayNext">
+              <ArrowRightBold />
+            </el-icon>
           </el-col>
         </el-row>
       </el-footer>
@@ -166,15 +177,19 @@ main {
   color: #39455f;
   font-family: 'Roboto';
 }
+
 span {
   font-size: 28px;
 }
+
 div {
   font-size: 14px;
 }
+
 .content :deep(strong) {
   font-family: 'Roboto';
 }
+
 .content :deep(p a) {
   line-height: 28px;
   padding: 5px;
@@ -186,38 +201,45 @@ div {
   border-radius: 5px;
   background-color: #eef0f4;
 }
+
 .pager {
   position: absolute;
   bottom: 0;
 }
+
 .pager-left {
   display: flex;
   justify-content: left;
   align-items: center;
 }
+
 .pager-right {
   display: flex;
   justify-content: right;
   align-items: center;
 }
+
 .footer {
   max-height: 30px;
 }
+
 .divider {
   margin-top: -15px;
 }
+
 .pager-router-link {
   font-family: 'Roboto';
   text-decoration: none;
   color: #39455f;
 }
+
 .pager-router-link:hover,
 .pager-left:hover,
 .pager-right:hover {
-  color: #52b165;
+  color: v-bind(summaryPagerLinksColor);
 }
+
 .favorite {
   cursor: pointer;
   line-height: 1;
-}
-</style>
+}</style>

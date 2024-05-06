@@ -1,13 +1,10 @@
-import { Any, GetAny, Version, API, get } from 'obp-typescript'
-import type { APIClientConfig } from 'obp-typescript'
-
-const clientConfig: APIClientConfig = {
-  baseUri: import.meta.env.VITE_OBP_API_HOST,
-  version: Version.v510,
-  withFixedVersion: true
-}
+import { OBP_API_VERSION, get } from '../obp'
+import { updateLoadingInfoMessage } from './common-functions'
 
 // Get Glossary
 export async function getOBPGlossary(): Promise<any> {
-  return await get<API.Any>(clientConfig, Any)(GetAny)('/api/glossary')
+  const logMessage = `Loading glossary { version: ${OBP_API_VERSION} }`
+  console.log(logMessage)
+  updateLoadingInfoMessage(logMessage)
+  return await get(`obp/${OBP_API_VERSION}/api/glossary`)
 }

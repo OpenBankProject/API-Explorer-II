@@ -1,25 +1,38 @@
 <script setup lang="ts">
 import { ArrowDown } from '@element-plus/icons-vue'
-import { inject } from 'vue'
+import { SEARCH_LINKS_COLOR as searchLinksColorSetting } from '../obp/style-setting'
+import { inject, ref } from 'vue'
+import { updateServerStatus } from '@/obp/common-functions';
+import { obpApiHostKey } from '@/obp/keys';
 
+const APP_VERSION = ref(__APP_VERSION__)
 const i18n = inject('i18n')
-const host = inject('OBP-API-Host')
+const OBP_API_HOST = inject(obpApiHostKey)
+const searchLinksColor = ref(searchLinksColorSetting)
 const handleLocale = (command: string) => {
   i18n.global.locale.value = command
+}
+const updateStatus = (event: any) => {
+  updateServerStatus()
 }
 </script>
 
 <template>
   <el-row>
-    <el-col :span="12" class="menu-left"></el-col>
-    <el-col :span="12" class="menu-right">
+    <el-col :span="10" class="menu-left">
+      &nbsp;&nbsp;
+      <span id="selected-api-version" class="host">OBPv5.1.0</span>
+    </el-col>
+    <el-col :span="14" class="menu-right">
+      <span class="host">App Version: {{ APP_VERSION }}</span>
+      &nbsp;&nbsp;
       <span class="host"
-        >API Host:
-        <a :href="host">
-          {{ host }}
+        ><span id="backend-status" @click="updateStatus" >API Host: </span>
+        <a :href="OBP_API_HOST">
+          {{ OBP_API_HOST }}
         </a>
       </span>
-      &nbsp;&nbsp;&nbsp;&nbsp;
+      &nbsp;&nbsp;
       <el-dropdown class="menu-right" @command="handleLocale">
         <span class="el-dropdown-link">
           {{ $i18n.locale }}
@@ -50,14 +63,21 @@ a {
   text-decoration: none;
 }
 a:hover {
-  color: #52b165;
+  color: v-bind(searchLinksColor);
 }
 .host {
   font-size: 14px;
   font-family: 'Roboto';
 }
+.menu-left,
 .menu-right,
 .el-dropdown-menu {
   color: #7787a6;
+}
+.server-is-online {
+  color: v-bind(searchLinksColor);
+}
+.server-is-offline {
+  color: red;
 }
 </style>
