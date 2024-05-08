@@ -31,6 +31,7 @@ let redisStore = new RedisStore({
   prefix: 'api-explorer-ii:'
 })
 
+console.info(`Environment: ${app.get('env')}`)
 app.use(express.json())
 let sessionObject = {
   store: redisStore,
@@ -55,8 +56,8 @@ const routePrefix = '/api'
 const server = useExpressServer(app, {
   //routePrefix: '/api/v1',
   routePrefix: routePrefix,
-  controllers: [path.join(__dirname + '/controllers/*.ts')],
-  middlewares: [path.join(__dirname + '/middlewares/*.ts')]
+  controllers: [path.join(__dirname + '/controllers/*.*s')],
+  middlewares: [path.join(__dirname + '/middlewares/*.*s')]
 })
 
 export const instance = server.listen(port)
