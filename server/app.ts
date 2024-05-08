@@ -36,8 +36,8 @@ const routePrefix = '/api'
 const server = useExpressServer(app, {
   //routePrefix: '/api/v1',
   routePrefix: routePrefix,
-  controllers: [path.join(__dirname + '/controllers/*.ts')],
-  middlewares: [path.join(__dirname + '/middlewares/*.ts')]
+  controllers: [path.join(__dirname + '/controllers/*')],
+  middlewares: [path.join(__dirname + '/middlewares/*')]
 })
 
 export const instance = server.listen(port)
