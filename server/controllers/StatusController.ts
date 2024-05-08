@@ -8,7 +8,7 @@ import { OAuthConfig } from 'obp-typescript'
 @Service()
 @Controller('/status')
 export class StatusController {
-  private obpExplorerHome = process.env.VITE_OBP_EXPLORER_HOST
+  private obpExplorerHome = process.env.VITE_OBP_API_EXPLORER_HOST
   private connectors = [
     'kafka_vSept2018',
     'akka_vDec2018',

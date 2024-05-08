@@ -10,7 +10,7 @@ import path from 'path'
 
 const port = 8085
 const app: Application = express()
-const host = process.env.VITE_OBP_EXPLORER_HOST
+const host = process.env.VITE_OBP_API_EXPLORER_HOST
 const httpsOrNot = host ? (host.indexOf('https://') == 0 ? true : false) : true
 
 // Initialize client.
