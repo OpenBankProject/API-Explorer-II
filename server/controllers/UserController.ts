@@ -8,7 +8,7 @@ import superagent from 'superagent'
 @Service()
 @Controller('/user')
 export class UserController {
-  private obpExplorerHome = process.env.VITE_OBP_EXPLORER_HOST
+  private obpExplorerHome = process.env.VITE_OBP_API_EXPLORER_HOST
   constructor(
     private obpClientService: OBPClientService,
     private oauthInjectedService: OauthInjectedService
