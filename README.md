@@ -56,16 +56,32 @@ npm test:unit
 
 ## Compile and Minify for Production
 
-##### Build 
+##### Build API-Explorer II front-end
 
 ```sh
-npm run build
+npm run-script build
 ```
 
-##### Start the backend server
+##### Build API-Explorer II back-end
+
 ```sh
-npx ts-node <path-to-your-install>/server/app.ts
+npm run-script build-server
 ```
+
+##### Start API-Explorer II back-end
+```sh
+npx ts-node <path-to-your-install>/server/app.js
+```
+
+##### Check the status of API-Explorer II back-end
+```
+Please find a message at a log file similar to this one:
+
+Backend is running. You can check a status at http://localhost:8085/api/status
+
+and use the link to check the status
+```
+
 
 ##### Nginx deployment
 

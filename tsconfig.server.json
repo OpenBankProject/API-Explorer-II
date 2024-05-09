@@ -3,7 +3,7 @@
     "module": "commonjs",
     "esModuleInterop": true,
     "target": "ES6",
-    "outDir": "server-dist",
+    "outDir": "dist-server",
     "rootDir": "server",
     "resolveJsonModule": true,
     "emitDecoratorMetadata": true,
