@@ -13,8 +13,6 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    if: steps.extract_branch.outputs.branch == develop
-
     steps:
       - name: Extract branch name
         shell: bash
