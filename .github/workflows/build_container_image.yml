@@ -1,6 +1,9 @@
 name: build and publish container
 
-on: [push]
+on:
+  push:
+    branches:
+    - develop
 env:
   DOCKER_HUB_ORGANIZATION: ${{ vars.DOCKER_HUB_ORGANIZATION }}
   DOCKER_HUB_REPOSITORY: api-explorer-ii
@@ -9,6 +12,7 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    if: steps.extract_branch.outputs.branch == develop
 
     steps:
       - name: Extract branch name
