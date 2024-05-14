@@ -2,7 +2,7 @@
 FROM node:lts-bullseye as builder
 
 # Add application sources
-ADD ../.. /home/node/app/
+ADD .. /home/node/app/
 WORKDIR /home/node/app
 # Install the dependencies
 RUN npm install

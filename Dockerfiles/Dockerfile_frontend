@@ -1,10 +1,7 @@
 FROM node:lts-bullseye as builder
-USER 0
 # Add application sources
-# Add application sources
-ADD ../.. /home/node/app/
+ADD .. /home/node/app/
 WORKDIR /home/node/app
-
 # Install the dependencies
 RUN npm install
 RUN npm run build
