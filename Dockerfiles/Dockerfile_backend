@@ -1,0 +1,21 @@
+# First stage builds the application
+FROM node:lts-bullseye as builder
+
+# Add application sources
+ADD .. /home/node/app/
+WORKDIR /home/node/app
+# Install the dependencies
+RUN npm install
+RUN npm run build-server
+
+# Run script uses standard ways to run the application
+# CMD npm run -d start
+FROM node:lts-bullseye
+
+COPY --from=builder /home/node/app/server-dist /home/node/app
+RUN mkdir /home/node/node_modules
+COPY --from=builder /home/node/app/node_modules /home/node/node_modules
+WORKDIR /home/node/app
+CMD ["node", "app.js"]
+
+
