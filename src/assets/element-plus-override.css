@@ -1,5 +1,4 @@
 /*
- * *
  * Open Bank Project -  API Explorer II
  * Copyright (C) 2023-2024, TESOBE GmbH
  *

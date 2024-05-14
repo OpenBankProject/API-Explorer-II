@@ -3,6 +3,7 @@ FROM node:lts-bullseye as builder
 ADD .. /home/node/app/
 WORKDIR /home/node/app
 # Install the dependencies
+COPY Dockerfiles/frontend_build.env /home/node/app/.env
 RUN npm install
 RUN npm run build
 
@@ -14,8 +15,7 @@ ADD Dockerfiles/nginx.conf "${NGINX_DEFAULT_CONF_PATH}"
 COPY --from=builder /home/node/app/dist /opt/app-root/src
 RUN chgrp -R 0 /opt/app-root/src/ && chmod -R g+rwX /opt/app-root/src/
 USER 1001
-CMD ["nginx", "-g", "daemon off;"]
-
+CMD sed -i "s@replaceobpapihost@$VITE_OBP_API_HOST@g" /home/app/dist/index*.js ; nginx -g "daemon off;"
 
 
 

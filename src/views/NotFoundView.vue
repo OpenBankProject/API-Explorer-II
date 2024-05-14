@@ -1,5 +1,4 @@
 <!--
-  - /**
   - Open Bank Project -  API Explorer II
   - Copyright (C) 2023-2024, TESOBE GmbH
   -
@@ -23,7 +22,7 @@
   -
   -   This product includes software developed at
   -   TESOBE (http://www.tesobe.com/)
-  -  */
+  -
   -->
 
 <script setup lang="ts"></script>
