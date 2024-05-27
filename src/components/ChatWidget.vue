@@ -34,7 +34,15 @@
   import { inject } from 'vue';
   import { obpApiHostKey } from '@/obp/keys';
 
-  const OBP_API_HOST = inject(obpApiHostKey)
+  import 'prismjs/components/prism-markup';
+  import 'prismjs/components/prism-javascript';
+  import 'prismjs/components/prism-json';
+  import 'prismjs/components/prism-bash';
+  import 'prismjs/components/prism-http';
+  import 'prismjs/components/prism-go';
+
+  import 'prismjs/themes/prism-okaidia.css';
+  
 
   export default {
     data() {
@@ -83,8 +91,6 @@
             console.error('Error:', error);
           }
 
-          console.log('Response status:', response.status);
-          console.log('Response headers:', response.headers);
 
           const data = await response.json();
           this.messages.push({ role: 'assistant', content: data.reply });
@@ -94,19 +100,38 @@
           });
         }
       },
-      highlightCode(content) {
-        return Prism.highlight(content, Prism.languages.markup, 'markup');
+      highlightCode(content, language) {
+        if (Prism.languages[language]) {
+          return Prism.highlight(content, Prism.languages[language], language);
+        } else {
+          console.log(`could not highlight ${language} code block, add language to dependencies`)
+          // If the language is not recognized, return the content as is
+          return content;
+        }
       },
       renderMarkdown(content) {
-        const markdown = new MarkdownIt();
-        return markdown.render(content);    
+        const markdown = new MarkdownIt({
+          highlight: (str, lang) => {
+            if (lang && Prism.languages[lang]) {
+              try {
+                return `<pre class="language-${lang}"><code>${this.highlightCode(str, lang)}</code></pre>`;
+              } catch (error) {
+                console.log(`error hilighting ${lang} code block: ${error}`)
+              }
+            }
+
+            // If the language is not specified or not recognized, use a default language
+            return `<pre class="language-"><code>${markdown.utils.escapeHtml(str)}</code></pre>`;
+          }
+        });
+
+        return markdown.render(content);
       },
       scrollToBottom() {
         const messages = this.$refs.messages;
         messages.scrollTop = messages.scrollHeight;
       },
       initResize(event) {
-        console.log("resizing")
         this.isResizing = true;
         this.startX = event.clientX;
         this.startY = event.clientY;
