@@ -29,14 +29,25 @@
   import Prism from 'prismjs';
   import MarkdownIt from "markdown-it";
   import 'prismjs/themes/prism.css'; // Choose a theme you like
-  
+  import { v4 as uuidv4 } from 'uuid';
+  import axios from 'axios';
+  import { inject } from 'vue';
+  import { obpApiHostKey } from '@/obp/keys';
+
+  const OBP_API_HOST = inject(obpApiHostKey)
+
   export default {
     data() {
       return {
         isOpen: false,
         userInput: '',
-        messages: []
+        messages: [],
+        sessionId: uuidv4(),
+        obpApiHost: null
       };
+    },
+    created() {
+      this.obpApiHost = inject(obpApiHostKey);
     },
     methods: {
       toggleChat() {
@@ -54,11 +65,23 @@
           this.userInput = '';
   
           // Send the user message to the backend and get the response
-          const response = await fetch('http://localhost:5000/chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: newMessage.content })
-          });
+          console.log('Sending message:', newMessage.content);
+
+          // DEBUG
+          console.log('OBP API HOST: ', this.obpApiHost)
+
+          try {
+            const response = await axios.post('http://localhost:5000/chat', {
+                session_id: this.sessionId,
+                message: newMessage.content,
+                obp_api_host: this.obpApiHost
+            });
+
+            console.log('Response:', response.data);
+            this.messages.push({ role: 'assistant', content: response.data.reply });
+          } catch (error) {
+            console.error('Error:', error);
+          }
 
           console.log('Response status:', response.status);
           console.log('Response headers:', response.headers);
@@ -118,7 +141,7 @@
 <template>
     <div>
       <div class="chat-button" @click="toggleChat">
-        <img alt="AI Help" v-show="!logo" src="@/assets/chatbot.png" />
+        <img alt="AI Help" src="@/assets/chatbot.png" />
       </div>
       <div v-if="isOpen" class="chat-container" ref="chatContainer">
         <div class="resizer" @mousedown="initResize"></div>
