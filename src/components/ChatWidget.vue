@@ -158,21 +158,35 @@
         this.isResizing = false;
         window.removeEventListener('mousemove', this.resize);
         window.removeEventListener('mouseup', this.stopResize);
+      },
+      submitEnter(event) {
+        if (event.key == 'Enter' && !event.shiftKey) {
+          event.preventDefault();
+          console.log("enter logged")
+          this.sendMessage();
+        }
       }
     }
   };
 </script>
 
 <template>
-    <div>
+
+  <div>
+    <el-tooltip content="Chat with our AI, Obey" placement="left" effect="light">
       <div class="chat-button" @click="toggleChat">
         <img alt="AI Help" src="@/assets/chatbot.png" />
       </div>
-      <div v-if="isOpen" class="chat-container" ref="chatContainer">
+    </el-tooltip>
+    <div v-if="isOpen" class="chat-container" ref="chatContainer">
+      <div class="quit-button-container">
+        <button class="quit-button" @click="toggleChat">X</button>
+      </div>
+      <div class="chat-container-inner">
         <div class="resizer" @mousedown="initResize"></div>
         <div class="chat-header">
-          <span>Chat with us</span>
-          <button @click="toggleChat">X</button>
+          <span>Chat with Obey</span>
+          <img alt="Powered by OpenAI" src="@/assets/powered-by-openai-badge-outlined-on-dark.svg" height="32">
         </div>
         <div class="chat-messages" ref="messages">
           <div v-for="(message, index) in messages" :key="index" :class="['chat-message', message.role]">
@@ -180,12 +194,13 @@
           </div>
         </div>
         <div class="chat-input">
-          <textarea v-model="userInput" placeholder="Type your message..."></textarea>
+          <textarea v-model="userInput" placeholder="Type your message..." @keypress="submitEnter"></textarea>
           <button @click="sendMessage">Send</button>
         </div>
       </div>
     </div>
-  </template>
+  </div>
+</template>
 
 <style>
 .chat-button {
@@ -206,6 +221,29 @@
   transition: box-shadow 0.3s;
 }
 
+.quit-button-container {
+  position: relative;
+}
+
+.quit-button {
+  position: absolute;
+  top: -12px; 
+  right: -12px; 
+  width: 24px;
+  height: 24px;
+  background-color: red;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 14px;
+  font-weight: bold;
+  z-index: 1002; /* Ensure it appears above the chat container and its contents */
+}
+
 .chat-button:hover {
   box-shadow: 0 0 30px rgba(0, 123, 255, 0.8);
 }
@@ -218,16 +256,26 @@
   position: fixed;
   bottom: 20px;
   right: 20px;
-  width: 300px;
-  height: 400px;
+  width: 390px;
+  height: 470px;
+  min-width: 390px;
+  min-height: 470px;
   border: 1px solid #ccc;
   border-radius: 10px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   background-color: #fff;
   display: flex;
   flex-direction: column;
-  z-index: 1000;
+  z-index: 1000; /* Lower than the quit button */
+  overflow: visible;
+}
+
+.chat-container-inner {
+  display: flex;
   overflow: hidden;
+  border-radius: inherit;
+  flex-direction: column;
+  height: 100%;
 }
 
 .chat-header {
@@ -244,6 +292,15 @@
   padding: 10px;
   overflow-y: auto;
   background-color: #f9f9f9;
+}
+
+.chat-message {
+  font-family: ui-sans-serif,-apple-system,system-ui,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif,Helvetica,Apple Color Emoji,Arial,Segoe UI Emoji,Segoe UI Symbol;
+}
+
+.chat-header span {
+  font-family: ui-sans-serif,-apple-system,system-ui,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif,Helvetica;
+  font-weight: 500;
 }
 
 .chat-message {
@@ -266,6 +323,8 @@
   padding: 10px;
   border-top: 1px solid #ccc;
   background-color: #fff;
+  position: sticky;
+  bottom: 0;
 }
 
 .chat-input textarea {
@@ -292,9 +351,15 @@
 }
 
 .resizer {
-  width: 15px;
-  height: 15px;
-  background: #ccc;
+  width: 13px;
+  height: 13px;
+  background: repeating-linear-gradient(
+    -45deg,
+    rgba(50, 50, 50, 50%),
+    rgba(50, 50, 50, 50%) 1px,
+    transparent 1px,
+    transparent 3px
+  );
   position: absolute;
   left: 0;
   top: 0;
