@@ -4,7 +4,6 @@ import { onBeforeRouteUpdate, useRoute } from 'vue-router'
 import { getOperationDetails } from '../obp/resource-docs'
 import type { ElNotification, FormInstance } from 'element-plus'
 import { OBP_API_VERSION, get, create, update, discard, createEntitlement, getCurrentUser } from '../obp'
-import { getGroupedResourceDocs } from '../obp/resource-docs'
 import { obpResourceDocsKey } from '@/obp/keys'
 
 const elMessageDuration = 5500
@@ -27,7 +26,6 @@ const showConnectorMethods = ref(true)
 const isUserLogon = ref(true)
 const type = ref('')
 const resourceDocs = inject(obpResourceDocsKey)
-const docs = getGroupedResourceDocs(configVersion, resourceDocs)
 const footNote = ref({
   operationId: '',
   version: '',

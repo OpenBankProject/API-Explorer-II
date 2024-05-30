@@ -11,7 +11,7 @@ createMyAPICollectionEndpoint,
 deleteMyAPICollectionEndpoint,
 getCurrentUser
 } from '../obp'
-import { getGroupedResourceDocs, getOperationDetails } from '../obp/resource-docs'
+import { getOperationDetails } from '../obp/resource-docs'
 import { SUMMARY_PAGER_LINKS_COLOR as summaryPagerLinksColorSetting } from '../obp/style-setting'
 import { initializeAPICollections, setTabActive } from './SearchNav.vue'
 
@@ -20,7 +20,6 @@ const obpVersion = 'OBP' + OBP_API_VERSION
 const description = ref('')
 const summary = ref('')
 const resourceDocs = inject(obpResourceDocsKey)
-const docs = getGroupedResourceDocs(obpVersion, resourceDocs)
 const displayPrev = ref(true)
 const displayNext = ref(true)
 const prev = ref({ id: 'prev' })
