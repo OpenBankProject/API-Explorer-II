@@ -15,6 +15,7 @@ dist-server
 coverage
 *.local
 .env
+.env_*
 
 /cypress/videos/
 /cypress/screenshots/
