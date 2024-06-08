@@ -39,6 +39,7 @@
   import 'prismjs/components/prism-json';
   import 'prismjs/components/prism-bash';
   import 'prismjs/components/prism-http';
+  import 'prismjs/components/prism-python';
   import 'prismjs/components/prism-go';
 
   import 'prismjs/themes/prism-okaidia.css';
@@ -173,7 +174,7 @@
 <template>
 
   <div>
-    <el-tooltip content="Chat with our AI, Obey" placement="left" effect="light">
+    <el-tooltip content="Chat with our AI, Opey" placement="left" effect="light">
       <div class="chat-button" @click="toggleChat">
         <img alt="AI Help" src="@/assets/chatbot.png" />
       </div>
@@ -185,7 +186,7 @@
       <div class="chat-container-inner">
         <div class="resizer" @mousedown="initResize"></div>
         <div class="chat-header">
-          <span>Chat with Obey</span>
+          <span>Chat with Opey</span>
           <img alt="Powered by OpenAI" src="@/assets/powered-by-openai-badge-outlined-on-dark.svg" height="32">
         </div>
         <div class="chat-messages" ref="messages">
