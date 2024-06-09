@@ -52,6 +52,7 @@
         userInput: '',
         messages: [],
         sessionId: uuidv4(),
+        isLoading: false,
         obpApiHost: null
       };
     },
@@ -72,6 +73,7 @@
           const newMessage = { role: 'user', content: this.userInput };
           this.messages.push(newMessage);
           this.userInput = '';
+          this.isLoading = true;
   
           // Send the user message to the backend and get the response
           console.log('Sending message:', newMessage.content);
@@ -86,15 +88,18 @@
                 obp_api_host: this.obpApiHost
             });
 
-            console.log('Response:', response.data);
+            
+            if (response.status != 200) {
+              console.log(`Response: ${response.status} ${response.data} `);
+              throw new Error("We're having trouble connecting you to Opey right now...");
+            }
             this.messages.push({ role: 'assistant', content: response.data.reply });
           } catch (error) {
             console.error('Error:', error);
+            this.messages.push({ role: 'error', content: "We're having trouble connecting you to Opey right now..."})
+          } finally {
+            this.isLoading = false;
           }
-
-
-          const data = await response.json();
-          this.messages.push({ role: 'assistant', content: data.reply });
   
           this.$nextTick(() => {
             this.scrollToBottom();
@@ -191,7 +196,12 @@
         </div>
         <div class="chat-messages" ref="messages">
           <div v-for="(message, index) in messages" :key="index" :class="['chat-message', message.role]">
-            <div v-html="renderMarkdown(message.content)"></div>
+            <div v-if="message.role=='error'">
+              <el-icon><Warning /></el-icon> <div v-html="renderMarkdown(message.content)"></div>
+            </div>
+            <div v-else>
+              <div v-html="renderMarkdown(message.content)"></div>
+            </div>
           </div>
         </div>
         <div class="chat-input">
@@ -317,6 +327,11 @@
 
 .chat-message.assistant {
   background-color: #fff;
+}
+
+.chat-message.error {
+  background-color: #eec2c2;
+  color: #b10101;
 }
 
 .chat-input {
