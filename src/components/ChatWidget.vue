@@ -203,6 +203,11 @@
               <div v-html="renderMarkdown(message.content)"></div>
             </div>
           </div>
+          <div if="isLoading" class="chat-message assistant typing">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+          </div>
         </div>
         <div class="chat-input">
           <textarea v-model="userInput" placeholder="Type your message..." @keypress="submitEnter"></textarea>
@@ -334,6 +339,43 @@
   color: #b10101;
 }
 
+.chat-message.typing {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #333;
+  border-radius: 5px;
+  padding: 10px;
+  margin-bottom: 10px;
+  font-size: 14px;
+  max-width: 70%;
+}
+
+.typing .dot {
+  width: 8px;
+  height: 8px;
+  margin: 0 5px;
+  background-color: #007bff;
+  border-radius: 50%;
+  animation: loading 1s infinite;
+}
+
+.typing .dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing .dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes loading {
+  0%, 80%, 100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1);
+  }
+}
 .chat-input {
   display: flex;
   padding: 10px;
