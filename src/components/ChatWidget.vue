@@ -203,7 +203,7 @@
               <div v-html="renderMarkdown(message.content)"></div>
             </div>
           </div>
-          <div if="isLoading" class="chat-message assistant typing">
+          <div v-if="isLoading" class="chat-message assistant typing">
             <div class="dot"></div>
             <div class="dot"></div>
             <div class="dot"></div>
