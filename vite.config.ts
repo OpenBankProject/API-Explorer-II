@@ -43,6 +43,11 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },
+      '^/opey': {
+          target: import.meta.env.VITE_CHATBOT_ENDPOINT_URL,
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/opey/, ''),
+      },
     },
   },
 })
