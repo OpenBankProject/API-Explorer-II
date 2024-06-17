@@ -9,6 +9,7 @@ export {}
 
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
+    ChatWidget: typeof import('./src/components/ChatWidget.vue')['default']
     Collections: typeof import('./src/components/Collections.vue')['default']
     Content: typeof import('./src/components/Content.vue')['default']
     ElAlert: typeof import('element-plus/es')['ElAlert']
@@ -35,6 +36,7 @@ declare module '@vue/runtime-core' {
     ElMenu: typeof import('element-plus/es')['ElMenu']
     ElMenuItem: typeof import('element-plus/es')['ElMenuItem']
     ElRow: typeof import('element-plus/es')['ElRow']
+    ElTooltip: typeof import('element-plus/es')['ElTooltip']
     GlossarySearchNav: typeof import('./src/components/GlossarySearchNav.vue')['default']
     HeaderNav: typeof import('./src/components/HeaderNav.vue')['default']
     Menu: typeof import('./src/components/Menu.vue')['default']

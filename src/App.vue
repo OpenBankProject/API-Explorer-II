@@ -27,6 +27,9 @@
 
 <script setup lang="ts">
 import HeaderNav from './components/HeaderNav.vue'
+import ChatWidget from './components/ChatWidget.vue'
+
+const isChatbotEnabled = import.meta.env.VITE_CHATBOT_ENABLED === 'true'
 </script>
 
 <template>
@@ -37,6 +40,7 @@ import HeaderNav from './components/HeaderNav.vue'
         <HeaderNav />
       </el-header>
       <RouterView />
+      <ChatWidget v-if="isChatbotEnabled"/>
     </el-container>
   </div>
 </template>
