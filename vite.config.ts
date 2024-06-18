@@ -1,6 +1,6 @@
 import { fileURLToPath, URL } from 'node:url'
 
-import { defineConfig } from 'vite'
+import { loadEnv, defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
 
@@ -12,6 +12,9 @@ import pluginRewriteAll from 'vite-plugin-rewrite-all';
 
 // https://vitejs.dev/config/
 export default defineConfig({
+
+  const env = loadEnv(mode, process.cwd(), '');
+
   plugins: [
     vue(), vueJsx(),
     AutoImport({
@@ -44,7 +47,7 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/api/, ''),
       },
       '^/opey': {
-          target: import.meta.env.VITE_CHATBOT_ENDPOINT_URL,
+          target: 'http://test-chat.openbankproject.com',
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/opey/, ''),
       },
