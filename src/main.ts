@@ -30,6 +30,8 @@ import { createPinia } from 'pinia'
 import ElementPlus from 'element-plus'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 
+import { Check, Close } from '@element-plus/icons-vue'
+
 import App from './App.vue'
 import appRouter from './router'
 import { createI18n } from 'vue-i18n'
