@@ -12,7 +12,7 @@ import pluginRewriteAll from 'vite-plugin-rewrite-all';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  
+
   plugins: [
     vue(), vueJsx(),
     AutoImport({
@@ -45,7 +45,7 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/api/, ''),
       },
       '^/opey': {
-          target: 'http://test-chat.openbankproject.com',
+          target: 'https://test-chat.openbankproject.com',
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/opey/, ''),
       },
