@@ -45,7 +45,7 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/api/, ''),
       },
       '^/opey': {
-          target: 'https://test-chat.openbankproject.com',
+          target: 'https://test-opey.openbankproject.com',
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/opey/, ''),
       },
