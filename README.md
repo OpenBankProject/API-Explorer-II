@@ -62,6 +62,14 @@ npm test:unit
 npm run build
 ```
 
+##### Build Server 
+
+```sh
+npm run build-server
+```
+
+
+
 ##### Start the backend server
 ```sh
 npx ts-node <path-to-your-install>/server/app.ts
