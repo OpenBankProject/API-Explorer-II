@@ -31,8 +31,9 @@
   import 'prismjs/themes/prism.css'; // Choose a theme you like
   import { v4 as uuidv4 } from 'uuid';
   import axios from 'axios';
-  import { inject } from 'vue';
+  import { inject, onMounted, ref } from 'vue';
   import { obpApiHostKey } from '@/obp/keys';
+  import { getCurrentUser } from '../obp';
   import { Check, Close } from '@element-plus/icons-vue'
 
   import 'prismjs/components/prism-markup';
@@ -43,7 +44,6 @@
   import 'prismjs/components/prism-python';
   import 'prismjs/components/prism-go';
   import 'prismjs/themes/prism-okaidia.css';
-  
 
   export default {
     data() {
@@ -53,11 +53,13 @@
         messages: [],
         sessionId: uuidv4(),
         isLoading: false,
-        obpApiHost: null
+        obpApiHost: null,
+        isLoggedIn: null,
       };
     },
     created() {
       this.obpApiHost = inject(obpApiHostKey);
+      this.checkLoginStatus();
     },
     methods: {
       toggleChat() {
@@ -67,6 +69,16 @@
             this.scrollToBottom();
           }
         });
+      },
+      async checkLoginStatus() {
+        const currentUser = await getCurrentUser()
+        const currentResponseKeys = Object.keys(currentUser)
+        if (currentResponseKeys.includes('username')) {
+          this.isLoggedIn = true
+        } else {
+          this.isLoggedIn = null
+        }
+        console.log(`Logged In:${this.isLoggedIn}`)
       },
       async sendMessage() {
         if (this.userInput.trim()) {
@@ -196,7 +208,7 @@
           <span>Chat with Opey</span>
           <img alt="Powered by OpenAI" src="@/assets/powered-by-openai-badge-outlined-on-dark.svg" height="32">
         </div>
-        <div class="chat-messages" ref="messages">
+        <div v-if="this.isLoggedIn" class="chat-messages" ref="messages">
           <div v-for="(message, index) in messages" :key="index" :class="['chat-message', message.role]">
             <div v-if="message.role=='error'">
               <el-icon><Warning /></el-icon> <div v-html="renderMarkdown(message.content)"></div>
@@ -240,9 +252,26 @@
             <div class="dot"></div>
           </div>
         </div>
+        <div v-else class="chat-messages">
+          <p>Opey is only availabled when logged in. <a v-bind:href="'/api/connect'">Log In</a> </p>
+        </div>
         <div class="chat-input">
-          <textarea v-model="userInput" placeholder="Type your message..." @keypress="submitEnter"></textarea>
-          <button @click="sendMessage">Send</button>
+          <el-input
+            v-model="userInput"
+            placeholder="Type your message..."
+            @keypress="submitEnter"
+            type="textarea"
+            :disabled="!isLoggedIn ? '' : disabled"
+          >
+          </el-input>
+          <!--<textarea v-model="userInput" placeholder="Type your message..." @keypress="submitEnter"></textarea>-->
+          <button 
+            @click="sendMessage" 
+            :disabled="!isLoggedIn ? '' : disabled"
+            :style="!isLoggedIn ? 'background-color:#929292; cursor:not-allowed' : ''"
+          >
+          Send
+          </button>
         </div>
       </div>
     </div>
