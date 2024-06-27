@@ -1,6 +1,6 @@
 import { fileURLToPath, URL } from 'node:url'
 
-import { defineConfig } from 'vite'
+import { loadEnv, defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
 
@@ -12,6 +12,7 @@ import pluginRewriteAll from 'vite-plugin-rewrite-all';
 
 // https://vitejs.dev/config/
 export default defineConfig({
+
   plugins: [
     vue(), vueJsx(),
     AutoImport({
@@ -42,6 +43,11 @@ export default defineConfig({
         target: 'http://localhost:8085/api',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+      '^/opey': {
+          target: 'https://test-opey.openbankproject.com',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/opey/, ''),
       },
     },
   },

@@ -28,6 +28,9 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import ElementPlus from 'element-plus'
+import * as ElementPlusIconsVue from '@element-plus/icons-vue'
+
+import { Check, Close } from '@element-plus/icons-vue'
 
 import App from './App.vue'
 import appRouter from './router'
@@ -49,6 +52,9 @@ import { getCacheStorageInfo } from './obp/common-functions'
 (async () => {
   const app = createApp(App)
   const router = await appRouter()
+  for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+    app.component(key, component)
+  }
   try {
     const worker = new Worker('/js/worker/web-worker.js')
     const isDataSetup = await setupData(app, worker)

@@ -56,19 +56,21 @@ npm test:unit
 
 ## Compile and Minify for Production
 
-##### Build API-Explorer II front-end
+##### Build 
 
 ```sh
-npm run-script build
+npm run build
 ```
 
-##### Build API-Explorer II back-end
+##### Build Server 
 
 ```sh
-npm run-script build-server
+npm run build-server
 ```
 
-##### Start API-Explorer II back-end
+
+
+##### Start the backend server
 ```sh
 npx ts-node <path-to-your-install>/server/app.js
 ```
