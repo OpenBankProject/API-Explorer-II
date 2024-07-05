@@ -78,7 +78,6 @@
         } else {
           this.isLoggedIn = null
         }
-        console.log(`Logged In:${this.isLoggedIn}`)
       },
       async sendMessage() {
         if (this.userInput.trim()) {
@@ -90,21 +89,18 @@
           // Send the user message to the backend and get the response
           console.log('Sending message:', newMessage.content);
 
-          // DEBUG
-          console.log('OBP API HOST: ', this.obpApiHost)
-
           try {
-            const response = await axios.post('/opey/chat', {
+            const response = await axios.post('/api/opey/chat', {
                 session_id: this.sessionId,
                 message: newMessage.content,
                 obp_api_host: this.obpApiHost
             });
             
-            console.log(response)
+            //console.log(response)
 
             
             if (response.status != 200) {
-              console.log(`Response: ${response.status} ${response.data} `);
+              console.log(`Response: ${response.status}`);
               throw new Error("We're having trouble connecting you to Opey right now...");
             }
             this.messages.push({ role: 'assistant', content: response.data.reply });
