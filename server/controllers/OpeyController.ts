@@ -31,6 +31,8 @@ import axios from 'axios';
 import OBPClientService from '../services/OBPClientService'
 import OauthInjectedService from '../services/OauthInjectedService'
 import { Service } from 'typedi'
+import * as fs from 'fs'
+import * as jwt from 'jsonwebtoken'
 import superagent from 'superagent'
 
 @Service()
@@ -38,6 +40,7 @@ import superagent from 'superagent'
 export class OpeyController {
   private obpExplorerHome = process.env.VITE_OBP_API_EXPLORER_HOST
   private chatBotUrl = process.env.VITE_CHATBOT_URL
+  private opeySecret = process.env.VITE_OPEY_SECRET
   constructor(
     private obpClientService: OBPClientService,
     private oauthInjectedService: OauthInjectedService
@@ -50,25 +53,44 @@ export class OpeyController {
     @Res() response: Response
   ): Response {
     try {
-
-    
+      const oauthService = this.oauthInjectedService
+      const consumer = oauthService.getConsumer()
+      // Get current user
       const oauthConfig = session['clientConfig']
-      this.printRequest(request)
-      console.log(oauthConfig.json)
-      const chatResponse = await axios.post(`${this.chatBotUrl}/chat`, {
-          session_id: request.body.session_id,
-          message: request.body.message,
-          obp_api_host: request.body.obp_api_host,
-          
+      const version = this.obpClientService.getOBPVersion()
+      const currentUser = await this.obpClientService.get(`/obp/${version}/users/current`, oauthConfig)
+      const currentResponseKeys = Object.keys(currentUser)
+      // If current user is logged in, issue JWT signed with private key
+      if (currentResponseKeys.includes('user_id')) {
+        // sign
+        const jwtToken = this.generateJWT(currentUser.user_id, currentUser.username, session)
+    
+        // Send request with jwt token
+        try {
+          const res = await axios.post(`${this.chatBotUrl}/chat`, {
+            session_id: request.body.session_id,
+            message: request.body.message,
+            obp_api_host: request.body.obp_api_host,
+          }, {
+            headers: {
+              'Authorization': `Bearer ${jwtToken}`
+            }
+          });
+          return response.json(res.data);
+        } catch (error) {
+          console.error("Error in chat endpoint: ", error);
+          return response.status(500).json({ error: 'Internal Server Error' });
         }
-      );
-      return response.json(chatResponse.data)
+      } else {
+        return response.status(400).json({ message: 'User not logged in, Authentication required' });
+      }
     } catch (error) {
-      console.error("Error in chat endpoint: ", error)
-      return response.status(500).json({ error: 'Internal Server Error'})
+      console.error("Error in chat endpoint: ", error);
+      return response.status(500).json({ error: 'Internal Server Error' });
     }
   }
 
+  /*
   printRequest(request: any) {
     console.log(`Request caught by opey controller: ${request.body.session_id}\n${request.body.message}\n${request.body.obp_api_host}`)
   }
@@ -76,4 +98,33 @@ export class OpeyController {
   printResponse(response: any) {
     console.log(`Response caught by opey controller: ${response.data}`)
   }
+  */
+
+  generateJWT(obpUserId: string, obpUsername: string, session: typeof Session): string {
+      // Retrieve secret key
+      let privateKey: string;
+      if (session['opeyToken']) {
+        console.log("Returning cached token");
+        return session['opeyToken'];
+      }
+
+      try {
+        privateKey = fs.readFileSync('./server/cert/private_key.pem', {encoding: 'utf-8'});
+      } catch (error) {
+        console.error("Error reading private key: ", error);
+        return '';
+      }
+      
+  
+      const payload = {
+        user_id: obpUserId,
+        username: obpUsername,
+        exp: Math.floor(Date.now() / 1000) + (60 * 60),
+      };
+  
+      const token = jwt.sign(payload, privateKey, { algorithm: 'RS256' });
+      session['opeyToken'] = token;
+
+      return token
+    }
 }
