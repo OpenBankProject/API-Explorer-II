@@ -33,6 +33,7 @@ import OauthInjectedService from '../services/OauthInjectedService'
 import { Service } from 'typedi'
 import * as fs from 'fs'
 import * as jwt from 'jsonwebtoken'
+import WebSocket from 'ws'
 import superagent from 'superagent'
 
 @Service()
@@ -64,23 +65,45 @@ export class OpeyController {
       if (currentResponseKeys.includes('user_id')) {
         // sign
         const jwtToken = this.generateJWT(currentUser.user_id, currentUser.username, session)
-    
+        
+        // Establish websocket connection
+        const ws = new WebSocket(`${this.chatBotUrl.replace('http', 'ws')}/chat`, {
+          headers: {
+            'Authorization': `Bearer ${jwtToken}`
+          }
+        });
+
         // Send request with jwt token
-        try {
-          const res = await axios.post(`${this.chatBotUrl}/chat`, {
+        ws.on('open', () => {
+          // Send request data
+          ws.send(JSON.stringify({
             session_id: request.body.session_id,
             message: request.body.message,
             obp_api_host: request.body.obp_api_host,
-          }, {
-            headers: {
-              'Authorization': `Bearer ${jwtToken}`
-            }
-          });
-          return response.json(res.data);
-        } catch (error) {
-          console.error("Error in chat endpoint: ", error);
-          return response.status(500).json({ error: 'Internal Server Error' });
-        }
+          }));
+        });
+
+        ws.on('message', (data) => {
+          const message = JSON.parse(data.toString());
+          // Handle incoming message
+          console.log("Message delta: ", message);
+          response.write(JSON.stringify(message));
+        });
+
+        ws.on('close', () => {
+          response.end();
+        });
+
+        ws.on('error', (error) => {
+          console.error("WebSocket error: ", error);
+          response.status(500).json({ error: 'WebSocket Error' });
+        });
+
+        request.on('close', () => {
+          ws.close();
+        });
+        
+        return response;
       } else {
         return response.status(400).json({ message: 'User not logged in, Authentication required' });
       }
@@ -90,15 +113,33 @@ export class OpeyController {
     }
   }
 
-  /*
-  printRequest(request: any) {
-    console.log(`Request caught by opey controller: ${request.body.session_id}\n${request.body.message}\n${request.body.obp_api_host}`)
+  @Post('/token')
+  async getToken(
+    @Session() session: any,
+    @Req() request: Request,
+    @Res() response: Response
+  ): Response {
+    try {
+      const oauthService = this.oauthInjectedService
+      const consumer = oauthService.getConsumer()
+      // Get current user
+      const oauthConfig = session['clientConfig']
+      const version = this.obpClientService.getOBPVersion()
+      const currentUser = await this.obpClientService.get(`/obp/${version}/users/current`, oauthConfig)
+      const currentResponseKeys = Object.keys(currentUser)
+      // If current user is logged in, issue JWT signed with private key
+      if (currentResponseKeys.includes('user_id')) {
+        // sign
+        const jwtToken = this.generateJWT(currentUser.user_id, currentUser.username, session)
+        return response.status(200).json({ token: jwtToken });
+      } else {
+        return response.status(400).json({ message: 'User not logged in, Authentication required' });
+      }
+    } catch (error) {
+      console.error("Error in token endpoint: ", error);
+      return response.status(500).json({ error: 'Internal Server Error' });
+    }
   }
-
-  printResponse(response: any) {
-    console.log(`Response caught by opey controller: ${response.data}`)
-  }
-  */
 
   generateJWT(obpUserId: string, obpUsername: string, session: typeof Session): string {
       // Retrieve secret key

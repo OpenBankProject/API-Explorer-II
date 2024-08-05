@@ -34,6 +34,7 @@
   import { inject, onMounted, ref } from 'vue';
   import { obpApiHostKey } from '@/obp/keys';
   import { getCurrentUser } from '../obp';
+  import { socket } from '@/socket';
   import { Check, Close } from '@element-plus/icons-vue'
 
   import 'prismjs/components/prism-markup';
@@ -58,6 +59,7 @@
       };
     },
     created() {
+      this.chatBotUrl = import.meta.env.VITE_CHATBOT_URL
       this.obpApiHost = inject(obpApiHostKey);
       this.checkLoginStatus();
     },
@@ -75,9 +77,16 @@
         const currentResponseKeys = Object.keys(currentUser)
         if (currentResponseKeys.includes('username')) {
           this.isLoggedIn = true
+          this.establishWebSocketConnection();
         } else {
           this.isLoggedIn = null
         }
+      },
+      async establishWebSocketConnection() {
+
+        console.log('Establishing WebSocket connection');
+        socket.connect();
+      
       },
       async sendMessage() {
         if (this.userInput.trim()) {
@@ -85,10 +94,10 @@
           this.messages.push(newMessage);
           this.userInput = '';
           this.isLoading = true;
-  
+
           // Send the user message to the backend and get the response
           console.log('Sending message:', newMessage.content);
-
+          /*
           try {
             const response = await axios.post('/api/opey/chat', {
                 session_id: this.sessionId,
@@ -113,7 +122,7 @@
   
           this.$nextTick(() => {
             this.scrollToBottom();
-          });
+          });*/
         }
       },
       highlightCode(content, language) {

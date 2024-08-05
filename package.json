@@ -35,12 +35,16 @@
     "redis": "^4.6.13",
     "reflect-metadata": "^0.1.13",
     "routing-controllers": "^0.10.3",
+    "socket.io": "^4.7.5",
+    "socket.io-client": "^4.7.5",
     "typedi": "^0.10.0",
     "uuid": "^9.0.1",
     "vue": "^3.2.47",
     "vue-i18n": "^9.2.2",
     "vue-markdown-renderer": "^0.2.7",
-    "vue-router": "^4.1.6"
+    "vue-router": "^4.1.6",
+    "vue-socket.io": "^3.0.10",
+    "ws": "^8.18.0"
   },
   "devDependencies": {
     "@rushstack/eslint-patch": "^1.2.0",
