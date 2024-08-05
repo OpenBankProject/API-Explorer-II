@@ -10,12 +10,13 @@ export const state = reactive({
 
 // "undefined" means the URL will be computed from the `window.location` object
 const URL = import.meta.env.VITE_CHATBOT_URL
+const token = await getOpeyJWT()
 
 export const socket = io(
   URL,
   {
     extraHeaders: {
-      Authorization: `Bearer ${getOpeyJWT()}`
+      Authorization: `Bearer ${token}`
     }
   }
 );
