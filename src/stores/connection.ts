@@ -25,15 +25,28 @@
  *
  */
 
-import { io } from "socket.io-client";
+import { defineStore } from "pinia";
+import { socket } from "@/socket";
 
-// "undefined" means the URL will be computed from the `window.location` object
-const URL = import.meta.env.VITE_CHATBOT_URL
+export const useConnectionStore = defineStore("connection", {
+  state: () => ({
+    isConnected: false,
+  }),
 
-export const socket = io(
-  URL,
-  {
-    autoConnect: false,
-  }
-);
+  actions: {
+    bindEvents() {
+      socket.on("connect", () => {
+        this.isConnected = true;
+      });
 
+      socket.on("disconnect", () => {
+        this.isConnected = false;
+      });
+    },
+
+    connect(token: string) {
+      socket.auth = { token };
+      socket.connect();
+    }
+  },
+});

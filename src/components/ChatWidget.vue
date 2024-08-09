@@ -30,12 +30,14 @@
   import MarkdownIt from "markdown-it";
   import 'prismjs/themes/prism.css'; // Choose a theme you like
   import { v4 as uuidv4 } from 'uuid';
-  import axios from 'axios';
-  import { inject, onMounted, ref } from 'vue';
+  import { inject } from 'vue';
   import { obpApiHostKey } from '@/obp/keys';
   import { getCurrentUser } from '../obp';
+  import { getOpeyJWT } from '@/obp/common-functions'
+  import { storeToRefs } from "pinia";
   import { socket } from '@/socket';
-  import { Check, Close } from '@element-plus/icons-vue'
+  import { useConnectionStore } from '@/stores/connection';
+  import { useChatStore } from '@/stores/chat';
 
   import 'prismjs/components/prism-markup';
   import 'prismjs/components/prism-javascript';
@@ -47,11 +49,23 @@
   import 'prismjs/themes/prism-okaidia.css';
 
   export default {
+    setup() {
+      const chatStore = useChatStore();
+      const connectionStore = useConnectionStore();
+
+      socket.off()
+
+      chatStore.bindEvents();
+      connectionStore.bindEvents();
+
+      const { isStreaming, chatMessages, currentMessageSnapshot } = storeToRefs(chatStore);
+
+      return {isStreaming, chatMessages, currentMessageSnapshot, chatStore, connectionStore}
+    },
     data() {
       return {
         isOpen: false,
         userInput: '',
-        messages: [],
         sessionId: uuidv4(),
         isLoading: false,
         obpApiHost: null,
@@ -83,20 +97,52 @@
         }
       },
       async establishWebSocketConnection() {
+        // Get the Opey JWT token
+        let token = ''
+        try {
+          token = await getOpeyJWT()
+        } catch (error) {
+          console.log(error)
+          token = ''
+        }
 
+        socket.auth = { token };
+ 
+        // Establish the WebSocket connection
         console.log('Establishing WebSocket connection');
-        socket.connect();
+        this.connectionStore.connect(token)
       
       },
       async sendMessage() {
         if (this.userInput.trim()) {
           const newMessage = { role: 'user', content: this.userInput };
-          this.messages.push(newMessage);
+          this.chatMessages.push(newMessage);
           this.userInput = '';
           this.isLoading = true;
+          this.currentMessage = "",
 
           // Send the user message to the backend and get the response
           console.log('Sending message:', newMessage.content);
+          socket.emit('chat', {
+              session_id: this.sessionId,
+              message: newMessage.content,
+              obp_api_host: this.obpApiHost
+          });
+
+          socket.on('response stream start', (response) => {
+            this.isLoading = false;
+          });
+          /*
+          
+
+          socket.on('response stream delta', (response) => {
+            this.isLoading = false;
+            console.log('Response:', response);
+            this.currentMessage += response.assistant;
+          });
+
+          
+          */
           /*
           try {
             const response = await axios.post('/api/opey/chat', {
@@ -112,10 +158,10 @@
               console.log(`Response: ${response.status}`);
               throw new Error("We're having trouble connecting you to Opey right now...");
             }
-            this.messages.push({ role: 'assistant', content: response.data.reply });
+            this.chatMessages.push({ role: 'assistant', content: response.data.reply });
           } catch (error) {
             console.error('Error:', error);
-            this.messages.push({ role: 'error', content: "We're having trouble connecting you to Opey right now..."})
+            this.chatMessages.push({ role: 'error', content: "We're having trouble connecting you to Opey right now..."})
           } finally {
             this.isLoading = false;
           }
@@ -214,9 +260,12 @@
           <img alt="Powered by OpenAI" src="@/assets/powered-by-openai-badge-outlined-on-dark.svg" height="32">
         </div>
         <div v-if="this.isLoggedIn" class="chat-messages" ref="messages">
-          <div v-for="(message, index) in messages" :key="index" :class="['chat-message', message.role]">
+          <div v-for="(message, index) in chatMessages" :key="index" :class="['chat-message', message.role]">
             <div v-if="message.role=='error'">
               <el-icon><Warning /></el-icon> <div v-html="renderMarkdown(message.content)"></div>
+            </div>
+            <div v-else-if="(this.isStreaming)&&(index === this.chatMessages.length -1)">
+              <div v-html="renderMarkdown(this.currentMessageSnapshot)"></div>
             </div>
             <div v-else>
               <div v-html="renderMarkdown(message.content)"></div>

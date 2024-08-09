@@ -39,79 +39,10 @@ import superagent from 'superagent'
 @Service()
 @Controller('/opey')
 export class OpeyController {
-  private obpExplorerHome = process.env.VITE_OBP_API_EXPLORER_HOST
-  private chatBotUrl = process.env.VITE_CHATBOT_URL
-  private opeySecret = process.env.VITE_OPEY_SECRET
   constructor(
     private obpClientService: OBPClientService,
     private oauthInjectedService: OauthInjectedService
   ) {}
-
-  @Post('/chat')
-  async chat(
-    @Session() session: any,
-    @Req() request: Request,
-    @Res() response: Response
-  ): Response {
-    try {
-      const oauthService = this.oauthInjectedService
-      const consumer = oauthService.getConsumer()
-      // Get current user
-      const oauthConfig = session['clientConfig']
-      const version = this.obpClientService.getOBPVersion()
-      const currentUser = await this.obpClientService.get(`/obp/${version}/users/current`, oauthConfig)
-      const currentResponseKeys = Object.keys(currentUser)
-      // If current user is logged in, issue JWT signed with private key
-      if (currentResponseKeys.includes('user_id')) {
-        // sign
-        const jwtToken = this.generateJWT(currentUser.user_id, currentUser.username, session)
-        
-        // Establish websocket connection
-        const ws = new WebSocket(`${this.chatBotUrl.replace('http', 'ws')}/chat`, {
-          headers: {
-            'Authorization': `Bearer ${jwtToken}`
-          }
-        });
-
-        // Send request with jwt token
-        ws.on('open', () => {
-          // Send request data
-          ws.send(JSON.stringify({
-            session_id: request.body.session_id,
-            message: request.body.message,
-            obp_api_host: request.body.obp_api_host,
-          }));
-        });
-
-        ws.on('message', (data) => {
-          const message = JSON.parse(data.toString());
-          // Handle incoming message
-          console.log("Message delta: ", message);
-          response.write(JSON.stringify(message));
-        });
-
-        ws.on('close', () => {
-          response.end();
-        });
-
-        ws.on('error', (error) => {
-          console.error("WebSocket error: ", error);
-          response.status(500).json({ error: 'WebSocket Error' });
-        });
-
-        request.on('close', () => {
-          ws.close();
-        });
-        
-        return response;
-      } else {
-        return response.status(400).json({ message: 'User not logged in, Authentication required' });
-      }
-    } catch (error) {
-      console.error("Error in chat endpoint: ", error);
-      return response.status(500).json({ error: 'Internal Server Error' });
-    }
-  }
 
   @Post('/token')
   async getToken(
@@ -120,8 +51,6 @@ export class OpeyController {
     @Res() response: Response
   ): Response {
     try {
-      const oauthService = this.oauthInjectedService
-      const consumer = oauthService.getConsumer()
       // Get current user
       const oauthConfig = session['clientConfig']
       const version = this.obpClientService.getOBPVersion()
