@@ -44,14 +44,6 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },
-<<<<<<< HEAD
-      '^/opey': {
-          target: 'https://test-opey.openbankproject.com',
-          changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/opey/, ''),
-      },
-=======
->>>>>>> 8b62bfb (refactor to use controllers)
     },
   },
 })
