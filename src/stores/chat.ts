@@ -33,6 +33,7 @@ export const useChatStore = defineStore('chat', {
         chatMessages: [] as {role: string; content: string}[],
         isStreaming: false,
         currentMessageSnapshot: "" as string,
+        lastError: "" as string,
         waitingForResponse: false,
     }),
     actions: {
@@ -51,12 +52,15 @@ export const useChatStore = defineStore('chat', {
                 this.currentMessageSnapshot += response.assistant;
             });
 
+            socket.on('error', (error) => {
+                this.lastError = error.error;
+                console.error(error.error);
+            })
+
             socket.on('response stream end', (response) => {
                 this.isStreaming = false;
-                console.log(this.chatMessages[this.chatMessages.length - 1].content)
                 this.chatMessages[this.chatMessages.length - 1].content = this.currentMessageSnapshot
                 this.currentMessageSnapshot = ""
-                console.log(this.chatMessages)
             });
         }
     }

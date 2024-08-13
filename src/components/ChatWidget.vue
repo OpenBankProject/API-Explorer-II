@@ -38,6 +38,7 @@
   import { socket } from '@/socket';
   import { useConnectionStore } from '@/stores/connection';
   import { useChatStore } from '@/stores/chat';
+  import { ElMessage } from 'element-plus';
 
   import 'prismjs/components/prism-markup';
   import 'prismjs/components/prism-javascript';
@@ -58,9 +59,9 @@
       chatStore.bindEvents();
       connectionStore.bindEvents();
 
-      const { isStreaming, chatMessages, currentMessageSnapshot } = storeToRefs(chatStore);
+      const { isStreaming, chatMessages, currentMessageSnapshot, lastError } = storeToRefs(chatStore);
 
-      return {isStreaming, chatMessages, currentMessageSnapshot, chatStore, connectionStore}
+      return {isStreaming, chatMessages, lastError, currentMessageSnapshot, chatStore, connectionStore}
     },
     data() {
       return {
@@ -70,6 +71,7 @@
         isLoading: false,
         obpApiHost: null,
         isLoggedIn: null,
+        errorState: false,
       };
     },
     created() {
@@ -102,6 +104,11 @@
         try {
           token = await getOpeyJWT()
         } catch (error) {
+          this.errorState = true
+          ElMessage({
+            message: 'Error getting Opey JWT token',
+            type: 'error'
+          });
           console.log(error)
           token = ''
         }
@@ -119,6 +126,7 @@
           this.chatMessages.push(newMessage);
           this.userInput = '';
           this.isLoading = true;
+          this.errorState = false;
           this.currentMessage = "",
 
           // Send the user message to the backend and get the response
@@ -132,43 +140,12 @@
           socket.on('response stream start', (response) => {
             this.isLoading = false;
           });
-          /*
-          
 
-          socket.on('response stream delta', (response) => {
+          socket.on('error', () => {
+            this.errorState = true;
             this.isLoading = false;
-            console.log('Response:', response);
-            this.currentMessage += response.assistant;
+            console.log(this.lastError);
           });
-
-          
-          */
-          /*
-          try {
-            const response = await axios.post('/api/opey/chat', {
-                session_id: this.sessionId,
-                message: newMessage.content,
-                obp_api_host: this.obpApiHost
-            });
-            
-            //console.log(response)
-
-            
-            if (response.status != 200) {
-              console.log(`Response: ${response.status}`);
-              throw new Error("We're having trouble connecting you to Opey right now...");
-            }
-            this.chatMessages.push({ role: 'assistant', content: response.data.reply });
-          } catch (error) {
-            console.error('Error:', error);
-            this.chatMessages.push({ role: 'error', content: "We're having trouble connecting you to Opey right now..."})
-          } finally {
-            this.isLoading = false;
-          }
-  
-          this.$nextTick(() => {
-            this.scrollToBottom();
-          });*/
         }
       },
       highlightCode(content, language) {
@@ -261,10 +238,7 @@
         </div>
         <div v-if="this.isLoggedIn" class="chat-messages" ref="messages">
           <div v-for="(message, index) in chatMessages" :key="index" :class="['chat-message', message.role]">
-            <div v-if="message.role=='error'">
-              <el-icon><Warning /></el-icon> <div v-html="renderMarkdown(message.content)"></div>
-            </div>
-            <div v-else-if="(this.isStreaming)&&(index === this.chatMessages.length -1)">
+            <div v-if="(this.isStreaming)&&(index === this.chatMessages.length -1)">
               <div v-html="renderMarkdown(this.currentMessageSnapshot)"></div>
             </div>
             <div v-else>
@@ -309,6 +283,13 @@
         <div v-else class="chat-messages">
           <p>Opey is only availabled when logged in. <a v-bind:href="'/api/connect'">Log In</a> </p>
         </div>
+        <el-alert
+          v-if="this.errorState"
+          title="Trouble connecting to Opey"
+          type="error"
+          :description="this.lastError"
+          show-icon
+        />
         <div class="chat-input">
           <el-input
             v-model="userInput"
@@ -349,6 +330,10 @@
   align-items: center;
   box-shadow: 0 0 20px rgba(0, 123, 255, 0.6);
   transition: box-shadow 0.3s;
+}
+
+.el-alert {
+  font-family: ui-sans-serif,-apple-system,system-ui,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif,Helvetica,Apple Color Emoji,Arial,Segoe UI Emoji,Segoe UI Symbol;
 }
 
 .quit-button-container {
