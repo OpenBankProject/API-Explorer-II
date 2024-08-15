@@ -27,17 +27,19 @@
 
 import { Controller, Session, Req, Res, Post } from 'routing-controllers'
 import { Request, Response } from 'express'
-import axios from 'axios';
 import OBPClientService from '../services/OBPClientService'
 import OauthInjectedService from '../services/OauthInjectedService'
 import { Service } from 'typedi'
 import * as fs from 'fs'
 import * as jwt from 'jsonwebtoken'
-import WebSocket from 'ws'
-import superagent from 'superagent'
 
 @Service()
 @Controller('/opey')
+/**
+ * Controller class for handling Opey related operations.
+ * This used to hold the /chat endpoint, but that endpoint has become obsolete since using websockets. 
+ * Now it serves to get tokens to authenticate the user at websocket handshake.
+ */
 export class OpeyController {
   constructor(
     private obpClientService: OBPClientService,
@@ -45,6 +47,17 @@ export class OpeyController {
   ) {}
 
   @Post('/token')
+  /**
+   * Retrieves a JWT token for the current user.
+   * This only works if the user is logged in. (i.e. the user has a valid session)
+   * Request for the token is made to POST /api/opey/token
+   * 
+   * @param session - The session object.
+   * @param request - The request object.
+   * @param response - The response object.
+   * @returns The response containing the JWT token or an error message.
+   * 
+   */
   async getToken(
     @Session() session: any,
     @Req() request: Request,
@@ -70,7 +83,15 @@ export class OpeyController {
     }
   }
 
+  /**
+   * Generates a JSON Web Token (JWT) for the given Open Bank Project (OBP) user.
+   * @param obpUserId - The ID of the OBP user.
+   * @param obpUsername - The username of the OBP user.
+   * @param session - The session object.
+   * @returns The generated JWT.
+   */
   generateJWT(obpUserId: string, obpUsername: string, session: typeof Session): string {
+
       // Retrieve secret key
       let privateKey: string;
       if (session['opeyToken']) {
@@ -78,6 +99,9 @@ export class OpeyController {
         return session['opeyToken'];
       }
 
+      // Read private key from file
+      // Private key must be in the server/cert directory, this is pretty janky at the moment and should be improved
+      // Opey must also have a copy of the public key to verify the JWT
       try {
         privateKey = fs.readFileSync('./server/cert/private_key.pem', {encoding: 'utf-8'});
       } catch (error) {
@@ -85,7 +109,7 @@ export class OpeyController {
         return '';
       }
       
-  
+      // Allows some user data to be passed in the JWT (this could be the obp consent in the future)
       const payload = {
         user_id: obpUserId,
         username: obpUsername,
