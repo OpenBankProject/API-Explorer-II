@@ -28,26 +28,36 @@
 import { defineStore } from 'pinia'
 import { socket } from '@/socket'
 
+/**
+ * Represents a Pinia store for managing chat messages and chatbot responses.
+ */
 export const useChatStore = defineStore('chat', {
     state: () => ({
+        // Messages a list of messages in the OpenAI format
         chatMessages: [] as {role: string; content: string}[],
+        // Tells us wether a response from the chatbot is currently being streamed or not
         isStreaming: false,
+        // The partial message at a particular moment in time
         currentMessageSnapshot: "" as string,
         lastError: "" as string,
         waitingForResponse: false,
     }),
     actions: {
         bindEvents() {
+            // TODO: Maybe we don't need to log this except for DEBUG, keep same for now
             socket.on("connect", () => {
                 console.log("Connected to chatbot");
             })
 
+            // When the assistant stream response starts, we set isStreaming to true
             socket.on('response stream start', (response) => {
                 this.isStreaming = true;
                 this.waitingForResponse = true;
+                // We create a temporary blank assistant message for the ChatWidget to render and add text deltas to when they come in
                 this.chatMessages.push({ role: 'assistant', content: " "})
             });
 
+            // Text deltas received from the assistant stream (they are like little snippets of the generated response)
             socket.on('response stream delta', (response) => {
                 this.currentMessageSnapshot += response.assistant;
             });

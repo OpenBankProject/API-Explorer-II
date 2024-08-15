@@ -28,7 +28,6 @@
 import { Controller, Session, Req, Res, Post } from 'routing-controllers'
 import { Request, Response } from 'express'
 import OBPClientService from '../services/OBPClientService'
-import OauthInjectedService from '../services/OauthInjectedService'
 import { Service } from 'typedi'
 import * as fs from 'fs'
 import * as jwt from 'jsonwebtoken'
@@ -39,11 +38,11 @@ import * as jwt from 'jsonwebtoken'
  * Controller class for handling Opey related operations.
  * This used to hold the /chat endpoint, but that endpoint has become obsolete since using websockets. 
  * Now it serves to get tokens to authenticate the user at websocket handshake.
+ * This is called from the frontend when ChatWidget.vue is mounted. (It is done at the backend to keep the private key secret) 
  */
 export class OpeyController {
   constructor(
     private obpClientService: OBPClientService,
-    private oauthInjectedService: OauthInjectedService
   ) {}
 
   @Post('/token')

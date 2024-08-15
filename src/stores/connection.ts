@@ -28,12 +28,20 @@
 import { defineStore } from "pinia";
 import { socket } from "@/socket";
 
+/**
+ * Creates a connection store using Pinia's defineStore function.
+ * The connection store manages the connection status and provides actions to connect and bind websocket events.
+ */
 export const useConnectionStore = defineStore("connection", {
   state: () => ({
     isConnected: false,
   }),
 
   actions: {
+    /**
+     * Binds events to the socket connection.
+     * Updates the `isConnected` state when the socket connects or disconnects.
+     */
     bindEvents() {
       socket.on("connect", () => {
         this.isConnected = true;
@@ -44,6 +52,11 @@ export const useConnectionStore = defineStore("connection", {
       });
     },
 
+    /**
+     * Connects to the server using the provided token.
+     * Sets the `auth` property of the socket and connects to the server.
+     * @param token - The authentication token. I.e. a JWT
+     */
     connect(token: string) {
       socket.auth = { token };
       socket.connect();

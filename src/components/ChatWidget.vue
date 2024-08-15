@@ -51,7 +51,16 @@
 
   export default {
     setup() {
+      /**
+       * Pinia stores only work properly in the vue composition API, hence the setup() call here, which allows us to use the vue composition API within the vue options API
+       * See https://vueschool.io/articles/vuejs-tutorials/options-api-vs-composition-api/ 
+       * and https://vuejs.org/api/composition-api-setup.html
+       * */ 
+       
+      // We use a pinia store to store the chat messages, and status data like if there is a message stream currently happening or an error state.
       const chatStore = useChatStore();
+
+      // The connection store merely handles connection to the websocket, and connection status
       const connectionStore = useConnectionStore();
 
       socket.off()
@@ -88,6 +97,9 @@
           }
         });
       },
+      /**
+       * checks the log in status of the user on mount
+       */
       async checkLoginStatus() {
         const currentUser = await getCurrentUser()
         const currentResponseKeys = Object.keys(currentUser)
@@ -112,8 +124,6 @@
           console.log(error)
           token = ''
         }
-
-        socket.auth = { token };
  
         // Establish the WebSocket connection
         console.log('Establishing WebSocket connection');
@@ -122,7 +132,10 @@
       },
       async sendMessage() {
         if (this.userInput.trim()) {
+          // Message in OpenAI standard format for user message
           const newMessage = { role: 'user', content: this.userInput };
+
+          // Push message to pinia store
           this.chatMessages.push(newMessage);
           this.userInput = '';
           this.isLoading = true;
@@ -148,6 +161,12 @@
           });
         }
       },
+      /**
+       * This function highlights code blocks in the chat messages
+       * 
+       * @param content 
+       * @param language 
+       */
       highlightCode(content, language) {
         if (Prism.languages[language]) {
           return Prism.highlight(content, Prism.languages[language], language);
@@ -179,6 +198,7 @@
         const messages = this.$refs.messages;
         messages.scrollTop = messages.scrollHeight;
       },
+      // Following three functions resize the chat widget window
       initResize(event) {
         this.isResizing = true;
         this.startX = event.clientX;
@@ -398,6 +418,8 @@
   height: 470px;
   min-width: 390px;
   min-height: 470px;
+  max-width: 90vw;
+  max-height: 90vh;
   border: 1px solid #ccc;
   border-radius: 10px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
