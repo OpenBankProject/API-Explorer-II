@@ -40,3 +40,9 @@ vite.config.js
 vitest.config.d.ts
 vitest.config.js
 components.d.ts
+
+#keys
+*.pem
+private_key.pem
+public_key.pem
+./server/cert/*

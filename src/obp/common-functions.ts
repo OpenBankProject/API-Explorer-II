@@ -25,7 +25,8 @@
  *
  */
 
-import { isServerUp, serverStatus } from '.'
+import { isServerUp, serverStatus } from '.';
+import axios from 'axios';
 
 export function updateLoadingInfoMessage(logMessage: string) {
   // 1. Select the div element using the id property
@@ -68,4 +69,12 @@ export async function getCacheStorageInfo() {
     return message
   }).catch((error) => {return `Cannot estimate Cache Storage quota. ${error}`})
   return message
+}
+
+export async function getOpeyJWT() {
+  const response = await axios.post('/api/opey/token').catch((error) => {
+    console.log(error)
+  })
+  const token = String(response?.data?.token)
+  return token
 }
