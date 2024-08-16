@@ -74,7 +74,7 @@ const setOperationDetails = (id: string, version: string): void => {
   requiredRoles.value = operation.roles || []
   possibleErrors.value = operation.error_response_bodies
   connectorMethods.value = operation.connector_methods
-  showRequiredRoles.value = requiredRoles.value.some((role) => role.requires_bank_id)
+  showRequiredRoles.value = requiredRoles.value.length > 0
   showValidations.value = validations.value.length > 0
   showPossibleErrors.value = possibleErrors.value.length > 0
   showConnectorMethods.value = connectorMethods.value.length > 0
@@ -90,9 +90,7 @@ const setOperationDetails = (id: string, version: string): void => {
 const setRoleForm = () => {
   if (requiredRoles.value) {
     requiredRoles.value.forEach((role, idx) => {
-      if (role.requires_bank_id) {
-        roleForm[`role${role.role}${idx}`] = role.role
-      }
+      roleForm[`role${role.role}${idx}`] = role.role
     })
   }
 }
@@ -248,11 +246,11 @@ onBeforeRouteUpdate((to) => {
             v-for="(role, idx) in requiredRoles"
             :key="role.role"
             :name="role.role"
-            v-show="role.requires_bank_id"
+            
           >
             <p>{{ role.role }}</p>
             <div class="flex-role-preview-panel" id="request-role-button-panel">
-              <el-form-item :prop="`bankId${role.role}${idx}`">
+              <el-form-item v-show="role.requires_bank_id" :prop=" `bankId${role.role}${idx}`">
                 <input
                   type="text"
                   v-model="roleForm[`bankId${role.role}${idx}`]"
