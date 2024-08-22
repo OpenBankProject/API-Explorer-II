@@ -11,7 +11,7 @@ node_modules
 .DS_Store
 dist
 dist-ssr
-server-dist
+dist-server
 coverage
 *.local
 .env

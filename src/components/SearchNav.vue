@@ -81,11 +81,20 @@ export const initializeAPICollections = async () => {
 <script setup lang="ts">
 const route = useRoute()
 let selectedVersion = route.query.version ? route.query.version : `OBP${OBP_API_VERSION}`
+let selectedTags = route.query.tags ? route.query.tags : 'NONE'
 onBeforeMount(async () => {
   resourceDocs.value = inject(obpResourceDocsKey)!
   docs.value = getGroupedResourceDocs(selectedVersion, resourceDocs.value)
   groups.value = JSON.parse(JSON.stringify(docs.value))
-  activeKeys.value = Object.keys(groups.value)
+  if (selectedTags === 'NONE') {
+    activeKeys.value = Object.keys(groups.value)
+  } else {
+    let list = selectedTags.split(",")
+    activeKeys.value = Object.keys(groups.value).filter((value, index, array) => list.includes(value))
+    if (activeKeys.value.length === 0) {
+      activeKeys.value = Object.keys(groups.value)
+    }
+  }
   sortedKeys.value = activeKeys.value.sort()
   await initializeAPICollections()
   setTabActive(route.params.id)
