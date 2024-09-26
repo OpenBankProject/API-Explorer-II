@@ -37,6 +37,18 @@ export async function getOBPResourceDocs(apiStandardAndVersion: string): Promise
   return await get(`/obp/${OBP_API_VERSION}/resource-docs/${apiStandardAndVersion}/obp`)
 }
 
+export function getFilteredGroupedResourceDocs(apiStandardAndVersion: string, tags: any, docs: any): Promise<any> {
+  console.log(docs);
+  if (apiStandardAndVersion === undefined || docs === undefined || docs[apiStandardAndVersion] === undefined) return Promise.resolve<any>({})
+    let list = tags.split(",")
+  return docs[apiStandardAndVersion].resource_docs.filter((subArray: any) => subArray.tags.some((value: string) => list.includes(value))).reduce((values: any, doc: any) => {
+    const tag = doc.tags[0] // Group by the first tag at resorce doc
+    ;(values[tag] = values[tag] || []).push(doc)
+    console.log(values);
+    return values
+  }, {})
+}
+
 export function getGroupedResourceDocs(apiStandardAndVersion: string, docs: any): Promise<any> {
   if (apiStandardAndVersion === undefined || docs === undefined) return Promise.resolve<any>({})
 
