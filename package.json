@@ -1,6 +1,6 @@
 {
   "name": "api-explorer",
-  "version": "1.0.15",
+  "version": "1.0.16",
   "private": true,
   "scripts": {
     "dev": "vite & ts-node server/app.ts",
