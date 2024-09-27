@@ -96,7 +96,12 @@ onBeforeMount(async () => {
   setTabActive(route.params.id)
   let element = document.getElementById("selected-api-version")
   if (element !== null) {
-    element.textContent = selectedVersion;
+    const totalRows = Object.values(groups.value).reduce((acc, currentValue) => acc + currentValue.length, 0)
+    if(selectedTags === 'NONE') {
+      element.textContent = `${selectedVersion} ( ${totalRows} APIs )`;
+    } else {
+      element.textContent = `${selectedVersion} ( ${totalRows} APIs filtered by tags: ${selectedTags})`;
+    }
   }
 })
 
@@ -114,8 +119,19 @@ watch(
     sortedKeys.value = activeKeys.value.sort()
     await initializeAPICollections()
     routeToFirstAPI()
+    countApis()
   }
 )
+
+
+
+const countApis = () => {
+  let element = document.getElementById("selected-api-version")
+  if (element !== null) {
+    const totalRows = Object.values(groups.value).reduce((acc, currentValue) => acc + currentValue.length, 0)
+    element.textContent = `${selectedVersion} ( ${totalRows} APIs )`;
+  }
+}
 
 const routeToFirstAPI = () => {
   let element
