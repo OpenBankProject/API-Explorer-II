@@ -38,7 +38,7 @@ import path from 'path'
 const port = 8085
 const app: Application = express()
 
-// Initialize client.
+// Initialize Redis client.
 console.log(`--- Redis setup -------------------------------------------------`)
 process.env.VITE_OBP_REDIS_URL
   ? console.log(`VITE_OBP_REDIS_URL: ${process.env.VITE_OBP_REDIS_URL}`)
@@ -49,6 +49,14 @@ let redisClient = process.env.VITE_OBP_REDIS_URL
   : createClient()
 redisClient.connect().catch(console.error)
 
+// Provide feedback in case of successful connection to Redis
+redisClient.on('connect', () => {
+  console.log(`Connected to Redis instance: ${process.env.VITE_OBP_REDIS_URL}`);
+});
+// Provide feedback in case of unsuccessful connection to Redis
+redisClient.on('error', (err) => {
+  console.error(`Error connecting to Redis instance: ${process.env.VITE_OBP_REDIS_URL}`, err);
+});
 
 // Initialize store.
 let redisStore = new RedisStore({
