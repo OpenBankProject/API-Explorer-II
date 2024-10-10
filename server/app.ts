@@ -49,13 +49,15 @@ let redisClient = process.env.VITE_OBP_REDIS_URL
   : createClient()
 redisClient.connect().catch(console.error)
 
+const redisUrl = process.env.VITE_OBP_REDIS_URL ? process.env.VITE_OBP_REDIS_URL : 'localhost on port 6379'
+
 // Provide feedback in case of successful connection to Redis
 redisClient.on('connect', () => {
-  console.log(`Connected to Redis instance: ${process.env.VITE_OBP_REDIS_URL}`);
+  console.log(`Connected to Redis instance: ${redisUrl}`);
 });
 // Provide feedback in case of unsuccessful connection to Redis
 redisClient.on('error', (err) => {
-  console.error(`Error connecting to Redis instance: ${process.env.VITE_OBP_REDIS_URL}`, err);
+  console.error(`Error connecting to Redis instance: ${redisUrl}`, err);
 });
 
 // Initialize store.
