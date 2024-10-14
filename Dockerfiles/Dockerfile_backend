@@ -1,17 +1,16 @@
 # First stage builds the application
-FROM node:18.17.1-slim as builder
+FROM  node:lts-bullseye as builder
 
 # Add application sources
 ADD .. /home/node/app/
 WORKDIR /home/node/app
 # Install the dependencies
-RUN npm install -g npm@10.1.0
 RUN npm install
 RUN npm run build-server
 
 # Run script uses standard ways to run the application
 # CMD npm run -d start
-FROM node:18.17.1-slim
+FROM  node:lts-bullseye
 
 COPY --from=builder /home/node/app/dist-server /home/node/app
 RUN mkdir /home/node/node_modules
