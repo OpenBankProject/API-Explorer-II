@@ -27,10 +27,12 @@
 
 import en from './en.json'
 import es from './es.json'
+import ro from './ro.json'
 
 export const defaultLocale = 'EN'
 
 export const languages = {
   EN: en,
-  ES: es
+  ES: es,
+  RO: ro
 }

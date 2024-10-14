@@ -78,3 +78,25 @@ export async function getOpeyJWT() {
   const token = String(response?.data?.token)
   return token
 }
+
+export function clearCacheByName(cacheName: string) {
+  if ('caches' in window) {
+    caches.delete(cacheName).then(function(success) {
+      if (success) {
+        console.log(`Cache ${cacheName} deleted successfully`);
+      } else {
+        console.log(`Failed to delete cache ${cacheName}`);
+      }
+    });
+    caches.keys().then(function(keys) {
+      if (keys.length === 0) {
+        console.log('Cache exists but is empty');
+        const oElem = document.getElementById('cache-storage-status')
+        if (oElem) {
+          oElem.className = 'host text-is-red'
+        }
+      }
+    });
+  }
+  
+}

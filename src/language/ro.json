@@ -1,0 +1,19 @@
+{
+    "header": {
+      "portal_home": "Portal Acasă",
+      "api_explorer": "Explorator API",
+      "api_manager": "Administrator API",
+      "glossary": "Glosar",
+      "more": "Mai mult",
+      "spaces": "Spații",
+      "login": "Autentificare",
+      "logoff": "Deconectare"
+    },
+    "preview": {
+      "required_roles": "ROLURI NECESARE",
+      "validations": "VALIDĂRI",
+      "possible_errors": "POSIBILE ERORI",
+      "connector_methods": "METODE DE CONECTOR"
+    }
+  }
+  
