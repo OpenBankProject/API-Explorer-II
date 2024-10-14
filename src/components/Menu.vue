@@ -29,7 +29,7 @@
 import { ArrowDown } from '@element-plus/icons-vue'
 import { SEARCH_LINKS_COLOR as searchLinksColorSetting } from '../obp/style-setting'
 import { inject, ref } from 'vue'
-import { updateServerStatus } from '@/obp/common-functions';
+import { updateServerStatus, clearCacheByName } from '@/obp/common-functions';
 import { obpApiHostKey } from '@/obp/keys';
 
 const APP_VERSION = ref(__APP_VERSION__)
@@ -42,6 +42,10 @@ const handleLocale = (command: string) => {
 const updateStatus = (event: any) => {
   updateServerStatus()
 }
+const clearCacheStorage = (event: any) => {
+  clearCacheByName('obp-message-docs-cache')
+  clearCacheByName('obp-resource-docs-cache')
+}
 </script>
 
 <template>
@@ -51,10 +55,9 @@ const updateStatus = (event: any) => {
       <span id="selected-api-version" class="host">OBPv5.1.0</span>
     </el-col>
     <el-col :span="14" class="menu-right">
-      <span class="host">App Version: {{ APP_VERSION }}</span>
+      <span class="host" id="cache-storage-status" @click="clearCacheStorage">App Version: {{ APP_VERSION }}</span>
       &nbsp;&nbsp;
-      <span class="host"
-        ><span id="backend-status" @click="updateStatus" >API Host: </span>
+      <span class="host"><span id="backend-status" @click="updateStatus">API Host: </span>
         <a :href="OBP_API_HOST">
           {{ OBP_API_HOST }}
         </a>
@@ -69,12 +72,8 @@ const updateStatus = (event: any) => {
         </span>
         <template #dropdown>
           <el-dropdown-menu>
-            <el-dropdown-item
-              v-for="locale in $i18n.availableLocales"
-              :key="`locale-${locale}`"
-              :command="locale"
-              >{{ locale }}</el-dropdown-item
-            >
+            <el-dropdown-item v-for="locale in $i18n.availableLocales" :key="`locale-${locale}`" :command="locale">{{
+              locale }}</el-dropdown-item>
           </el-dropdown-menu>
         </template>
       </el-dropdown>
@@ -89,22 +88,31 @@ a {
   color: #7787a6;
   text-decoration: none;
 }
+
 a:hover {
   color: v-bind(searchLinksColor);
 }
+
 .host {
   font-size: 14px;
   font-family: 'Roboto';
 }
+
 .menu-left,
 .menu-right,
 .el-dropdown-menu {
   color: #7787a6;
 }
+
 .server-is-online {
   color: v-bind(searchLinksColor);
 }
+
 .server-is-offline {
+  color: red;
+}
+
+.text-is-red {
   color: red;
 }
 </style>

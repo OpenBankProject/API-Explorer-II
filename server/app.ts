@@ -38,17 +38,36 @@ import path from 'path'
 const port = 8085
 const app: Application = express()
 
-// Initialize client.
+// Initialize Redis client.
 console.log(`--- Redis setup -------------------------------------------------`)
 process.env.VITE_OBP_REDIS_URL
   ? console.log(`VITE_OBP_REDIS_URL: ${process.env.VITE_OBP_REDIS_URL}`)
   : console.log(`VITE_OBP_REDIS_URL: undefined connects to localhost on port 6379`)
+
+const redisPassword = process.env.VITE_OBP_REDIS_PASSWORD 
+  ? process.env.VITE_OBP_REDIS_PASSWORD // Redis instance is protected with a password
+  : '' // Specify an empty password (i.e., no password) when connecting to Redis
+if(!redisPassword) {
+  console.warn(`VITE_OBP_REDIS_PASSWORD is not provided.`)
+}
 console.log(`-----------------------------------------------------------------`)
-let redisClient = process.env.VITE_OBP_REDIS_URL
-  ? createClient({ url: process.env.VITE_OBP_REDIS_URL })
+const redisClient = process.env.VITE_OBP_REDIS_URL
+  ? createClient({ url: process.env.VITE_OBP_REDIS_URL, password: redisPassword })
   : createClient()
 redisClient.connect().catch(console.error)
 
+const redisUrl = process.env.VITE_OBP_REDIS_URL
+  ? process.env.VITE_OBP_REDIS_URL
+  : 'localhost on port 6379'
+
+// Provide feedback in case of successful connection to Redis
+redisClient.on('connect', () => {
+  console.log(`Connected to Redis instance: ${redisUrl}`)
+})
+// Provide feedback in case of unsuccessful connection to Redis
+redisClient.on('error', (err) => {
+  console.error(`Error connecting to Redis instance: ${redisUrl}`, err)
+})
 
 // Initialize store.
 let redisStore = new RedisStore({
