@@ -31,7 +31,7 @@ import { Search } from '@element-plus/icons-vue'
 import { inject, onBeforeMount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { OBP_API_VERSION, getMyAPICollections, getMyAPICollectionsEndpoint } from '../obp'
-import { getGroupedResourceDocs } from '../obp/resource-docs'
+import { getGroupedResourceDocs, getFilteredGroupedResourceDocs } from '../obp/resource-docs'
 import { SEARCH_LINKS_COLOR as searchLinksColorSetting } from '../obp/style-setting'
 const operationIdTitle = {}
 const resourceDocs = ref({})
@@ -81,9 +81,14 @@ export const initializeAPICollections = async () => {
 <script setup lang="ts">
 const route = useRoute()
 let selectedVersion = route.query.version ? route.query.version : `OBP${OBP_API_VERSION}`
+let selectedTags = route.query.tags ? route.query.tags : 'NONE'
 onBeforeMount(async () => {
   resourceDocs.value = inject(obpResourceDocsKey)!
-  docs.value = getGroupedResourceDocs(selectedVersion, resourceDocs.value)
+  if(selectedTags === 'NONE') {
+    docs.value = getGroupedResourceDocs(selectedVersion, resourceDocs.value)
+  } else {
+    docs.value = getFilteredGroupedResourceDocs(selectedVersion, selectedTags, resourceDocs.value)
+  }
   groups.value = JSON.parse(JSON.stringify(docs.value))
   activeKeys.value = Object.keys(groups.value)
   sortedKeys.value = activeKeys.value.sort()
@@ -91,7 +96,12 @@ onBeforeMount(async () => {
   setTabActive(route.params.id)
   let element = document.getElementById("selected-api-version")
   if (element !== null) {
-    element.textContent = selectedVersion;
+    const totalRows = Object.values(groups.value).reduce((acc, currentValue) => acc + currentValue.length, 0)
+    if(selectedTags === 'NONE') {
+      element.textContent = `${selectedVersion} ( ${totalRows} APIs )`;
+    } else {
+      element.textContent = `${selectedVersion} ( ${totalRows} APIs filtered by tags: ${selectedTags})`;
+    }
   }
 })
 
@@ -109,8 +119,19 @@ watch(
     sortedKeys.value = activeKeys.value.sort()
     await initializeAPICollections()
     routeToFirstAPI()
+    countApis()
   }
 )
+
+
+
+const countApis = () => {
+  let element = document.getElementById("selected-api-version")
+  if (element !== null) {
+    const totalRows = Object.values(groups.value).reduce((acc, currentValue) => acc + currentValue.length, 0)
+    element.textContent = `${selectedVersion} ( ${totalRows} APIs )`;
+  }
+}
 
 const routeToFirstAPI = () => {
   let element

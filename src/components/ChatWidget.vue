@@ -30,11 +30,15 @@
   import MarkdownIt from "markdown-it";
   import 'prismjs/themes/prism.css'; // Choose a theme you like
   import { v4 as uuidv4 } from 'uuid';
-  import axios from 'axios';
-  import { inject, onMounted, ref } from 'vue';
+  import { inject } from 'vue';
   import { obpApiHostKey } from '@/obp/keys';
   import { getCurrentUser } from '../obp';
-  import { Check, Close } from '@element-plus/icons-vue'
+  import { getOpeyJWT } from '@/obp/common-functions'
+  import { storeToRefs } from "pinia";
+  import { socket } from '@/socket';
+  import { useConnectionStore } from '@/stores/connection';
+  import { useChatStore } from '@/stores/chat';
+  import { ElMessage } from 'element-plus';
 
   import 'prismjs/components/prism-markup';
   import 'prismjs/components/prism-javascript';
@@ -46,18 +50,41 @@
   import 'prismjs/themes/prism-okaidia.css';
 
   export default {
+    setup() {
+      /**
+       * Pinia stores only work properly in the vue composition API, hence the setup() call here, which allows us to use the vue composition API within the vue options API
+       * See https://vueschool.io/articles/vuejs-tutorials/options-api-vs-composition-api/ 
+       * and https://vuejs.org/api/composition-api-setup.html
+       * */ 
+       
+      // We use a pinia store to store the chat messages, and status data like if there is a message stream currently happening or an error state.
+      const chatStore = useChatStore();
+
+      // The connection store merely handles connection to the websocket, and connection status
+      const connectionStore = useConnectionStore();
+
+      socket.off()
+
+      chatStore.bindEvents();
+      connectionStore.bindEvents();
+
+      const { isStreaming, chatMessages, currentMessageSnapshot, lastError } = storeToRefs(chatStore);
+
+      return {isStreaming, chatMessages, lastError, currentMessageSnapshot, chatStore, connectionStore}
+    },
     data() {
       return {
         isOpen: false,
         userInput: '',
-        messages: [],
         sessionId: uuidv4(),
         isLoading: false,
         obpApiHost: null,
         isLoggedIn: null,
+        errorState: false,
       };
     },
     created() {
+      this.chatBotUrl = import.meta.env.VITE_CHATBOT_URL
       this.obpApiHost = inject(obpApiHostKey);
       this.checkLoginStatus();
     },
@@ -70,56 +97,76 @@
           }
         });
       },
+      /**
+       * checks the log in status of the user on mount
+       */
       async checkLoginStatus() {
         const currentUser = await getCurrentUser()
         const currentResponseKeys = Object.keys(currentUser)
         if (currentResponseKeys.includes('username')) {
           this.isLoggedIn = true
+          this.establishWebSocketConnection();
         } else {
           this.isLoggedIn = null
         }
-        console.log(`Logged In:${this.isLoggedIn}`)
+      },
+      async establishWebSocketConnection() {
+        // Get the Opey JWT token
+        let token = ''
+        try {
+          token = await getOpeyJWT()
+        } catch (error) {
+          this.errorState = true
+          ElMessage({
+            message: 'Error getting Opey JWT token',
+            type: 'error'
+          });
+          console.log(error)
+          token = ''
+        }
+ 
+        // Establish the WebSocket connection
+        console.log('Establishing WebSocket connection');
+        this.connectionStore.connect(token)
+      
       },
       async sendMessage() {
         if (this.userInput.trim()) {
+          // Message in OpenAI standard format for user message
           const newMessage = { role: 'user', content: this.userInput };
-          this.messages.push(newMessage);
+
+          // Push message to pinia store
+          this.chatMessages.push(newMessage);
           this.userInput = '';
           this.isLoading = true;
-  
+          this.errorState = false;
+          this.currentMessage = "",
+
           // Send the user message to the backend and get the response
           console.log('Sending message:', newMessage.content);
+          socket.emit('chat', {
+              session_id: this.sessionId,
+              message: newMessage.content,
+              obp_api_host: this.obpApiHost
+          });
 
-          // DEBUG
-          console.log('OBP API HOST: ', this.obpApiHost)
-
-          try {
-            const response = await axios.post('/opey/chat', {
-                session_id: this.sessionId,
-                message: newMessage.content,
-                obp_api_host: this.obpApiHost
-            });
-            
-            console.log(response)
-
-            
-            if (response.status != 200) {
-              console.log(`Response: ${response.status} ${response.data} `);
-              throw new Error("We're having trouble connecting you to Opey right now...");
-            }
-            this.messages.push({ role: 'assistant', content: response.data.reply });
-          } catch (error) {
-            console.error('Error:', error);
-            this.messages.push({ role: 'error', content: "We're having trouble connecting you to Opey right now..."})
-          } finally {
+          socket.on('response stream start', (response) => {
             this.isLoading = false;
-          }
-  
-          this.$nextTick(() => {
-            this.scrollToBottom();
+          });
+
+          socket.on('error', () => {
+            this.errorState = true;
+            this.isLoading = false;
+            console.log(this.lastError);
           });
         }
       },
+      /**
+       * This function highlights code blocks in the chat messages
+       * 
+       * @param content 
+       * @param language 
+       */
       highlightCode(content, language) {
         if (Prism.languages[language]) {
           return Prism.highlight(content, Prism.languages[language], language);
@@ -151,6 +198,7 @@
         const messages = this.$refs.messages;
         messages.scrollTop = messages.scrollHeight;
       },
+      // Following three functions resize the chat widget window
       initResize(event) {
         this.isResizing = true;
         this.startX = event.clientX;
@@ -209,9 +257,9 @@
           <img alt="Powered by OpenAI" src="@/assets/powered-by-openai-badge-outlined-on-dark.svg" height="32">
         </div>
         <div v-if="this.isLoggedIn" class="chat-messages" ref="messages">
-          <div v-for="(message, index) in messages" :key="index" :class="['chat-message', message.role]">
-            <div v-if="message.role=='error'">
-              <el-icon><Warning /></el-icon> <div v-html="renderMarkdown(message.content)"></div>
+          <div v-for="(message, index) in chatMessages" :key="index" :class="['chat-message', message.role]">
+            <div v-if="(this.isStreaming)&&(index === this.chatMessages.length -1)">
+              <div v-html="renderMarkdown(this.currentMessageSnapshot)"></div>
             </div>
             <div v-else>
               <div v-html="renderMarkdown(message.content)"></div>
@@ -255,6 +303,13 @@
         <div v-else class="chat-messages">
           <p>Opey is only availabled when logged in. <a v-bind:href="'/api/connect'">Log In</a> </p>
         </div>
+        <el-alert
+          v-if="this.errorState"
+          title="Trouble connecting to Opey"
+          type="error"
+          :description="this.lastError"
+          show-icon
+        />
         <div class="chat-input">
           <el-input
             v-model="userInput"
@@ -295,6 +350,10 @@
   align-items: center;
   box-shadow: 0 0 20px rgba(0, 123, 255, 0.6);
   transition: box-shadow 0.3s;
+}
+
+.el-alert {
+  font-family: ui-sans-serif,-apple-system,system-ui,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif,Helvetica,Apple Color Emoji,Arial,Segoe UI Emoji,Segoe UI Symbol;
 }
 
 .quit-button-container {
@@ -359,6 +418,8 @@
   height: 470px;
   min-width: 390px;
   min-height: 470px;
+  max-width: 90vw;
+  max-height: 90vh;
   border: 1px solid #ccc;
   border-radius: 10px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);

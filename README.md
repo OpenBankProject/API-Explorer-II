@@ -72,8 +72,18 @@ npm run build-server
 
 ##### Start the backend server
 ```sh
-npx ts-node <path-to-your-install>/server/app.ts
+npx ts-node <path-to-your-install>/server/app.js
 ```
+
+##### Check the status of API-Explorer II back-end
+```
+Please find a message at a log file similar to this one:
+
+Backend is running. You can check a status at http://localhost:8085/api/status
+
+and use the link to check the status
+```
+
 
 ##### Nginx deployment
 
