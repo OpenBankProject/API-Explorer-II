@@ -5,6 +5,7 @@ FROM node:18.17.1-slim as builder
 ADD .. /home/node/app/
 WORKDIR /home/node/app
 # Install the dependencies
+RUN npm install -g npm@10.1.0
 RUN npm install
 RUN npm run build-server
 
@@ -12,7 +13,7 @@ RUN npm run build-server
 # CMD npm run -d start
 FROM node:18.17.1-slim
 
-COPY --from=builder /home/node/app/server-dist /home/node/app
+COPY --from=builder /home/node/app/dist-server /home/node/app
 RUN mkdir /home/node/node_modules
 COPY --from=builder /home/node/app/node_modules /home/node/node_modules
 WORKDIR /home/node/app

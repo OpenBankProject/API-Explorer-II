@@ -4,6 +4,7 @@ ADD .. /home/node/app/
 WORKDIR /home/node/app
 # Install the dependencies
 COPY Dockerfiles/frontend_build.env /home/node/app/.env
+RUN npm install -g npm@10.1.0
 RUN npm install
 RUN npm run build
 
