@@ -30,6 +30,8 @@ import { io } from "socket.io-client";
 // "undefined" means the URL will be computed from the `window.location` object
 const URL = import.meta.env.VITE_CHATBOT_URL
 
+console.log(`setting up socket with ${URL}`)
+
 export const socket = io(
   URL,
   {

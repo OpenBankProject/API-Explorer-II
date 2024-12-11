@@ -127,7 +127,6 @@
         }
  
         // Establish the WebSocket connection
-        console.log('Establishing WebSocket connection');
         this.connectionStore.connect(token)
       
       },

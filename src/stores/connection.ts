@@ -59,8 +59,13 @@ export const useConnectionStore = defineStore("connection", {
      * @param token - The authentication token. I.e. a JWT
      */
     connect(token: string) {
+      console.log("attempting websocket connection")
       socket.auth = { token };
-      socket.connect();
+      try {
+        socket.connect()
+      } catch (error) {
+        console.log(`Error connecting to websocket ${error}`)
+      }
     }
   },
 });
