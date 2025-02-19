@@ -1,5 +1,4 @@
-import { OpeyController } from "../server/controllers/OpeyController";
-import app from '../server/app';
+import app, { instance } from '../server/app';
 import request from 'supertest';
 import fetch from 'node-fetch';
 import http from 'node:http';
@@ -24,49 +23,72 @@ describe('GET /api/opey', () => {
 });
 
 describe('GET /api/opey/invoke', () => {
-    let response: Response;
+    let response;
 
     let userInput: UserInput = {
         message: "Hello Opey",
         thread_id: uuidv4(),
         is_tool_call_approval: false
     }
-    
-    it('Should return 200', async () => {
-        const response = await request(app)
+
+    beforeAll(async () => {
+        // Make the invoke request
+        response = await request(app)
             .post("/api/opey/invoke")
             .send(userInput)
             .set('Content-Type', 'application/json')
-            .then(response => {
-                console.log(`Response: ${response.body}`)
-                expect(response.status).toBe(200);
-            })
-            
-        
+    })
+
+    it('Should return 200', async () => {
+        expect(response.status).toBe(200);
     });
+
+    it('Should return a message if not a tool call approval', async () => {
+        if (!response.body.tool_approval_request) {
+            expect(response.body.content).toBeTruthy();
+        }
+    })
 })
 
 describe('POST /api/opey/stream', () => {
+
+    let streamingResponse;
+
+    let userInput: UserInput = {
+        message: "Hello Opey",
+        thread_id: uuidv4(),
+        is_tool_call_approval: false
+    }
 
     const httpAgent = new http.Agent({ keepAlive: true, port: 9999 });
 
     beforeAll(async () => {
         app.listen(5173)
         
+        try {
+            streamingResponse = await fetch(`${SERVER_URL}/api/opey/stream`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'connection': 'keep-alive'
+                },
+                body: JSON.stringify(userInput),
+            })
+        } catch (error) {
+            console.error(`Error getting stream: ${error}`)
+        }
+        
     });
 
     afterAll(async () => {
-        app.close()
+        instance.close()
         httpAgent.destroy()
     });
 
+    it
     
     it('Should stream response', async () => {
-        let userInput: UserInput = {
-            message: "Hello Opey",
-            thread_id: uuidv4(),
-            is_tool_call_approval: false
-        }
+        
 
         
 
@@ -76,23 +98,11 @@ describe('POST /api/opey/stream', () => {
         //     .responseType('blob')
         //     .send(userInput)
 
-        await fetch(`${SERVER_URL}/api/opey/stream`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'connection': 'keep-alive'
-            },
-            body: JSON.stringify(userInput),
+        expect(streamingResponse.status).toBe(200)
+        
+        streamingResponse.body.on('data', (chunk) => {
+            console.log(`${chunk}`)
         })
-        .catch(error => {
-            console.error(`Error performing test fetch: ${error}`)
-        })
-        .then(streamingResponse => {
-            console.log(streamingResponse)
-
-            streamingResponse.body.on('data', (chunk) => {
-                console.log(`${chunk}`)
-            })
             // response.on
             // console.log(response.body)
             // const readable = response.body
@@ -100,10 +110,7 @@ describe('POST /api/opey/stream', () => {
             //     const data = chunk.toString()
             //     console.log(`data: ${data}`)
             // })
-        })
-        .finally(() => {
-            httpAgent.destroy()
-        })
+        
             
         
 

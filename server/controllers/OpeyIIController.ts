@@ -14,14 +14,14 @@ import { UserInput } from '../schema/OpeySchema'
 
 export class OpeyController {
     constructor(
-        private obpClientService: OBPClientService,
-        private opeyClientService: OpeyClientService,
+      public obpClientService: OBPClientService,
+      public opeyClientService: OpeyClientService,
     ) {}
 
     @Get('/')
     async getStatus(
         @Res() response: Response
-    ): Response {
+    ): Promise<Response | any> {
 
         try {
           const opeyStatus = await this.opeyClientService.getOpeyStatus()
@@ -67,33 +67,57 @@ export class OpeyController {
             callback();
           }
         })
+
+        let nodeStream: NodeJS.ReadableStream | null = null
         
         try {
-          const nodeStream = await this.opeyClientService.stream(user_input)
-          console.log(`Stream received from OpeyClientService.stream: ${nodeStream.readable}`)
-          nodeStream.pipe(streamMiddlewareTransform).pipe(response)
+          // Read stream from OpeyClientService
+          nodeStream = await this.opeyClientService.stream(user_input)
+          console.debug(`Stream received readable: ${nodeStream.readable}`)
+          
+        } catch (error) {
+          console.error("Error reading stream: ", error)
+          response.status(500).json({ error: 'Internal Server Error' })
+          return
+        }
 
-          response.status(200)
+        if (!nodeStream || !nodeStream.readable) {
+          console.error("Stream is not readable")
+          response.status(500).json({ error: 'Internal Server Error' })
+          return
+        }
+
+        try {
+          // response.writeHead(200, {
+          //   'Content-Type': "text/event-stream",
+          //   'Cache-Control': "no-cache",
+          //   'Connection': "keep-alive"
+          // });
+
           response.setHeader('Content-Type', 'text/event-stream')
           response.setHeader('Cache-Control', 'no-cache')
           response.setHeader('Connection', 'keep-alive')
 
-          // nodeStream.on('data', (chunk) => {
-          //   const data = chunk.toString()
-          //   console.log(`data: ${data}`)
-          //   response.write(`data: ${data}\n\n`)
-          // })
-          // nodeStream.on('end', () => {
-          //   console.log('Stream ended')
-          //   response.end()
-          // })
-          // nodeStream.on('error', (error) => {
-          //   console.error(error)
-          //   response.write(`data: Error reading stream\n\n`)
-          //   response.end()
-          // })
+          let data: any[] = []
+
+          nodeStream.on('data', (chunk) => {
+            const bufferChunk = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+            data.push(bufferChunk);
+            response.write(`data: ${chunk.toString()}\n\n`)
+          })
+          nodeStream.on('end', () => {
+            //console.log('Stream ended')
+            const totalData = Buffer.concat(data)
+            response.write(totalData)
+            response.end()
+          })
+          nodeStream.on('error', (error) => {
+            console.error(error)
+            response.write(`data: Error reading stream\n\n`)
+            response.end()
+          })
         } catch (error) {
-          console.error(error)
+          console.error("Error writing data: ", error)
           response.status(500).json({ error: 'Internal Server Error' })
         }
     }
@@ -103,7 +127,7 @@ export class OpeyController {
         @Session() session: any,
         @Req() request: Request,
         @Res() response: Response
-    ): Response {
+    ): Promise<Response | any> {
 
         let user_input: UserInput
         try {
@@ -113,14 +137,14 @@ export class OpeyController {
             "is_tool_call_approval": request.body.is_tool_call_approval
           }
         } catch (error) {
-          console.error("Error in stream endpoint, could not parse into UserInput: ", error)
+          console.error("Error in invoke endpoint, could not parse into UserInput: ", error)
           return response.status(500).json({ error: 'Internal Server Error' })
         }
 
         try {
           const opey_response = await this.opeyClientService.invoke(user_input)
 
-          console.log("Opey response: ", opey_response)
+          //console.log("Opey response: ", opey_response)
           return response.status(200).json(opey_response)
         } catch (error) {
           console.error(error)
@@ -136,7 +160,7 @@ export class OpeyController {
         @Session() session: any,
         @Req() request: Request,
         @Res() response: Response
-    ): Response {
+    ): Promise<Response | any> {
         try {
         console.log("Getting consent from OBP")
         // Check if consent is already in session
@@ -190,7 +214,7 @@ export class OpeyController {
       @Session() session: any,
       @Req() request: Request,
       @Res() response: Response
-    ): Response {
+    ): Promise<Response | any> {
       try {
         const oauthConfig = session['clientConfig']
         const version = this.obpClientService.getOBPVersion()
