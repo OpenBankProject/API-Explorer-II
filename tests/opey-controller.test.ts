@@ -111,15 +111,15 @@ describe('OpeyController', () => {
         expect(res.statusCode).toBe(200);
     })
 
-    it('streamOpey', () => {
+    it('streamOpey', async () => {
 
         const _eventEmitter = new EventEmitter();
         _eventEmitter.addListener('data', () => {
             console.log('Data received')
         })
         // The default event emitter does nothing, so replace
-        const res = httpMocks.createResponse({
-            eventEmitter: _eventEmitter,
+        const res = await httpMocks.createResponse({
+            eventEmitter: EventEmitter,
             writableStream: Stream.Writable
         });
 
@@ -132,27 +132,32 @@ describe('OpeyController', () => {
         } as unknown as Request;
 
         // Define handelrs for events
-        res.on('end', () => {
-            console.log('Stream ended')
-            console.log(res._getData())
-            expect(res.statusCode).toBe(200);
-        })
+        
 
+        
         let chunks: any[] = [];
-        res.on('data', (chunk) => {
-            console.log(chunk)
-            chunks.push(chunk);
-            expect(chunk).toBeDefined();
-        })
+        try {
+            const response = await opeyController.streamOpey({}, req, res)
 
-        opeyController.streamOpey({}, req, res)
-        .then((res) => {
-            console.log(res)
-        })
+            response.on('end', async () => {
+                console.log('Stream ended')
+                console.log(res._getData())
+                await expect(res.statusCode).toBe(200);
+            })
+            
+            response.on('data', async (chunk) => {
+                console.log(chunk)
+                await chunks.push(chunk);
+                await expect(chunk).toBeDefined();
+            })
+        } catch (error) {
+            console.error(error)
+        }
+        
 
-        expect(chunks.length).toBe(10);
-        expect(MockOpeyClientService.stream).toHaveBeenCalled();
-        expect(res).toBeDefined();
+        await expect(chunks.length).toBe(10);
+        await expect(MockOpeyClientService.stream).toHaveBeenCalled();
+        await expect(res).toBeDefined();
         
     })
 })

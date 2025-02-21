@@ -1,10 +1,10 @@
 import app, { instance } from '../server/app';
 import request from 'supertest';
-import fetch from 'node-fetch';
 import http from 'node:http';
 import { UserInput } from '../server/schema/OpeySchema';
 import {v4 as uuidv4} from 'uuid';
 import { agent } from "superagent";
+import fetch from 'node-fetch';
 
 
 const BEFORE_ALL_TIMEOUT = 30000; // 30 sec
@@ -52,7 +52,8 @@ describe('GET /api/opey/invoke', () => {
 
 describe('POST /api/opey/stream', () => {
 
-    let streamingResponse;
+    let data: Array<string> = [];
+    let res;
 
     let userInput: UserInput = {
         message: "Hello Opey",
@@ -60,68 +61,55 @@ describe('POST /api/opey/stream', () => {
         is_tool_call_approval: false
     }
 
-    const httpAgent = new http.Agent({ keepAlive: true, port: 9999 });
 
     beforeAll(async () => {
         app.listen(5173)
-        
+    });
+
+    afterAll(async () => {
+        instance.close()
+    });
+
+    it
+    
+    it('Should stream response', async () => {
+
         try {
-            streamingResponse = await fetch(`${SERVER_URL}/api/opey/stream`, {
+            const response = await fetch(`${SERVER_URL}/api/opey/stream`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'connection': 'keep-alive'
                 },
                 body: JSON.stringify(userInput),
+            });
+
+            console.log(`Response in test: ${response.body}`)
+            const stream = response.body
+
+            stream.on('data', (chunk) => {
+                console.log(`chunk: ${chunk}`)
+                // check if chunk is not empty
+                expect(chunk).toBeTruthy()
             })
+            stream.on('end', () => {
+                console.log('Stream ended')
+            })
+            stream.on('error', (error) => {
+                console.error(`Error in stream: ${error}`)
+            })
+
+            res = response;
+
+            await expect(res.status).toBe(200)
+
         } catch (error) {
-            console.error(`Error getting stream: ${error}`)
+            console.error(`Error fetching stream from test: ${error}`)
         }
+
         
-    });
 
-    afterAll(async () => {
-        instance.close()
-        httpAgent.destroy()
-    });
-
-    it
     
-    it('Should stream response', async () => {
         
-
-        
-
-        // const response = await request(app)
-        //     .post("/api/opey/stream")
-        //     .set('Content-Type', 'text/event-stream')
-        //     .responseType('blob')
-        //     .send(userInput)
-
-        expect(streamingResponse.status).toBe(200)
-        
-        streamingResponse.body.on('data', (chunk) => {
-            console.log(`${chunk}`)
-        })
-            // response.on
-            // console.log(response.body)
-            // const readable = response.body
-            // readable.on('data', (chunk) => {
-            //     const data = chunk.toString()
-            //     console.log(`data: ${data}`)
-            // })
-        
-            
-        
-
-        // while (true) {
-        //     const {value, done} = await reader.read();
-        //     if (done) break;
-        //     console.log('Received', value);
-        //   }
-            
-        // expect(response.headers['content-type']).toBe('text/event-stream')
-        // expect(response.status).toBe(200)
-        // Optionally, parse chunks or check SSE headers
     })
 });

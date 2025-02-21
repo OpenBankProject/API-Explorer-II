@@ -1,12 +1,10 @@
-import { streamText } from 'ai'
-import axios from 'axios'
 import { Controller, Session, Req, Res, Post, Get } from 'routing-controllers'
 import { Request, Response } from 'express'
+import { pipeline } from "node:stream/promises"
 import { Service } from 'typedi'
 import OBPClientService from '../services/OBPClientService'
 import OpeyClientService from '../services/OpeyClientService'
-import { v6 as uuid6 } from 'uuid';
-import { Transform } from 'stream'
+
 import { UserInput } from '../schema/OpeySchema'
 
 @Service()
@@ -41,7 +39,7 @@ export class OpeyController {
     async streamOpey(
         @Session() session: any,
         @Req() request: Request,
-        @Res() response: Response
+        @Res() response: Response,
     ) {
 
         let user_input: UserInput
@@ -59,67 +57,46 @@ export class OpeyController {
         
         console.log("Calling OpeyClientService.stream")
 
-        const streamMiddlewareTransform = new Transform({
-          transform(chunk, encoding, callback) {
-            console.log(`Logged Chunk: ${chunk}`)
-            this.push(chunk);
+        // const streamMiddlewareTransform = new Transform({
+        //   transform(chunk, encoding, callback) {
+        //     console.log(`Logged Chunk: ${chunk}`)
+        //     this.push(chunk);
         
-            callback();
-          }
-        })
+        //     callback();
+        //   }
+        // })
 
-        let nodeStream: NodeJS.ReadableStream | null = null
+        let stream: NodeJS.ReadableStream | null = null
         
         try {
           // Read stream from OpeyClientService
-          nodeStream = await this.opeyClientService.stream(user_input)
-          console.debug(`Stream received readable: ${nodeStream.readable}`)
+          stream = await this.opeyClientService.stream(user_input)
+          console.debug(`Stream received readable: ${stream?.readable}`)
           
         } catch (error) {
           console.error("Error reading stream: ", error)
-          response.status(500).json({ error: 'Internal Server Error' })
-          return
+          return response.status(500).json({ error: 'Internal Server Error' })
         }
 
-        if (!nodeStream || !nodeStream.readable) {
-          console.error("Stream is not readable")
-          response.status(500).json({ error: 'Internal Server Error' })
-          return
+        if (!stream || !stream.readable) {
+          console.error("Stream is not recieved or not readable")
+          return response.status(500).json({ error: 'Internal Server Error' })
         }
 
-        try {
-          // response.writeHead(200, {
-          //   'Content-Type': "text/event-stream",
-          //   'Cache-Control': "no-cache",
-          //   'Connection': "keep-alive"
-          // });
-
-          response.setHeader('Content-Type', 'text/event-stream')
-          response.setHeader('Cache-Control', 'no-cache')
-          response.setHeader('Connection', 'keep-alive')
-
-          let data: any[] = []
-
-          nodeStream.on('data', (chunk) => {
-            const bufferChunk = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
-            data.push(bufferChunk);
-            response.write(`data: ${chunk.toString()}\n\n`)
+        return new Promise<Response>((resolve, reject) => {
+          stream.pipe(response)
+          stream.on('end', () => {
+            response.status(200)
+            resolve(response)
           })
-          nodeStream.on('end', () => {
-            //console.log('Stream ended')
-            const totalData = Buffer.concat(data)
-            response.write(totalData)
-            response.end()
+          stream.on('error', (error) => {
+            console.error("Error piping stream: ", error)
+            reject(error)
           })
-          nodeStream.on('error', (error) => {
-            console.error(error)
-            response.write(`data: Error reading stream\n\n`)
-            response.end()
-          })
-        } catch (error) {
-          console.error("Error writing data: ", error)
-          response.status(500).json({ error: 'Internal Server Error' })
-        }
+          
+        })
+
+        
     }
 
     @Post('/invoke')
