@@ -79,7 +79,6 @@
         isOpen: false,
         userInput: '',
         sessionId: uuidv4(),
-        awaitingConnection: !this.isConnected,
         isLoading: false,
         obpApiHost: null,
         isLoggedIn: null,
@@ -269,7 +268,7 @@
           <span>Chat with Opey</span>
           <img alt="Powered by OpenAI" src="@/assets/powered-by-openai-badge-outlined-on-dark.svg" height="32">
         </div>
-        <div v-if="this.isLoggedIn" v-loading="this.awaitingConnection" element-loading-text="Awaiting Connection..." class="chat-messages" ref="messages">
+        <div v-if="this.isLoggedIn" v-loading="!this.isConnected" element-loading-text="Awaiting Connection..." class="chat-messages" ref="messages">
           <div v-for="(message, index) in chatMessages" :key="index" :class="['chat-message', message.role]">
             <div v-if="(this.isStreaming)&&(index === this.chatMessages.length -1)">
               <div v-html="renderMarkdown(this.currentMessageSnapshot)"></div>
@@ -331,14 +330,14 @@
             placeholder="Type your message..."
             @keypress="submitEnter"
             type="textarea"
-            :disabled="!isLoggedIn || this.awaitingConnection ? '' : disabled"
+            :disabled="!isLoggedIn || !this.isConnected ? '' : disabled"
           >
           </el-input>
           <!--<textarea v-model="userInput" placeholder="Type your message..." @keypress="submitEnter"></textarea>-->
           <button 
             @click="sendMessage" 
-            :disabled="!isLoggedIn || this.awaitingConnection ? '' : disabled"
-            :style="!isLoggedIn || this.awaitingConnection ? 'background-color:#929292; cursor:not-allowed' : ''"
+            :disabled="!isLoggedIn || !this.isConnected ? '' : disabled"
+            :style="!isLoggedIn || !this.isConnected ? 'background-color:#929292; cursor:not-allowed' : ''"
           >
           Send
           </button>
