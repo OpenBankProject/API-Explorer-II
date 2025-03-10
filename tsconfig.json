@@ -12,7 +12,8 @@
     },
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "allowJs": true
+    "allowJs": true,
+    "types": ["vitest/globals"]
   },
   "references": [
     {

@@ -284,24 +284,27 @@ const onError = (error) => {
         placeholder="Request Header (Header1:Value1::Header2:Value2)"
       />
     </div>
-    <p v-show="exampleRequestBody" class="header-container">{{ exampleBodyTitle }}:</p>
-    <div class="flex-preview-panel" v-show="exampleRequestBody">
-      <!-- <textarea v-model="exampleRequestBody" rows="8" cols="40"></textarea> -->
-      <!-- <input type="text" v-model="exampleRequestBody" /> -->
-      <!-- <pre>{{ JSON.stringify(exampleRequestBody, null, 2) }}</pre> -->
-      <JsonEditorVue
-        v-model="exampleRequestBody"
-        class="jse-theme-dark"
-        :stringified="true"
-        :mode="Mode.tree"
-        v-bind="{/* local props & attrs */}"
-        :onChange="onJsonEditorChange"
-      />
+    <div class="json-editor-container" v-show="exampleRequestBody">
+      <p v-show="exampleRequestBody" class="header-container request-body-header">{{ exampleBodyTitle }}:</p>
+      <div class="json-editor jse-theme-dark">
+        <JsonEditorVue
+          v-model="exampleRequestBody"
+          :stringified="true"
+          :mode="Mode.tree"
+          v-bind="{/* local props & attrs */}"
+          :onChange="onJsonEditorChange"
+        />
+      </div>
+      
     </div>
-    <div v-show="successResponseBody">
-      <p class="header-container">{{ responseHeaderTitle }}:</p>
-      <pre><button @click="copyToClipboard" class="copy-button icon-md-heavy" title="Copy to Clipboard"><i class="material-icons">content_copy</i></button>
-        <code><div id="code" v-html="successResponseBody"></div></code></pre>
+    <div v-show="successResponseBody" class="success-response-container">
+      <div class="success-response-header-container">
+        <p class="header-container success-response-header">{{ responseHeaderTitle }}:</p>
+        <button @click="copyToClipboard" class="copy-button icon-md-heavy" title="Copy to Clipboard"><i class="material-icons">content_copy</i></button>
+      </div>
+      <pre>
+        <code><div id="code" v-html="successResponseBody"></div></code>
+      </pre>
     </div>
     <el-form ref="roleFormRef" :model="roleForm">
       <div v-show="showRequiredRoles">
@@ -394,12 +397,11 @@ span {
   font-size: 28px;
 }
 pre {
-  margin-left: -25px;
-  margin-right: -25px;
-  padding: 30px 30px 10px 30px;
+  padding: 0px 30px 0px 30px;
   max-height: 340px;
   background-color: #253047;
   font-size: 14px;
+  margin: 0;
   font-family: 'Roboto';
   font-weight: normal;
 }
@@ -438,6 +440,40 @@ li {
   height: 1px;
   background-color: var(--el-border-color-light);
   z-index: var(--el-index-normal);
+}
+.request-body-header {
+  background-color: #010B20;
+  margin-right: auto;
+  margin-top: 0;
+}
+.json-editor-container {
+  display: flex;
+  flex-direction: column;
+  margin-left: -25px;
+  margin-right: -25px;
+  background-color: #010B20;
+  padding: 25px 25px 25px 25px;
+}
+.json-editor {
+  /* the list of default vars to change can be found here: https://github.com/josdejong/svelte-jsoneditor/blob/main/src/lib/themes/defaults.scss */
+  width: 100%;
+  margin-left: -5px;
+  margin-right: -5px;
+  --jse-theme-color: #010B20;
+  --jse-key-color: #ffffff;
+  --jse-value-color: #6a8759;
+  --jse-value-color-string: #6a8759;
+  --jse-background-color: #010B20;
+  --jse-context-menu-background: #010B20;
+  --jse-theme-color-highlight: #010B20;
+  --jse-context-menu-pointer-hover-background: #253047;
+  --jse-context-menu-background-highlight: #253047;
+  --jse-context-menu-pointer-background: #253047;
+  --jse-context-menu-tip-background: #253047;
+  --jse-modal-background: #010B20;
+  --jse-panel-background: #010B20;
+  --jse-font-family-mono: 'Roboto', 'Courier New', monospace;
+  --jse-main-border: none;
 }
 .flex-preview-panel {
   display: flex;
@@ -489,6 +525,22 @@ li {
 
 #conector-method-link {
   color: white !important;
+}
+.success-response-header-container {
+  margin-left: 25px;
+  margin-right: 25px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  background-color: #253047;
+}
+.success-response-header {
+  margin-top: 25px;
+}
+.success-response-container{
+  background-color: #253047;
+  margin-right: -25px;
+  margin-left: -25px;
 }
 .copy-button {
   background: none;

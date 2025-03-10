@@ -1,20 +1,20 @@
-import { OpeyController } from "../server/controllers/OpeyIIController";
-import OpeyClientService from '../server/services/OpeyClientService';
-import OBPClientService from '../server/services/OBPClientService';
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
+import { OpeyController } from "../controllers/OpeyIIController";
+import OpeyClientService from '../services/OpeyClientService';
+import OBPClientService from '../services/OBPClientService';
 import Stream, { Readable } from 'stream';
 import { Request, Response } from 'express';
 import httpMocks from 'node-mocks-http'
 import { EventEmitter } from 'events';
-import {jest} from '@jest/globals';
 
-jest.mock("../server/services/OpeyClientService", () => {
+vi.mock("../../server/services/OpeyClientService", () => {
     return {
-        OpeyClientService: jest.fn().mockImplementation(() => {
+        default: vi.fn().mockImplementation(() => {
             return {
-                getOpeyStatus: jest.fn(async () => {
+                getOpeyStatus: vi.fn(async () => {
                     return {status: 'running'}
                 }),
-                stream: jest.fn(async () => {
+                stream: vi.fn(async () => {
                     const readableStream = new Stream.Readable();
                 
                     for (let i=0; i<10; i++) {
@@ -23,7 +23,7 @@ jest.mock("../server/services/OpeyClientService", () => {
                 
                     return readableStream as NodeJS.ReadableStream;
                 }),
-                invoke: jest.fn(async () => {
+                invoke: vi.fn(async () => {
                     return {
                         content: 'Hi this is Opey',
                     }
@@ -34,52 +34,16 @@ jest.mock("../server/services/OpeyClientService", () => {
     };
 });
 
-// jest.mock("./A", () => {
-//     return {
-//         A: jest.fn().mockImplementation(() => {
-//             return {
-//                 getSomething: getSomethingMock
-//             }
-//         })
-//     };
-// });
-// Mock the OpeyClientService class
-
-
-// jest.mocked(OpeyClientService).mockImplementation(() => {
-//     return {
-//         getOpeyStatus: jest.fn(async () => {
-//             return {status: 'running'}
-//         }),
-//         stream: jest.fn(async () => {
-//             const readableStream = new Stream.Readable();
-        
-//             for (let i=0; i<10; i++) {
-//                 readableStream.push(`Chunk ${i}`);
-//             }
-        
-//             return readableStream as NodeJS.ReadableStream;
-//         }),
-//         invoke: jest.fn(async () => {
-//             return {
-//                 content: 'Hi this is Opey',
-//             }
-//         })
-//     }
-// });
-
-
-
 describe('OpeyController', () => {
     // Mock the OpeyClientService class
 
     const MockOpeyClientService = {
         authConfig: {},
         opeyConfig: {},
-        getOpeyStatus: jest.fn(async () => {
+        getOpeyStatus: vi.fn(async () => {
             return {status: 'running'}
         }),
-        stream: jest.fn(async () => {
+        stream: vi.fn(async () => {
 
             async function * generator() {
                 for (let i=0; i<10; i++) {
@@ -91,12 +55,12 @@ describe('OpeyController', () => {
 
             return readableStream as NodeJS.ReadableStream;
         }),
-        invoke: jest.fn(async () => {
+        invoke: vi.fn(async () => {
             return {
                 content: 'Hi this is Opey',
             }
         })
-    } as unknown as jest.Mocked<OpeyClientService>
+    } as unknown as OpeyClientService
 
 
     // Instantiate OpeyController with the mocked OpeyClientService
@@ -159,5 +123,76 @@ describe('OpeyController', () => {
         await expect(MockOpeyClientService.stream).toHaveBeenCalled();
         await expect(res).toBeDefined();
         
+    })
+})
+
+
+describe('OpeyController consents flow', () => {
+    let mockOBPClientService: OBPClientService
+
+    let opeyController: OpeyController
+
+    beforeAll(() => {
+        mockOBPClientService = {
+            get: vi.fn(async () => {
+                Promise.resolve({})
+            })
+        } as unknown as OBPClientService       
+
+        const MockOpeyClientService = {
+            authConfig: {},
+            opeyConfig: {},
+            getOpeyStatus: vi.fn(async () => {
+                return {status: 'running'}
+            }),
+            stream: vi.fn(async () => {
+    
+                async function * generator() {
+                    for (let i=0; i<10; i++) {
+                        yield `Chunk ${i}`;
+                    }
+                }
+    
+                const readableStream = Stream.Readable.from(generator());
+    
+                return readableStream as NodeJS.ReadableStream;
+            }),
+            invoke: vi.fn(async () => {
+                return {
+                    content: 'Hi this is Opey',
+                }
+            })
+        } as unknown as OpeyClientService
+    
+    
+        // Instantiate OpeyController with the mocked OpeyClientService
+        opeyController = new OpeyController(new OBPClientService, MockOpeyClientService)
+
+    })
+    afterEach(() => {
+        vi.clearAllMocks()
+    })
+    it('should return 200 and consent ID when consent is created at OBP', async () => {
+
+        vi.mock('../services/OBPClientService', () => {
+            return {
+              default: vi.fn().mockImplementation(() => {
+                return {
+                  get: vi.fn(async () => ({ user_id: 'mocked-user-id' })),
+                  create: vi.fn(async () => ({
+                    "consent_request_id": "8ca8a7e4-6d02-40e3-a129-0b2bf89de9f0",
+                    "consumer_id": "7uy8a7e4-6d02-40e3-a129-0b2bf89de8uh",
+                    "payload": "payload"
+                  })),
+                }
+              }),
+            }
+          })
+
+        const req = {}
+        const res = httpMocks.createResponse()
+        await opeyController.getConsentRequest({}, req, res)
+        await expect(res.status).toBe(200)
+
     })
 })

@@ -28,6 +28,8 @@
 import superagent from 'superagent'
 
 export const OBP_API_VERSION = import.meta.env.VITE_OBP_API_VERSION
+export const OBP_API_DEFAULT_RESOURCE_DOC_VERSION = 
+  (import.meta.env.VITE_OBP_API_DEFAULT_RESOURCE_DOC_VERSION ?? `OBP${OBP_API_VERSION}`)
 const default_collection_name = 'Favourites'
 
 export async function serverStatus(): Promise<any> {
@@ -50,7 +52,10 @@ export async function get(path: string): Promise<any> {
 
 export async function create(path: string, body: any): Promise<any> {
   try {
-    return (await superagent.post(`/api/create?path=${path}`).send(JSON.parse(body))).body
+    return (await superagent.post(`/api/create?path=${path}`)
+      .set('Content-Type', 'application/json')
+      .send(JSON.parse(body)))
+      .body
   } catch (error) {
     console.log(error)
     return { error }
@@ -59,7 +64,9 @@ export async function create(path: string, body: any): Promise<any> {
 
 export async function update(path: string, body: any): Promise<any> {
   try {
-    return (await superagent.put(`/api/update?path=${path}`).send(JSON.parse(body))).body
+    return (await superagent.put(`/api/update?path=${path}`)
+      .set('Content-Type', 'application/json')
+      .send(JSON.parse(body))).body
   } catch (error) {
     console.log(error)
     return { error }

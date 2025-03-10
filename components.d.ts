@@ -7,8 +7,9 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    ChatMessage: typeof import('./src/components/ChatMessage.vue')['default']
     ChatWidget: typeof import('./src/components/ChatWidget.vue')['default']
-    ChatWidgetII: typeof import('./src/components/ChatWidgetII.vue')['default']
+    ChatWidgetOld: typeof import('./src/components/ChatWidgetOld.vue')['default']
     Collections: typeof import('./src/components/Collections.vue')['default']
     Content: typeof import('./src/components/Content.vue')['default']
     ElAlert: typeof import('element-plus/es')['ElAlert']
@@ -32,9 +33,8 @@ declare module 'vue' {
     ElIcon: typeof import('element-plus/es')['ElIcon']
     ElInput: typeof import('element-plus/es')['ElInput']
     ElMain: typeof import('element-plus/es')['ElMain']
-    ElMenu: typeof import('element-plus/es')['ElMenu']
-    ElMenuItem: typeof import('element-plus/es')['ElMenuItem']
     ElRow: typeof import('element-plus/es')['ElRow']
+    ElScrollbar: typeof import('element-plus/es')['ElScrollbar']
     ElTooltip: typeof import('element-plus/es')['ElTooltip']
     GlossarySearchNav: typeof import('./src/components/GlossarySearchNav.vue')['default']
     HeaderNav: typeof import('./src/components/HeaderNav.vue')['default']
@@ -44,8 +44,5 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SearchNav: typeof import('./src/components/SearchNav.vue')['default']
-  }
-  export interface ComponentCustomProperties {
-    vLoading: typeof import('element-plus/es')['ElLoadingDirective']
   }
 }

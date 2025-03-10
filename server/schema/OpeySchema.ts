@@ -23,3 +23,7 @@ export type AuthConfig = {
     consentId: string,
     opeyJWT: string,
 }
+
+export interface ConsentRequestResponse {
+    consentId: string;
+}

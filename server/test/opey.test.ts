@@ -1,7 +1,7 @@
-import app, { instance } from '../server/app';
+import app, { instance } from '../app';
 import request from 'supertest';
 import http from 'node:http';
-import { UserInput } from '../server/schema/OpeySchema';
+import { UserInput } from '../schema/OpeySchema';
 import {v4 as uuidv4} from 'uuid';
 import { agent } from "superagent";
 import fetch from 'node-fetch';

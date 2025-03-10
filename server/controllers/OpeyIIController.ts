@@ -1,11 +1,13 @@
 import { Controller, Session, Req, Res, Post, Get } from 'routing-controllers'
 import { Request, Response } from 'express'
-import { pipeline } from "node:stream/promises"
+import { Transform, pipeline, Readable } from "node:stream"
+import { ReadableStream as WebReadableStream } from "stream/web"
 import { Service } from 'typedi'
 import OBPClientService from '../services/OBPClientService'
 import OpeyClientService from '../services/OpeyClientService'
 
 import { UserInput } from '../schema/OpeySchema'
+import { APIApi, Configuration, ConsentApi, ConsumerConsentrequestsBody, InlineResponse20151 } from 'obp-api-typescript'
 
 @Service()
 @Controller('/opey')
@@ -42,9 +44,11 @@ export class OpeyController {
         @Res() response: Response,
     ) {
 
+        // Read user input from request body
         let user_input: UserInput
         try {
-           user_input = {
+          console.log("Request body: ", request.body)
+          user_input = {
             "message": request.body.message,
             "thread_id": request.body.thread_id,
             "is_tool_call_approval": request.body.is_tool_call_approval
@@ -54,45 +58,73 @@ export class OpeyController {
           return response.status(500).json({ error: 'Internal Server Error' })
         }
         
-        
-        console.log("Calling OpeyClientService.stream")
 
-        // const streamMiddlewareTransform = new Transform({
-        //   transform(chunk, encoding, callback) {
-        //     console.log(`Logged Chunk: ${chunk}`)
-        //     this.push(chunk);
-        
-        //     callback();
-        //   }
-        // })
+        // Define a function to transform the response from Opey (which is a text stream) into a TS-Native langchain stream
+        const frontendTransformer = new TransformStream({
+          transform(chunk, controller) {
+            // Decode the chunk to a string
+            const decodedChunk = new TextDecoder().decode(chunk)
+          
+            console.log("Sending chunk", decodedChunk)
+            controller.enqueue(decodedChunk);
+          },
+          flush(controller) {
+            console.log('[flush]');
+            // Close ReadableStream when done
+            controller.terminate();
+          },
+        });
 
-        let stream: NodeJS.ReadableStream | null = null
+
+        let stream: ReadableStream | null = null
         
         try {
-          // Read stream from OpeyClientService
+          // Read web stream from OpeyClientService
+          console.log("Calling OpeyClientService.stream")
           stream = await this.opeyClientService.stream(user_input)
-          console.debug(`Stream received readable: ${stream?.readable}`)
           
         } catch (error) {
           console.error("Error reading stream: ", error)
           return response.status(500).json({ error: 'Internal Server Error' })
         }
 
-        if (!stream || !stream.readable) {
+        if (!stream) {
           console.error("Stream is not recieved or not readable")
           return response.status(500).json({ error: 'Internal Server Error' })
         }
 
+        
+        // Transform our stream if needed, right now this is just a passthrough
+        const frontendStream: ReadableStream = stream.pipeThrough(frontendTransformer)
+        
+        // If we need to split the stream into two, we can use the tee method as below 
+
+        // const streamTee = langchainStream.tee()
+        // if (!streamTee) {
+        //   console.error("Stream is not tee'd")
+        //   return response.status(500).json({ error: 'Internal Server Error' })
+        // }
+        // const [stream1, stream2] = streamTee
+
+        
+
+        const nodeStream = Readable.fromWeb(frontendStream as WebReadableStream<any>)
+
+        response.setHeader('x-vercel-ai-data-stream', 'v1')
+        response.setHeader('Content-Type', 'text/event-stream');
+        response.setHeader('Cache-Control', 'no-cache');
+        response.setHeader('Connection', 'keep-alive');
+        nodeStream.pipe(response);
+      
+
         return new Promise<Response>((resolve, reject) => {
-          stream.pipe(response)
-          stream.on('end', () => {
-            response.status(200)
-            resolve(response)
-          })
-          stream.on('error', (error) => {
-            console.error("Error piping stream: ", error)
-            reject(error)
-          })
+          nodeStream.on('end', () => {
+            resolve(response);
+          });
+          nodeStream.on('error', (error) => {
+            console.error('Stream error:', error);
+            reject(error);
+          });
           
         })
 
@@ -127,6 +159,67 @@ export class OpeyController {
           console.error(error)
           return response.status(500).json({ error: 'Internal Server Error' })
         }
+    }
+
+    @Post('/consent/request')
+    /**
+     * Retrieves a consent request from OBP
+     * 
+     */
+    async getConsentRequest(
+        @Session() session: any,
+        @Req() request: Request,
+        @Res() response: Response,
+    ): Promise<Response | any> {
+      try {
+
+        let obpToken: string
+
+        obpToken = await this.obpClientService.getDirectLoginToken()
+        console.log("Got token: ", obpToken)
+        const authHeader = `DirectLogin token="${obpToken}"`
+        console.log("Auth header: ", authHeader)
+
+        const obpOAuthHeaders = await this.obpClientService.getOAuthHeader('/consents', 'POST')
+        console.log("OBP OAuth Headers: ", obpOAuthHeaders)
+
+        const obpConfig: Configuration = {
+          apiKey: authHeader,
+          basePath: process.env.VITE_OBP_API_HOST,
+        }
+
+        console.log("OBP Config: ", obpConfig)
+
+        const consentAPI = new ConsentApi(obpConfig, process.env.VITE_OBP_API_HOST)
+        
+
+        // OBP sdk naming is a bit mad, can be rectified in the future
+        const consentRequestResponse = await consentAPI.oBPv500CreateConsentRequest({
+            accountAccess: [],
+            everything: false,
+            entitlements: [], 
+            consumerId: '',
+          } as unknown as ConsumerConsentrequestsBody,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }
+        )
+
+        //console.log("Consent request response: ", consentRequestResponse)
+        
+        console.log({consentId: consentRequestResponse.data.consent_request_id})
+        session['obpConsentRequestId'] = consentRequestResponse.data.consent_request_id
+
+        return response.status(200).json(JSON.stringify({consentId: consentRequestResponse.data.consent_request_id}))
+        //console.log(await response.body.json())
+        
+
+      } catch (error) {
+        console.error("Error in consent/request endpoint: ", error);
+        return response.status(500).json({ error: 'Internal Server Error' });
+      }
     }
 
     @Post('/consent')

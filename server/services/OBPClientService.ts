@@ -37,9 +37,10 @@ import {
   CreateAny,
   UpdateAny,
   DiscardAny,
-  Any
+  Any,
 } from 'obp-typescript'
 import type { APIClientConfig, OAuthConfig } from 'obp-typescript'
+import { OAuth } from 'obp-typescript'
 
 @Service()
 export default class OBPClientService {
@@ -56,6 +57,7 @@ export default class OBPClientService {
       version: process.env.VITE_OBP_API_VERSION as Version,
       oauthConfig: this.oauthConfig
     }
+    
   }
   async get(path: string, clientConfig: any): Promise<any> {
     const config = this.getSessionConfig(clientConfig)
@@ -81,7 +83,48 @@ export default class OBPClientService {
     return this.clientConfig.version
   }
 
-  getOBPClientConfig(): any {
+  getOBPClientConfig(): APIClientConfig {
     return this.clientConfig
+  }
+
+  async getOAuthHeader(path: string, method:string): Promise<string> {
+    // This gets the OAuth1 header for the given path and method for the logged in user
+    // We should probably transition to OAuth2
+    
+    const config = this.getSessionConfig(this.clientConfig)
+    if (!config.oauthConfig) {
+      throw new Error('OAuth configuration is missing')
+    }
+    const oauthInstance = new OAuth(config.oauthConfig).get()
+
+    const authHeader = oauthInstance.authHeader(path, config.consumerSecret, config.accessToken, method)
+    return authHeader
+  }
+
+  async getDirectLoginToken(): Promise<string> {
+    // Hilariously insecure, should be replaced with an OAuth 2 flow as soon as possible
+
+    const consumerKey = this.oauthConfig.consumerKey
+    const username = process.env.VITE_OBP_DIRECT_LOGIN_USERNAME
+    const password = process.env.VITE_OBP_DIRECT_LOGIN_PASSWORD
+
+    const authHeader = `DirectLogin username="${username}",password="${password}",consumer_key="${consumerKey}"`
+    // Get token from OBP
+    const tokenResponse = await fetch(`${this.clientConfig.baseUri}/my/logins/direct`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': authHeader
+      }
+    })
+
+    if (!tokenResponse.ok) {
+      throw new Error(`Failed to get direct login token: ${tokenResponse.statusText} ${await tokenResponse.text()}`)
+    } 
+    
+    const token = await tokenResponse.json()
+    return token.token
+    
+
   }
 }

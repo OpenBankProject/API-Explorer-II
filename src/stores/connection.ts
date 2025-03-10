@@ -44,13 +44,33 @@ export const useConnectionStore = defineStore("connection", {
      */
     bindEvents() {
       socket.on("connect", () => {
-        console.log("websocket connection established")
+        console.log("connectionStore says: websocket connection established")
         this.isConnected = true;
       });
 
-      socket.on("disconnect", () => {
-        this.isConnected = false;
+      socket.on("reconnecting", (reconnectionNo) => {
+        console.log(`connectionStore says: attempting recconnection... tried ${reconnectionNo} time(s) `)
+        this.isConnected = true;
       });
+
+      // Handle errors and disconnections
+      socket.on("disconnect", (error) => {
+        this.isConnected = false;
+        console.error("connectionStore says: socket disconnected", error)
+      });
+      
+      socket.on("connect_timeout", (error) => {
+        console.error("connectionStore says: socket connection timeout", error)
+      });
+
+      socket.on("connect_error", (error) => {
+        console.error("connectionStore says: websocket connection error", error)
+      });
+
+      socket.on("connect_failed", (error) => {
+        console.error("connectionStore says: websocket connection failed", error)
+      });
+
     },
 
     /**

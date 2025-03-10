@@ -161,6 +161,13 @@ openssl rsa -in private_key.pem -pubout -out public_key.pem
 cp public_key.pem {path-to-your-opey-install}/
 ```
 
+# Building the frontend container
+
+As the frontend environment is read at build time, we need to reprocess the values 
+at container runtime. 
+This is done here: Dockerfiles/prestart.go
+overwriting the values set here: Dockerfiles/frontend_build.env
+Any newly introduced environment variables should be added to the prestart.go and frontend_build.env files accordingly.
 # LICENSE
 
 This project is licensed under the AGPL V3 (see NOTICE) and a commercial license from TESOBE.

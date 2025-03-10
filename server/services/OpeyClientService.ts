@@ -1,12 +1,12 @@
 import { Service } from 'typedi'
-import { UserInput, StreamInput, OpeyConfig, AuthConfig } from '../schema/OpeySchema'
-import { Readable } from "stream"
-import fetch from 'node-fetch'
+import { UserInput, StreamInput, OpeyConfig, AuthConfig, ConsentRequestResponse } from '../schema/OpeySchema'
+import OBPClientService from './OBPClientService'
 
 @Service()
 export default class OpeyClientService {
     private authConfig: AuthConfig
     private opeyConfig: OpeyConfig
+    public obpClientService: OBPClientService
     constructor() {
         this.authConfig = {
             consentId: '',
@@ -73,7 +73,7 @@ export default class OpeyClientService {
 
             console.log("Got response body: ", response.body) //DEBUG
 
-            return response.body
+            return response.body as unknown as ReadableStream<any>
         }
         catch (error) {
             throw new Error(`Error streaming from Opey: ${error}`)
@@ -106,4 +106,17 @@ export default class OpeyClientService {
             throw new Error(`Error invoking Opey: ${error}`)
         }
     }
+
+    // async createConsentRequest(): Promise<ConsentRequestResponse | Error> {
+    //     // Create a consent request for the current user
+
+
+    //     const oauthConfig = session['clientConfig']
+
+    //     try {
+    //         this.obpClientService.create('/obp/v5.0.0/consumer/consent-requests', )
+    //     } catch (error) {
+    //         throw new Error(`Error creating consent request: ${error}`)
+    //     }
+    // }
 }

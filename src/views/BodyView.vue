@@ -28,9 +28,11 @@
 <script setup lang="ts">
 import SearchNav from '../components/SearchNav.vue'
 import Menu from '../components/Menu.vue'
+import ChatWidget from '../components/ChatWidget.vue'
 import Collections from '../components/Collections.vue'
 import { inject } from 'vue'
 
+const isChatbotEnabled = import.meta.env.VITE_CHATBOT_ENABLED === 'true'
 </script>
 
 <template>
@@ -62,6 +64,7 @@ import { inject } from 'vue'
         <!--Footer
         </el-footer>-->
       </el-container>
+      <ChatWidget v-if="isChatbotEnabled" />
     </el-main>
   </el-container>
 </template>
