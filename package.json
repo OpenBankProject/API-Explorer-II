@@ -33,7 +33,7 @@
     "dotenv": "^16.3.1",
     "element-plus": "^2.3.9",
     "express": "^4.21.0",
-    "express-session": "^1.17.3",
+    "express-session": "^1.18.2",
     "highlight.js": "^11.8.0",
     "json-editor-vue": "^0.17.3",
     "jsonwebtoken": "^9.0.2",
