@@ -62,7 +62,7 @@
   },
   "devDependencies": {
     "@ai-sdk/vue": "^1.1.18",
-    "@playwright/test": "^1.51.1",
+    "@playwright/test": "^1.56.1",
     "@rushstack/eslint-patch": "^1.4.0",
     "@testing-library/vue": "^8.1.0",
     "@types/jest": "^29.5.14",
@@ -85,7 +85,7 @@
     "jsdom": "^25.0.1",
     "node-mocks-http": "^1.16.2",
     "npm-run-all2": "^7.0.1",
-    "playwright": "^1.51.1",
+    "playwright": "^1.56.1",
     "prettier": "^3.0.1",
     "superagent": "^9.0.0",
     "supertest": "^7.0.0",
