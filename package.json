@@ -42,7 +42,7 @@
     "highlight.js": "^11.8.0",
     "json-editor-vue": "^0.17.3",
     "jsonwebtoken": "^9.0.2",
-    "langchain": "^0.3.19",
+    "langchain": "^0.3.37",
     "markdown-it": "^14.1.0",
     "node-fetch": "^2.6.7",
     "obp-api-typescript": "^1.0.1",
