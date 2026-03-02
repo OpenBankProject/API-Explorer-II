@@ -19,13 +19,15 @@ jobs:
       - name: Build container images
         run: |
           if [ "${{ github.ref }}" == "refs/heads/develop" ]; then
+            echo start building  api-explorer-ii containers develop branch with latest tag
             docker build . --file Dockerfiles/Dockerfile_backend --tag docker.io/${{ env.DOCKER_HUB_ORGANIZATION }}/${{ env.DOCKER_HUB_REPOSITORY }}:$GITHUB_SHA --tag docker.io/${{ env.DOCKER_HUB_ORGANIZATION }}/${{ env.DOCKER_HUB_REPOSITORY }}:${{ steps.extract_branch.outputs.branch }} --tag docker.io/${{ env.DOCKER_HUB_ORGANIZATION }}/${{ env.DOCKER_HUB_REPOSITORY }}:latest
             docker build . --file Dockerfiles/Dockerfile_frontend --tag docker.io/${{ env.DOCKER_HUB_ORGANIZATION }}/${{ env.DOCKER_HUB_REPOSITORY }}-nginx:$GITHUB_SHA --tag docker.io/${{ env.DOCKER_HUB_ORGANIZATION }}/${{ env.DOCKER_HUB_REPOSITORY }}-nginx:${{ steps.extract_branch.outputs.branch }} --tag docker.io/${{ env.DOCKER_HUB_ORGANIZATION }}/${{ env.DOCKER_HUB_REPOSITORY }}-nginx:latest
-            echo building  api-explorer-ii containers with latest tag done
+            echo building  api-explorer-ii containers develop branch with latest tag done
           else
+            echo start building  api-explorer-ii containers non-develop branch without latest tag
             docker build . --file Dockerfiles/Dockerfile_backend --tag docker.io/${{ env.DOCKER_HUB_ORGANIZATION }}/${{ env.DOCKER_HUB_REPOSITORY }}:$GITHUB_SHA --tag docker.io/${{ env.DOCKER_HUB_ORGANIZATION }}/${{ env.DOCKER_HUB_REPOSITORY }}:${{ steps.extract_branch.outputs.branch }} 
             docker build . --file Dockerfiles/Dockerfile_frontend --tag docker.io/${{ env.DOCKER_HUB_ORGANIZATION }}/${{ env.DOCKER_HUB_REPOSITORY }}-nginx:$GITHUB_SHA --tag docker.io/${{ env.DOCKER_HUB_ORGANIZATION }}/${{ env.DOCKER_HUB_REPOSITORY }}-nginx:${{ steps.extract_branch.outputs.branch }}
-            echo building  api-explorer-ii containers without latest tag done
+            echo building  api-explorer-ii containers non-develop branch without latest tag done
           fi
 
       - name: Upload container image with latest tag
