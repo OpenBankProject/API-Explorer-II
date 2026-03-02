@@ -1,9 +1,6 @@
 name: build and publish container
 
-on:
-  push:
-    branches:
-    - develop
+on: [push]
 env:
   DOCKER_HUB_ORGANIZATION: ${{ vars.DOCKER_HUB_ORGANIZATION }}
   DOCKER_HUB_REPOSITORY: api-explorer-ii
@@ -19,17 +16,24 @@ jobs:
         id: extract_branch
 
       - uses: actions/checkout@v4
-      - name: Build container image with latest tag
+      - name: Build container images
         run: |
-          docker build . --file Dockerfiles/Dockerfile_backend --tag docker.io/${{ env.DOCKER_HUB_ORGANIZATION }}/${{ env.DOCKER_HUB_REPOSITORY }}:$GITHUB_SHA --tag docker.io/${{ env.DOCKER_HUB_ORGANIZATION }}/${{ env.DOCKER_HUB_REPOSITORY }}:${{ steps.extract_branch.outputs.branch }} --tag docker.io/${{ env.DOCKER_HUB_ORGANIZATION }}/${{ env.DOCKER_HUB_REPOSITORY }}:latest
-          docker build . --file Dockerfiles/Dockerfile_frontend --tag docker.io/${{ env.DOCKER_HUB_ORGANIZATION }}/${{ env.DOCKER_HUB_REPOSITORY }}-nginx:$GITHUB_SHA --tag docker.io/${{ env.DOCKER_HUB_ORGANIZATION }}/${{ env.DOCKER_HUB_REPOSITORY }}-nginx:${{ steps.extract_branch.outputs.branch }} --tag docker.io/${{ env.DOCKER_HUB_ORGANIZATION }}/${{ env.DOCKER_HUB_REPOSITORY }}-nginx:latest
-          echo building  api-explorer-ii with latest tag done
+          if [ "${{ github.ref }}" == "refs/heads/develop" ]; then
+            docker build . --file Dockerfiles/Dockerfile_backend --tag docker.io/${{ env.DOCKER_HUB_ORGANIZATION }}/${{ env.DOCKER_HUB_REPOSITORY }}:$GITHUB_SHA --tag docker.io/${{ env.DOCKER_HUB_ORGANIZATION }}/${{ env.DOCKER_HUB_REPOSITORY }}:${{ steps.extract_branch.outputs.branch }} --tag docker.io/${{ env.DOCKER_HUB_ORGANIZATION }}/${{ env.DOCKER_HUB_REPOSITORY }}:latest
+            docker build . --file Dockerfiles/Dockerfile_frontend --tag docker.io/${{ env.DOCKER_HUB_ORGANIZATION }}/${{ env.DOCKER_HUB_REPOSITORY }}-nginx:$GITHUB_SHA --tag docker.io/${{ env.DOCKER_HUB_ORGANIZATION }}/${{ env.DOCKER_HUB_REPOSITORY }}-nginx:${{ steps.extract_branch.outputs.branch }} --tag docker.io/${{ env.DOCKER_HUB_ORGANIZATION }}/${{ env.DOCKER_HUB_REPOSITORY }}-nginx:latest
+            echo building  api-explorer-ii containers with latest tag done
+          else
+            docker build . --file Dockerfiles/Dockerfile_backend --tag docker.io/${{ env.DOCKER_HUB_ORGANIZATION }}/${{ env.DOCKER_HUB_REPOSITORY }}:$GITHUB_SHA --tag docker.io/${{ env.DOCKER_HUB_ORGANIZATION }}/${{ env.DOCKER_HUB_REPOSITORY }}:${{ steps.extract_branch.outputs.branch }} 
+            docker build . --file Dockerfiles/Dockerfile_frontend --tag docker.io/${{ env.DOCKER_HUB_ORGANIZATION }}/${{ env.DOCKER_HUB_REPOSITORY }}-nginx:$GITHUB_SHA --tag docker.io/${{ env.DOCKER_HUB_ORGANIZATION }}/${{ env.DOCKER_HUB_REPOSITORY }}-nginx:${{ steps.extract_branch.outputs.branch }}
+            echo building  api-explorer-ii containers without latest tag done
+          fi
+
       - name: Upload container image with latest tag
         run: |
           echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin docker.io
           docker push docker.io/${{ env.DOCKER_HUB_ORGANIZATION }}/${{ env.DOCKER_HUB_REPOSITORY }} --all-tags
           docker push docker.io/${{ env.DOCKER_HUB_ORGANIZATION }}/${{ env.DOCKER_HUB_REPOSITORY }}-nginx --all-tags
-          echo pushing container api-explorer-ii with latest tag done
+          echo pushing api-explorer-ii containers done
 
       - uses: sigstore/cosign-installer@main
       - name: Write signing key to disk (only needed for `cosign sign --key`)
