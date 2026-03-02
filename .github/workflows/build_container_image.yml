@@ -30,7 +30,7 @@ jobs:
             echo building  api-explorer-ii containers non-develop branch without latest tag done
           fi
 
-      - name: Upload container image with latest tag
+      - name: Upload container images
         run: |
           echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin docker.io
           docker push docker.io/${{ env.DOCKER_HUB_ORGANIZATION }}/${{ env.DOCKER_HUB_REPOSITORY }} --all-tags
