@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ElNotification, NotificationHandle } from 'element-plus';
 import { ref, computed, h, onMounted, onBeforeUnmount } from 'vue';
+import { DEFAULT_OBP_API_VERSION } from '../shared-constants';
 
 // Props can be defined with defineProps
 const props = defineProps({
@@ -37,7 +38,8 @@ async function getOBPSuggestedTimeout() {
     let timeoutInSeconds: number;
     // Fetch the suggested timeout from the OBP API
 
-    const response = await fetch(`${obpApiHost}/obp/${import.meta.env.VITE_OBP_API_VERSION}/ui/suggested-session-timeout`);
+    // Always use v5.1.0 for application infrastructure - stable and debuggable
+    const response = await fetch(`${obpApiHost}/obp/${DEFAULT_OBP_API_VERSION}/ui/suggested-session-timeout`);
     const json = await response.json();
     if(json.timeout_in_seconds) {
       timeoutInSeconds = json.timeout_in_seconds;
@@ -48,7 +50,7 @@ async function getOBPSuggestedTimeout() {
     }
 
     return timeoutInSeconds;
-} 
+}
 
 function resetTimeout() {
     // Logic to reset the timeout
@@ -72,14 +74,14 @@ function warningMessage() {
     // Update the countdown every second
     countdownInterval = setInterval(() => {
         secondsLeft.value = Math.ceil((logoutTime - Date.now()) / 1000);
-        
+
         // If time's up or almost up, clear the interval
         if (secondsLeft.value <= 0) {
             clearInterval(countdownInterval);
             return;
         }
-        
-        
+
+
     }, 1000);
 
     warningNotification = ElNotification({
@@ -117,11 +119,11 @@ onMounted(() => {
         const logoutDelay = timeoutInSeconds * 1000;
         // Set warning to appear 30 seconds before logout
         const warningDelay = Math.max(logoutDelay - 30000, 0);
-        
+
         // Update the defaults
         defaultWarningDelay = warningDelay;
         defaultLogoutDelay = logoutDelay;
-        
+
         // Reset timers with new values
         resetTimeout();
     }).catch(error => {

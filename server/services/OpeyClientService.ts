@@ -1,6 +1,6 @@
 import { Service } from 'typedi'
-import { UserInput, StreamInput, OpeyConfig, ConsentRequestResponse } from '../schema/OpeySchema'
-import OBPClientService from './OBPClientService'
+import { UserInput, StreamInput, OpeyConfig, ConsentRequestResponse } from '../schema/OpeySchema.js'
+import OBPClientService from './OBPClientService.js'
 
 @Service()
 export default class OpeyClientService {

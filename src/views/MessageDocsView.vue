@@ -36,7 +36,7 @@ import CodeBlock from '../components/CodeBlock.vue';
 
 let connector = connectors[0]
 const route = useRoute()
-const groupedMessageDocs = ref(inject(obpGroupedMessageDocsKey)!)
+const groupedMessageDocs = ref(inject(obpGroupedMessageDocsKey) || {})
 const messageDocs = ref(null as any)
 
 const activeNames = ref(['1', '2', '3', '4', '5', '6'])
@@ -77,12 +77,13 @@ function showDependentEndpoints(value: any) {
     <el-main class="message-docs-content">
       <el-scrollbar>
         <el-backtop :right="100" :bottom="100" />
+        <div class="message-docs-header">
+          <h1>{{ connector }}</h1>
+          <p class="connector-subtitle">Message Docs</p>
+        </div>
         <div v-for="(group, key) of messageDocs" :key="key">
           <div v-for="(value, key) of group" :key="value">
             <el-divider></el-divider>
-            <header>
-
-            </header>
             <a v-bind:href="`#${value.process}`" :id="value.process">
               <h2>{{ value.process }}</h2>
             </a>
@@ -250,5 +251,26 @@ div {
 
 .content :deep(a):hover {
   background-color: #39455f;
+}
+
+.message-docs-header {
+  padding: 20px 0;
+  border-bottom: 2px solid #e4e7ed;
+  margin-bottom: 20px;
+}
+
+.message-docs-header h1 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #303133;
+  margin: 0 0 0.5rem 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.connector-subtitle {
+  font-size: 1rem;
+  color: #909399;
+  margin: 0;
 }
 </style>

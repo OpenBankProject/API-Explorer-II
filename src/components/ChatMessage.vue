@@ -100,7 +100,7 @@ export default {
         </div>
         <div v-if="message.error" class="error"><el-icon><Warning /></el-icon> {{ message.error }}</div>
     </div>
-    
+
 </template>
 
 <style>
@@ -211,5 +211,25 @@ export default {
 }
 .tidot:nth-child(3){
     animation-delay:400ms;
+}
+
+/* Override Prism.js styling for Scala code blocks to make them readable */
+pre.language-scala {
+    background-color: #f5f5f5 !important;
+    color: #333 !important;
+    font-family: 'Courier New', Courier, monospace !important;
+    padding: 1em !important;
+    overflow: auto !important;
+}
+
+pre.language-scala code {
+    background-color: transparent !important;
+    color: #333 !important;
+    font-family: 'Courier New', Courier, monospace !important;
+}
+
+/* Reset all token colors for Scala to ensure readability */
+pre.language-scala .token {
+    color: #333 !important;
 }
 </style>

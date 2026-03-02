@@ -46,6 +46,7 @@ main {
   line-height: 40px;
   display: table;
   border-bottom: solid 1px var(--el-menu-border-color);
+  flex-shrink: 0;
 }
 
 .menu-left {
@@ -65,7 +66,6 @@ main {
 .search-nav {
   background-color: #f8f9fb;
   padding: 8px 0 8px 8px;
-  border-right: solid 1px var(--el-menu-border-color);
 }
 
 .el-notification__content {

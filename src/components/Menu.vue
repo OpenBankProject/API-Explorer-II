@@ -53,6 +53,7 @@ const clearCacheStorage = (event: any) => {
     <el-col :span="10" class="menu-left">
       &nbsp;&nbsp;
       <span id="selected-api-version" class="host"></span>
+      <span id="selected-endpoint-tags" class="endpoint-tags"></span>
     </el-col>
     <el-col :span="14" class="menu-right">
       <span class="host" id="cache-storage-status" @click="clearCacheStorage">App Version: {{ APP_VERSION }}</span>
@@ -114,5 +115,23 @@ a:hover {
 
 .text-is-red {
   color: red;
+}
+
+.endpoint-tags {
+  margin-left: 10px;
+  font-size: 12px;
+  color: #606266;
+}
+
+.endpoint-tags :deep(.tag-link) {
+  color: #409eff;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.endpoint-tags :deep(.tag-link:hover) {
+  color: #66b1ff;
+  text-decoration: underline;
 }
 </style>

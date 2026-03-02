@@ -24,8 +24,8 @@ vi.mock('../services/OBPClientService', () => {
     }
 })
 
-import OBPConsentsService from '../services/OBPConsentsService';
-import OpeyClientService from '../services/OpeyClientService';
+import OBPConsentsService from '../services/OBPConsentsService.js';
+import OpeyClientService from '../services/OpeyClientService.js';
 
 describe('OBPConsentsService.createUserConsentsClient', () => {
     let obpConsentsService: OBPConsentsService;

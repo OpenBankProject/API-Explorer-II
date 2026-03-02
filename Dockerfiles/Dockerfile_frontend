@@ -37,7 +37,3 @@ COPY --from=gobuilder /usr/src/app/prestart /bin/prestart
 RUN chgrp -R 0 /opt/app-root/src/ && chmod -R g+rwX /opt/app-root/src/
 USER 1001
 CMD /bin/prestart ; nginx -g "daemon off;"
-
-
-
-

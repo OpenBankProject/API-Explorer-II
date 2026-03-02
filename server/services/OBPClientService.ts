@@ -25,76 +25,174 @@
  *
  */
 
-import { Service } from 'typedi'
-import { DEFAULT_OBP_API_VERSION } from '../../shared-constants'
-import {
-  Version,
-  API,
-  get,
-  create,
-  update,
-  discard,
-  GetAny,
-  CreateAny,
-  UpdateAny,
-  DiscardAny,
-  Any,
-} from 'obp-typescript'
-import type { APIClientConfig, OAuthConfig } from 'obp-typescript'
-import { OAuth } from 'obp-typescript'
+import { Service, Container } from 'typedi'
+import { DEFAULT_OBP_API_VERSION } from '../../src/shared-constants.js'
+import { BerlinGroupSignatureService } from './BerlinGroupSignatureService.js'
+import type { BerlinGroupSessionData } from '../types/berlin-group.js'
+
+// Custom error class to preserve HTTP status codes
+class OBPAPIError extends Error {
+  status: number
+  constructor(status: number, message: string) {
+    super(message)
+    this.status = status
+    this.name = 'OBPAPIError'
+  }
+}
+
+// OAuth2 Bearer token configuration
+interface OAuth2Config {
+  accessToken: string
+  tokenType: string
+}
+
+// API Client configuration for OAuth2
+interface APIClientConfig {
+  baseUri: string
+  version: string
+  oauth2?: OAuth2Config
+  berlinGroup?: BerlinGroupSessionData
+}
 
 @Service()
 /**
  * OBPClientService provides methods for interacting with the Open Bank Project API.
- * 
- * This service handles API communication with OBP, including OAuth authentication,
- * making HTTP requests (GET, POST, PUT, DELETE), and managing API configurations.
- * 
+ *
+ * This service handles API communication with OBP using OAuth2 Bearer token authentication,
+ * making HTTP requests (GET, POST, PUT, DELETE).
+ *
  * @class OBPClientService
- * 
- * @property {OAuthConfig} oauthConfig - OAuth configuration for authentication
+ *
  * @property {APIClientConfig} clientConfig - API client configuration
- * 
+ *
  * @example
  * const obpService = new OBPClientService();
- * const response = await obpService.get('/banks', clientConfig);
+ * const response = await obpService.get('/obp/v5.1.0/banks', sessionConfig);
  */
 export default class OBPClientService {
-  private oauthConfig: OAuthConfig
   private clientConfig: APIClientConfig
+
   constructor() {
-    if (!process.env.VITE_OBP_CONSUMER_KEY) throw new Error('VITE_OBP_CONSUMER_KEY is not set')
-    if (!process.env.VITE_OBP_CONSUMER_SECRET) throw new Error('VITE_OBP_CONSUMER_SECRET is not set')
-    if (!process.env.VITE_OBP_REDIRECT_URL) throw new Error('VITE_OBP_REDIRECT_URL is not set')
     if (!process.env.VITE_OBP_API_HOST) throw new Error('VITE_OBP_API_HOST is not set')
-    this.oauthConfig = {
-      consumerKey: process.env.VITE_OBP_CONSUMER_KEY!,
-      consumerSecret: process.env.VITE_OBP_CONSUMER_SECRET!,
-      redirectUrl: process.env.VITE_OBP_REDIRECT_URL!
-    }
+
+    // Always use v5.1.0 for application infrastructure - stable and debuggable
     this.clientConfig = {
       baseUri: process.env.VITE_OBP_API_HOST!,
-      version: (process.env.VITE_OBP_API_VERSION ?? DEFAULT_OBP_API_VERSION) as Version,
-      oauthConfig: this.oauthConfig
+      version: DEFAULT_OBP_API_VERSION
     }
-    
   }
   async get(path: string, clientConfig: any): Promise<any> {
     const config = this.getSessionConfig(clientConfig)
-    return await get<API.Any>(config, Any)(GetAny)(path)
+
+    // Check if this is a Berlin Group path and signing is enabled
+    const bgService = Container.get(BerlinGroupSignatureService)
+    if (BerlinGroupSignatureService.isBerlinGroupPath(path) && bgService.isEnabled()) {
+      return await this.requestWithBerlinGroupHeaders(
+        path, 'GET', '', config, config?.berlinGroup?.consentId
+      )
+    }
+
+    // If no config or no access token, make unauthenticated request
+    if (!config || !config.oauth2?.accessToken) {
+      return await this.getWithoutAuth(path)
+    }
+
+    return await this.getWithBearer(path, config.oauth2.accessToken)
   }
+
   async create(path: string, body: any, clientConfig: any): Promise<any> {
     const config = this.getSessionConfig(clientConfig)
-    return await create<API.Any>(config, Any)(CreateAny)(path)(body)
+
+    // Check if this is a Berlin Group path and signing is enabled
+    const bgService = Container.get(BerlinGroupSignatureService)
+    if (BerlinGroupSignatureService.isBerlinGroupPath(path) && bgService.isEnabled()) {
+      return await this.requestWithBerlinGroupHeaders(
+        path, 'POST', JSON.stringify(body), config, config?.berlinGroup?.consentId
+      )
+    }
+
+    if (!config || !config.oauth2?.accessToken) {
+      throw new Error('Authentication required for creating resources.')
+    }
+
+    return await this.createWithBearer(path, body, config.oauth2.accessToken)
   }
+
   async update(path: string, body: any, clientConfig: any): Promise<any> {
     const config = this.getSessionConfig(clientConfig)
-    return await update<API.Any>(config, Any)(UpdateAny)(path)(body)
+
+    // Check if this is a Berlin Group path and signing is enabled
+    const bgService = Container.get(BerlinGroupSignatureService)
+    if (BerlinGroupSignatureService.isBerlinGroupPath(path) && bgService.isEnabled()) {
+      return await this.requestWithBerlinGroupHeaders(
+        path, 'PUT', JSON.stringify(body), config, config?.berlinGroup?.consentId
+      )
+    }
+
+    if (!config || !config.oauth2?.accessToken) {
+      throw new Error('Authentication required for updating resources.')
+    }
+
+    return await this.updateWithBearer(path, body, config.oauth2.accessToken)
   }
+
   async discard(path: string, clientConfig: any): Promise<any> {
     const config = this.getSessionConfig(clientConfig)
-    return await discard<API.Any>(config, Any)(DiscardAny)(path)
+
+    // Check if this is a Berlin Group path and signing is enabled
+    const bgService = Container.get(BerlinGroupSignatureService)
+    if (BerlinGroupSignatureService.isBerlinGroupPath(path) && bgService.isEnabled()) {
+      return await this.requestWithBerlinGroupHeaders(
+        path, 'DELETE', '', config, config?.berlinGroup?.consentId
+      )
+    }
+
+    if (!config || !config.oauth2?.accessToken) {
+      throw new Error('Authentication required for deleting resources.')
+    }
+
+    return await this.discardWithBearer(path, config.oauth2.accessToken)
   }
+  /**
+   * Make a request to a Berlin Group API path with TPP signature headers.
+   * OAuth2 Bearer token is included when available alongside signature headers.
+   */
+  private async requestWithBerlinGroupHeaders(
+    path: string,
+    method: string,
+    body: string,
+    clientConfig: APIClientConfig | null,
+    consentId?: string
+  ): Promise<any> {
+    const bgService = Container.get(BerlinGroupSignatureService)
+    const bgHeaders = bgService.generateHeaders(method, body, consentId)
+
+    // Merge with OAuth2 Bearer token if available
+    const headers: Record<string, string> = { ...bgHeaders }
+    if (clientConfig?.oauth2?.accessToken) {
+      headers['Authorization'] = `Bearer ${clientConfig.oauth2.accessToken}`
+    }
+
+    const normalizedPath = path.startsWith('/') ? path : `/${path}`
+    const url = `${this.clientConfig.baseUri}${normalizedPath}`
+    console.log(`OBPClientService: ${method} Berlin Group request to: ${url}`)
+
+    const fetchOptions: RequestInit = { method, headers }
+    if (method === 'POST' || method === 'PUT') {
+      fetchOptions.body = body
+    }
+
+    const response = await fetch(url, fetchOptions)
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error(`[OBPClientService] Berlin Group ${method} request failed:`, response.status, errorText)
+      throw new OBPAPIError(response.status, errorText)
+    }
+
+    return await response.json()
+  }
+
   private getSessionConfig(clientConfig: APIClientConfig): APIClientConfig {
     return clientConfig || this.clientConfig
   }
@@ -107,68 +205,196 @@ export default class OBPClientService {
     return this.clientConfig
   }
 
-
   /**
-   * Generates an OAuth1 authentication header for a given API request. I.e. to use in the Authorization header.
-   * Currently used for boostrapping the newer 'obp-api-typescript' SDK.
-   * 
-   * @param path - The API endpoint path to access i.e. /banks or /consents/IMPLICIT
-   *  NOTE: the path should not include the baseUri
-   * @param method - The HTTP method to use (GET, POST, PUT, DELETE, etc.)
-   * @param clientConfig - Configuration object containing the user's session data
-   * @returns A Promise resolving to the OAuth authentication header string
-   * @throws Error if OAuth configuration is missing or if access token is not available
-   * 
-   * @remarks
-   * This method requires that the user has already authenticated and the OAuth access token
-   * is stored in the clientConfig. It uses OAuth1 for authentication, which may be replaced
-   * with OAuth2 in future implementations.
+   * Make a GET request without authentication (for public endpoints)
+   *
+   * @param path - The API endpoint path (e.g., /obp/v5.1.0/api/versions)
+   * @returns Response data from the API
    */
-  async getOAuthHeader(path: string, method:string, clientConfig: any): Promise<string> {
-    // This gets the OAuth1 header for the given path and method for the logged in user
-    // We should probably transition to OAuth2
-    console.log('Getting OAuth header for path:', path, 'method:', method)
-    // OAuth1 access token stored in the clientConfig
-    const config = this.getSessionConfig(clientConfig)
-    if (!config.oauthConfig) {
-      throw new Error('OAuth configuration is missing')
-    }
-    if(!config.oauthConfig.accessToken) {
-      throw new Error('Access token is missing, OAuth headers trying to be retrieved before login')
-    }
+  private async getWithoutAuth(path: string): Promise<any> {
+    // Ensure proper slash handling between base URI and path
+    const normalizedPath = path.startsWith('/') ? path : `/${path}`
+    const url = `${this.clientConfig.baseUri}${normalizedPath}`
+    console.log('OBPClientService: GET request without authentication to:', url)
 
-    const oauthInstance = new OAuth(config.oauthConfig).get()
-
-    // Use the OAuth1 instance to get the header
-    const url = `${config.baseUri}${path}`
-    const authHeader = oauthInstance.authHeader(url, config.oauthConfig.accessToken.key, config.oauthConfig.accessToken.secret, method)
-    return authHeader
-  }
-
-  async getDirectLoginToken(): Promise<string> {
-    // Hilariously insecure, should be replaced with an OAuth 2 flow as soon as possible
-
-    const consumerKey = this.oauthConfig.consumerKey
-    const username = process.env.VITE_OBP_DIRECT_LOGIN_USERNAME
-    const password = process.env.VITE_OBP_DIRECT_LOGIN_PASSWORD
-
-    const authHeader = `DirectLogin username="${username}",password="${password}",consumer_key="${consumerKey}"`
-    // Get token from OBP
-    const tokenResponse = await fetch(`${this.clientConfig.baseUri}/my/logins/direct`, {
-      method: 'POST',
+    const response = await fetch(url, {
+      method: 'GET',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': authHeader
+        'Content-Type': 'application/json'
       }
     })
 
-    if (!tokenResponse.ok) {
-      throw new Error(`Failed to get direct login token: ${tokenResponse.statusText} ${await tokenResponse.text()}`)
-    } 
-    
-    const token = await tokenResponse.json()
-    return token.token
-    
+    if (!response.ok) {
+      const errorText = await response.text()
+      // 401 errors are expected when user is not authenticated
+      if (response.status === 401) {
+        console.log(`[OBPClientService] 401 Unauthorized: ${url} (authentication required)`)
+      } else {
+        console.error('[OBPClientService] GET request failed:', response.status, errorText)
+      }
+      throw new OBPAPIError(response.status, errorText)
+    }
 
+    const responseData = await response.json()
+    // Log count instead of full data to reduce log noise
+    if (
+      responseData &&
+      responseData.scanned_api_versions &&
+      Array.isArray(responseData.scanned_api_versions)
+    ) {
+      console.log(
+        `OBPClientService: Response data: ${responseData.scanned_api_versions.length} scanned_api_versions`
+      )
+    } else {
+      console.log('OBPClientService: Response data received:', typeof responseData)
+    }
+    return responseData
+  }
+
+  /**
+   * Make a GET request with OAuth2 Bearer token authentication
+   *
+   * @param path - The API endpoint path (e.g., /obp/v5.1.0/banks)
+   * @param accessToken - OAuth2 access token
+   * @returns Response data from the API
+   */
+  private async getWithBearer(path: string, accessToken: string): Promise<any> {
+    // Ensure proper slash handling between base URI and path
+    const normalizedPath = path.startsWith('/') ? path : `/${path}`
+    const url = `${this.clientConfig.baseUri}${normalizedPath}`
+    console.log('OBPClientService: GET request with Bearer token to:', url)
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      }
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      // 401 errors indicate token expiration or invalid token
+      if (response.status === 401) {
+        console.warn(
+          `[OBPClientService] 401 Unauthorized with Bearer token: ${url} (token may be expired)`
+        )
+      } else {
+        console.error(
+          '[OBPClientService] GET request with Bearer failed:',
+          response.status,
+          errorText
+        )
+      }
+      throw new OBPAPIError(response.status, errorText)
+    }
+
+    return await response.json()
+  }
+
+  /**
+   * Make a POST request with OAuth2 Bearer token authentication
+   *
+   * @param path - The API endpoint path
+   * @param body - Request body data
+   * @param accessToken - OAuth2 access token
+   * @returns Response data from the API
+   */
+  private async createWithBearer(path: string, body: any, accessToken: string): Promise<any> {
+    // Ensure proper slash handling between base URI and path
+    const normalizedPath = path.startsWith('/') ? path : `/${path}`
+    const url = `${this.clientConfig.baseUri}${normalizedPath}`
+    console.log('OBPClientService: POST request with Bearer token to:', url)
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      if (response.status === 401) {
+        console.warn(`[OBPClientService] 401 Unauthorized on POST: ${url} (token may be expired)`)
+      } else {
+        console.error('[OBPClientService] POST request failed:', response.status, errorText)
+      }
+      throw new OBPAPIError(response.status, errorText)
+    }
+
+    return await response.json()
+  }
+
+  /**
+   * Make a PUT request with OAuth2 Bearer token authentication
+   *
+   * @param path - The API endpoint path
+   * @param body - Request body data
+   * @param accessToken - OAuth2 access token
+   * @returns Response data from the API
+   */
+  private async updateWithBearer(path: string, body: any, accessToken: string): Promise<any> {
+    // Ensure proper slash handling between base URI and path
+    const normalizedPath = path.startsWith('/') ? path : `/${path}`
+    const url = `${this.clientConfig.baseUri}${normalizedPath}`
+    console.log('OBPClientService: PUT request with Bearer token to:', url)
+
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      if (response.status === 401) {
+        console.warn(`[OBPClientService] 401 Unauthorized on PUT: ${url} (token may be expired)`)
+      } else {
+        console.error('[OBPClientService] PUT request failed:', response.status, errorText)
+      }
+      throw new OBPAPIError(response.status, errorText)
+    }
+
+    return await response.json()
+  }
+
+  /**
+   * Make a DELETE request with OAuth2 Bearer token authentication
+   *
+   * @param path - The API endpoint path
+   * @param accessToken - OAuth2 access token
+   * @returns Response data from the API
+   */
+  private async discardWithBearer(path: string, accessToken: string): Promise<any> {
+    // Ensure proper slash handling between base URI and path
+    const normalizedPath = path.startsWith('/') ? path : `/${path}`
+    const url = `${this.clientConfig.baseUri}${normalizedPath}`
+    console.log('OBPClientService: DELETE request with Bearer token to:', url)
+
+    const response = await fetch(url, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      }
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      if (response.status === 401) {
+        console.warn(`[OBPClientService] 401 Unauthorized on DELETE: ${url} (token may be expired)`)
+      } else {
+        console.error('[OBPClientService] DELETE request failed:', response.status, errorText)
+      }
+      throw new OBPAPIError(response.status, errorText)
+    }
+
+    return await response.json()
   }
 }

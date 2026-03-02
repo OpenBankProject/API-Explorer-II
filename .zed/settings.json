@@ -1,0 +1,38 @@
+{
+  "theme": {
+    "mode": "dark",
+    "dark": "API-Explorer-II-Green",
+    "light": "API-Explorer-II-Green"
+  },
+  "ui_font_size": 14,
+  "buffer_font_size": 14,
+  "terminal": {
+    "font_size": 13,
+    "line_height": "comfortable"
+  },
+  "project_panel": {
+    "button": true,
+    "default_width": 300,
+    "dock": "left"
+  },
+  "tab_bar": {
+    "show": true
+  },
+  "status_bar": {
+    "show": true
+  },
+  "toolbar": {
+    "breadcrumbs": true,
+    "quick_actions": true
+  },
+  "workspace": {
+    "save_on_focus_change": true
+  },
+  "git": {
+    "enabled": true,
+    "autoFetch": true
+  },
+  "format_on_save": "on",
+  "show_whitespaces": "selection",
+  "soft_wrap": "prefer_line"
+}

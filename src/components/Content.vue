@@ -30,9 +30,9 @@ import { obpMyCollectionsEndpointKey, obpResourceDocsKey } from '@/obp/keys'
 import { ArrowLeftBold, ArrowRightBold } from '@element-plus/icons-vue'
 import { ElNotification } from 'element-plus'
 import { inject, onMounted, provide, ref } from 'vue'
-import { onBeforeRouteUpdate, useRoute } from 'vue-router'
+import { onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
 import {
-OBP_API_VERSION,
+OBP_API_DEFAULT_RESOURCE_DOC_VERSION,
 createMyAPICollection,
 createMyAPICollectionEndpoint,
 deleteMyAPICollectionEndpoint,
@@ -43,16 +43,22 @@ import { SUMMARY_PAGER_LINKS_COLOR as summaryPagerLinksColorSetting } from '../o
 import { initializeAPICollections, setTabActive } from './SearchNav.vue'
 
 const route = useRoute()
-const obpVersion = 'OBP' + OBP_API_VERSION
+const router = useRouter()
+const obpVersion = OBP_API_DEFAULT_RESOURCE_DOC_VERSION
 const description = ref('')
 const summary = ref('')
+const tags = ref<string[]>([])
+const allTags = ref<string[]>([])
 const resourceDocs = inject(obpResourceDocsKey)
-const displayPrev = ref(true)
-const displayNext = ref(true)
+const displayPrev = ref(false)
+const displayNext = ref(false)
 const prev = ref({ id: 'prev' })
 const next = ref({ id: 'next' })
 const favoriteButtonStyle = ref('favorite favoriteButton')
 const summaryPagerLinksColor = ref(summaryPagerLinksColorSetting)
+const showPlaceholder = ref(false)
+const placeholderVersion = ref('')
+const totalEndpoints = ref(0)
 let routeId = ''
 let version = obpVersion
 let isFavorite = false
@@ -60,8 +66,60 @@ let apiCollectionsEndpoint = inject(obpMyCollectionsEndpointKey)!
 
 const setOperationDetails = (id: string, version: string): void => {
   const operation = getOperationDetails(version, id, resourceDocs)
+  console.log('Operation details:', operation)
+  console.log('Tags from operation:', operation?.tags)
   description.value = operation?.description
   summary.value = operation?.summary
+  tags.value = operation?.tags || []
+  console.log('Tags ref value:', tags.value)
+  updateHeaderTags(tags.value)
+}
+
+const updateHeaderTags = (tagsList: string[]) => {
+  const element = document.getElementById('selected-endpoint-tags')
+  if (element) {
+    if (tagsList.length > 0) {
+      const tagsHTML = tagsList.map(tag =>
+        `<a class="tag-link" data-tag="${tag}" href="#">${tag}</a>`
+      ).join(', ')
+      element.innerHTML = `Tags: ${tagsHTML}`
+
+      // Add click handlers to the tags
+      element.querySelectorAll('.tag-link').forEach((tagElement) => {
+        tagElement.addEventListener('click', (e) => {
+          e.preventDefault()
+          const tag = (e.target as HTMLElement).getAttribute('data-tag')
+          if (tag) {
+            filterByTag(tag)
+          }
+        })
+      })
+    } else {
+      element.innerHTML = ''
+    }
+  }
+}
+
+const clearHeaderTags = () => {
+  const element = document.getElementById('selected-endpoint-tags')
+  if (element) {
+    element.innerHTML = ''
+  }
+}
+
+const filterByTag = (tag: string) => {
+  router.push({
+    name: 'api',
+    params: { version: version },
+    query: { tags: tag }
+  })
+}
+
+const clearTagFilter = () => {
+  router.push({
+    name: 'api',
+    params: { version: version }
+  })
 }
 
 const setPager = (id: string): void => {
@@ -141,19 +199,52 @@ const showNotification = (message: string, type: string): void => {
   })
 }
 
+const getAllTags = (version: string) => {
+  const docs = resourceDocs[version]?.resource_docs || []
+  const tagSet = new Set<string>()
+  docs.forEach((doc: any) => {
+    if (doc.tags && Array.isArray(doc.tags)) {
+      doc.tags.forEach((tag: string) => tagSet.add(tag))
+    }
+  })
+  return Array.from(tagSet).sort()
+}
+
 onMounted(async () => {
-  routeId = route.params.id
-  version = route.query.version ? route.query.version : obpVersion
-  setOperationDetails(routeId, version)
-  setPager(routeId)
-  await tagFavoriteButton(routeId)
+  routeId = route.query.operationid
+  version = route.params.version ? route.params.version : obpVersion
+
+  if (!routeId) {
+    // No operation selected, show placeholder
+    showPlaceholder.value = true
+    placeholderVersion.value = version
+    totalEndpoints.value = resourceDocs[version]?.resource_docs?.length || 0
+    allTags.value = getAllTags(version)
+    clearHeaderTags()
+  } else {
+    showPlaceholder.value = false
+    setOperationDetails(routeId, version)
+    setPager(routeId)
+    await tagFavoriteButton(routeId)
+  }
 })
 onBeforeRouteUpdate(async (to) => {
-  routeId = to.params.id
-  version = route.query.version ? route.query.version : obpVersion
-  setOperationDetails(routeId, version)
-  setPager(routeId)
-  await tagFavoriteButton(routeId)
+  routeId = to.query.operationid
+  version = to.params.version ? to.params.version : obpVersion
+
+  if (!routeId) {
+    // Version changed but no endpoint selected
+    showPlaceholder.value = true
+    placeholderVersion.value = version
+    totalEndpoints.value = resourceDocs[version]?.resource_docs?.length || 0
+    allTags.value = getAllTags(version)
+    clearHeaderTags()
+  } else {
+    showPlaceholder.value = false
+    setOperationDetails(routeId, version)
+    setPager(routeId)
+    await tagFavoriteButton(routeId)
+  }
 })
 </script>
 
@@ -161,33 +252,85 @@ onBeforeRouteUpdate(async (to) => {
   <main>
     <el-container>
       <el-main>
-        <el-row>
-          <el-col :span="22">
-            <span>{{ summary }}</span>
-          </el-col>
-          <el-col :span="2">
-            <span :class="favoriteButtonStyle" @click="createDeleteFavorite()">★</span>
-            <!--<el-button text>★</el-button>-->
-          </el-col>
-        </el-row>
-        <div v-html="description" class="content"></div>
+        <div v-if="showPlaceholder" class="placeholder-message">
+          <div class="version-header">
+            <h1>{{ placeholderVersion }}</h1>
+            <p class="version-subtitle">API Documentation</p>
+          </div>
+          <p class="version-info">There are {{ totalEndpoints }} endpoints available in this version.</p>
+          <p class="version-instructions">Please click an endpoint on the left or browse by tags below.</p>
+
+          <div v-if="allTags.length > 0" class="placeholder-tags">
+            <h3>Filter by Tag:</h3>
+            <div class="tags-grid">
+              <a
+                class="tag-link tag-link-all"
+                :class="{ 'tag-link-active': route.query.tags === undefined || route.query.tags === 'NONE' }"
+                @click.prevent="clearTagFilter()"
+              >
+                All
+              </a>
+              <a
+                v-for="tag in allTags"
+                :key="tag"
+                class="tag-link"
+                :class="{ 'tag-link-active': route.query.tags === tag }"
+                @click.prevent="filterByTag(tag)"
+              >
+                {{ tag }}
+              </a>
+            </div>
+          </div>
+        </div>
+        <div v-else>
+          <el-row>
+            <el-col :span="22">
+              <span>{{ summary }}</span>
+            </el-col>
+            <el-col :span="2">
+              <span :class="favoriteButtonStyle" @click="createDeleteFavorite()">★</span>
+              <!--<el-button text>★</el-button>-->
+            </el-col>
+          </el-row>
+          <div v-html="description" class="content"></div>
+          <div class="tags-section">
+            <span class="tags-label">Tags:</span>
+            <a
+              v-if="route.query.tags"
+              class="tag-link tag-link-all"
+              @click.prevent="clearTagFilter()"
+            >
+              All
+            </a>
+            <a
+              v-for="tag in tags"
+              :key="tag"
+              class="tag-link"
+              :class="{ 'tag-link-active': route.query.tags === tag }"
+              @click.prevent="filterByTag(tag)"
+            >
+              {{ tag }}
+            </a>
+            <span v-if="tags.length === 0" style="color: #909399; font-size: 12px;">No tags available</span>
+          </div>
+        </div>
       </el-main>
-      <el-footer class="footer">
+      <el-footer class="footer" v-if="!showPlaceholder">
         <el-divider class="divider" />
         <el-row>
           <el-col :span="12" class="pager-left">
-            <el-icon v-show="displayPrev">
+            <el-icon v-if="displayPrev">
               <ArrowLeftBold />
             </el-icon>
-            <RouterLink v-show="displayPrev" class="pager-router-link"
-              :to="{ name: 'api', params: { id: prev.id }, query: { version: prev.version } }">{{ prev.title }}
+            <RouterLink v-if="displayPrev" class="pager-router-link"
+              :to="{ name: 'api', params: { version: prev.version }, query: { operationid: prev.id } }">{{ prev.title }}
             </RouterLink>
           </el-col>
           <el-col :span="12" class="pager-right">
-            <RouterLink v-show="displayNext" class="pager-router-link"
-              :to="{ name: 'api', params: { id: next.id }, query: { version: next.version } }">{{ next.title }}
+            <RouterLink v-if="displayNext" class="pager-router-link"
+              :to="{ name: 'api', params: { version: next.version }, query: { operationid: next.id } }">{{ next.title }}
             </RouterLink>
-            <el-icon v-show="displayNext">
+            <el-icon v-if="displayNext">
               <ArrowRightBold />
             </el-icon>
           </el-col>
@@ -206,6 +349,121 @@ main {
 
 span {
   font-size: 28px;
+}
+
+.tags-section {
+  margin: 15px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tags-label {
+  font-size: 14px !important;
+  font-weight: 600;
+  color: #606266;
+}
+
+.tag-link {
+  display: inline-block;
+  padding: 4px 12px;
+  font-size: 12px !important;
+  color: #409eff;
+  background-color: #ecf5ff;
+  border: 1px solid #d9ecff;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.tag-link:hover {
+  background-color: #409eff;
+  color: white;
+  border-color: #409eff;
+}
+
+.tag-link-all {
+  background-color: #67c23a;
+  border-color: #b3e19d;
+  color: white;
+  font-weight: 600;
+}
+
+.tag-link-all:hover {
+  background-color: #85ce61;
+  border-color: #85ce61;
+}
+
+.tag-link-active {
+  background-color: #409eff;
+  color: white;
+  border-color: #409eff;
+  font-weight: 600;
+}
+
+.tag-link-all.tag-link-active {
+  background-color: #67c23a;
+  border-color: #67c23a;
+}
+
+.placeholder-message {
+  padding: 0;
+  color: #606266;
+}
+
+.version-header {
+  padding: 20px 0;
+  border-bottom: 2px solid #e4e7ed;
+  margin-bottom: 20px;
+}
+
+.version-header h1 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #303133;
+  margin: 0 0 0.5rem 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.version-subtitle {
+  font-size: 1rem;
+  color: #909399;
+  margin: 0;
+}
+
+.version-info {
+  font-size: 16px;
+  margin: 20px 0 10px 0;
+  line-height: 1.6;
+  color: #606266;
+}
+
+.version-instructions {
+  font-size: 16px;
+  margin: 10px 0 20px 0;
+  line-height: 1.6;
+  color: #606266;
+}
+
+.placeholder-tags {
+  margin-top: 30px;
+  text-align: left;
+}
+
+.placeholder-tags h3 {
+  font-size: 18px;
+  margin-bottom: 20px;
+  color: #39455f;
+}
+
+.tags-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-start;
 }
 
 div {

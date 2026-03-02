@@ -1,0 +1,63 @@
+### OBP API Configuration ###
+VITE_OBP_API_HOST=http://127.0.0.1:8080
+VITE_OBP_API_VERSION=v6.0.0
+VITE_OBP_API_EXPLORER_HOST=http://localhost:5173
+
+### Session Configuration ###
+VITE_OPB_SERVER_SESSION_PASSWORD=asidudhiuh33875
+
+### OAuth2 Redirect URL (shared by all providers) ###
+VITE_OAUTH2_REDIRECT_URL=http://localhost:5173/api/oauth2/callback
+
+### Redis Configuration ###
+VITE_OBP_REDIS_URL=redis://127.0.0.1:6379
+
+### Chatbot Configuration ###
+VITE_CHATBOT_ENABLED=false
+VITE_CHATBOT_URL=http://localhost:5000
+
+### Multi-Provider OAuth2/OIDC Configuration ###
+### The system fetches available providers from: http://localhost:8080/obp/v5.1.0/well-known
+### Configure credentials below for each provider you want to support
+
+### OBP-OIDC Provider ###
+VITE_OBP_OIDC_CLIENT_ID=c2ea173e-8c1a-43c4-ba62-19738f27c43e
+VITE_OBP_OIDC_CLIENT_SECRET=1E7zsN47Xp4VTb28xEv5ZK4vcX8XMsYIH3IsnjQTYk8
+
+### OBP Consumer Key (for API calls) ###
+VITE_OBP_CONSUMER_KEY=c2ea173e-8c1a-43c4-ba62-19738f27c43e
+
+### Keycloak Provider (Optional) ###
+# VITE_KEYCLOAK_CLIENT_ID=obp-api-explorer
+# VITE_KEYCLOAK_CLIENT_SECRET=your-keycloak-secret-here
+
+### Google Provider (Optional) ###
+# VITE_GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
+# VITE_GOOGLE_CLIENT_SECRET=your-google-client-secret
+
+### GitHub Provider (Optional) ###
+# VITE_GITHUB_CLIENT_ID=your-github-client-id
+# VITE_GITHUB_CLIENT_SECRET=your-github-client-secret
+
+### Custom OIDC Provider (Optional) ###
+# VITE_CUSTOM_OIDC_PROVIDER_NAME=my-custom-provider
+# VITE_CUSTOM_OIDC_CLIENT_ID=your-custom-client-id
+# VITE_CUSTOM_OIDC_CLIENT_SECRET=your-custom-client-secret
+
+### Opey Configuration ###
+VITE_OPEY_CONSUMER_ID=74545fb7-9a1f-4ee0-beb4-6e5b7ee50076
+
+### Resource Docs Version ###
+VITE_OBP_API_DEFAULT_RESOURCE_DOC_VERSION=OBPv6.0.0
+
+### HOW IT WORKS ###
+# 1. Backend fetches provider list from OBP API: GET /obp/v5.1.0/well-known
+# 2. OBP API returns available providers with their .well-known URLs
+# 3. Backend matches providers with credentials configured above
+# 4. Only providers with both (API registration + credentials) will be available
+# 5. Users see provider selection if 2+ providers configured (or auto-login if only 1)
+
+### VERIFY YOUR SETUP ###
+# curl http://localhost:8080/obp/v5.1.0/well-known
+# curl http://localhost:8085/api/oauth2/providers
+# Visit: http://localhost:5173/debug/providers-status

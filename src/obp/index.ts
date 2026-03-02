@@ -26,11 +26,13 @@
  */
 
 import superagent from 'superagent'
-import { DEFAULT_OBP_API_VERSION } from '../../shared-constants'
+import { DEFAULT_OBP_API_VERSION } from '../shared-constants'
 
-export const OBP_API_VERSION = import.meta.env.VITE_OBP_API_VERSION ?? DEFAULT_OBP_API_VERSION
-export const OBP_API_DEFAULT_RESOURCE_DOC_VERSION = 
-  (import.meta.env.VITE_OBP_API_DEFAULT_RESOURCE_DOC_VERSION ?? `OBP${OBP_API_VERSION}`)
+// Always use v5.1.0 for application infrastructure - stable and debuggable
+export const OBP_API_VERSION = DEFAULT_OBP_API_VERSION
+// Default to showing v6.0.0 documentation in the UI (can be overridden by env var)
+export const OBP_API_DEFAULT_RESOURCE_DOC_VERSION =
+  import.meta.env.VITE_OBP_API_DEFAULT_RESOURCE_DOC_VERSION ?? 'OBPv6.0.0'
 const default_collection_name = 'Favourites'
 
 export async function serverStatus(): Promise<any> {
@@ -45,8 +47,12 @@ export async function isServerUp(): Promise<boolean> {
 export async function get(path: string): Promise<any> {
   try {
     return (await superagent.get(`/api/get?path=${path}`)).body
-  } catch (error) {
+  } catch (error: any) {
     console.log(error)
+    // Extract the full OBP error message from the response body
+    if (error.response && error.response.body) {
+      return { error: error.response.body }
+    }
     return { error }
   }
 }
@@ -70,8 +76,12 @@ export async function create(path: string, body?: any): Promise<any> {
       }
     }
     return (await request).body
-  } catch (error) {
+  } catch (error: any) {
     console.log(error)
+    // Extract the full OBP error message from the response body
+    if (error.response && error.response.body) {
+      return { error: error.response.body }
+    }
     return { error }
   }
 }
@@ -95,8 +105,12 @@ export async function update(path: string, body?: any): Promise<any> {
       }
     }
     return (await request).body
-  } catch (error) {
+  } catch (error: any) {
     console.log(error)
+    // Extract the full OBP error message from the response body
+    if (error.response && error.response.body) {
+      return { error: error.response.body }
+    }
     return { error }
   }
 }
@@ -104,8 +118,12 @@ export async function update(path: string, body?: any): Promise<any> {
 export async function discard(path: string): Promise<any> {
   try {
     return (await superagent.delete(`/api/delete?path=${path}`)).body
-  } catch (error) {
+  } catch (error: any) {
     console.log(error)
+    // Extract the full OBP error message from the response body
+    if (error.response && error.response.body) {
+      return { error: error.response.body }
+    }
     return { error }
   }
 }
@@ -113,8 +131,29 @@ export async function discard(path: string): Promise<any> {
 export async function getCurrentUser(): Promise<any> {
   try {
     return (await superagent.get(`/api/user/current`)).body
-  } catch (error) {
+  } catch (error: any) {
     console.log(error)
+    // Extract the full OBP error message from the response body
+    if (error.response && error.response.body) {
+      return { error: error.response.body }
+    }
+    return { error }
+  }
+}
+
+export async function getUserEntitlements(): Promise<any> {
+  try {
+    const userId = (await getCurrentUser()).user_id
+    if (!userId) {
+      return { error: 'User not logged in' }
+    }
+    const url = `/obp/${OBP_API_VERSION}/users/${userId}/entitlements`
+    return await get(url)
+  } catch (error: any) {
+    console.log(error)
+    if (error.response && error.response.body) {
+      return { error: error.response.body }
+    }
     return { error }
   }
 }
@@ -156,5 +195,15 @@ export async function getMyAPICollections(): Promise<any> {
 }
 
 export async function getMyAPICollectionsEndpoint(collectionName: string): Promise<any> {
-  return await get(`/obp/${OBP_API_VERSION}/my/api-collections/${collectionName}/api-collection-endpoints`)
+  return await get(
+    `/obp/${OBP_API_VERSION}/my/api-collections/${collectionName}/api-collection-endpoints`
+  )
+}
+
+export async function getAPICollectionEndpoints(collectionId: string): Promise<any> {
+  return await get(`obp/v6.0.0/api-collections/${collectionId}/api-collection-endpoints`)
+}
+
+export async function getOBPBanks(): Promise<any> {
+  return await get(`obp/v6.0.0/banks`)
 }

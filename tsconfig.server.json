@@ -1,15 +1,17 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "esModuleInterop": true,
-    "target": "ES6",
+    "target": "ES2022",
     "outDir": "dist-server",
-    "rootDir": "server",
+    "rootDir": ".",
     "resolveJsonModule": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "allowJs": true,
+    "skipLibCheck": true
   },
-  "exclude": ["src", "server/test"],
-  "include": ["server"]
+  "exclude": ["server/test", "node_modules"],
+  "include": ["server", "src/shared-constants.ts"]
 }

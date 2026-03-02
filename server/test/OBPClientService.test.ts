@@ -1,5 +1,5 @@
 import {describe, it, expect} from 'vitest'
-import OBPClientService from "../services/OBPClientService";
+import OBPClientService from "../services/OBPClientService.js";
 import { before } from 'node:test';
 
 describe('OBPClientService.getOauthHeaders', () => {

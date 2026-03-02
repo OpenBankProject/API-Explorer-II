@@ -35,7 +35,7 @@ import { obpGroupedMessageDocsKey } from '@/obp/keys'
 
 let connector = connectors[0]
 const route = useRoute()
-const groupedMessageDocs = ref(inject(obpGroupedMessageDocsKey)!)
+const groupedMessageDocs = ref(inject(obpGroupedMessageDocsKey) || {})
 const docs = ref({})
 const groups = ref({})
 const sortedKeys = ref([])

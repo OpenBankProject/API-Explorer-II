@@ -25,15 +25,16 @@
  *
  */
 
-import { OBP_API_VERSION, get } from '../obp'
+import { get } from '../obp'
 import { updateLoadingInfoMessage } from './common-functions'
+import { GLOSSARY_API_VERSION } from '../shared-constants'
 
 // Get Glossary
 export async function getOBPGlossary(): Promise<any> {
-  const logMessage = `Loading glossary { version: ${OBP_API_VERSION} }`
+  const logMessage = `Loading glossary { version: ${GLOSSARY_API_VERSION} }`
   console.log(logMessage)
   updateLoadingInfoMessage(logMessage)
-  const glossary = await get(`obp/${OBP_API_VERSION}/api/glossary`)
+  const glossary = await get(`obp/${GLOSSARY_API_VERSION}/api/glossary`)
 
   // Check if the API call failed
   if (glossary && glossary.error) {

@@ -40,10 +40,34 @@ const form = reactive({
   search: ''
 })
 
+// Helper function to check if a glossary item should be displayed
+const shouldDisplayItem = (item: any): boolean => {
+  const html = item.description?.html || ''
+
+  // Check if description contains "no-description-provided"
+  if (html.includes('no-description-provided')) {
+    return false
+  }
+
+  // Check if Example value is empty
+  // Matches: "Example value:</p>", "Example value: </p>", "Example value:&nbsp;</p>", etc.
+  if (html.match(/Example value:\s*(&nbsp;|\s)*<\/p>/i)) {
+    return false
+  }
+
+  // Also check for "Example value:" followed by empty tags or whitespace before closing
+  if (html.match(/Example value:\s*(<[^>]*>)*\s*<\/p>/i)) {
+    return false
+  }
+
+  return true
+}
+
 onBeforeMount(() => {
   const glossary = inject(obpGlossaryKey)!
   for (const item of glossary.glossary_items) {
-    if (!activeKeys.value.includes(item.title)) {
+    // Only include items that pass the filter
+    if (!activeKeys.value.includes(item.title) && shouldDisplayItem(item)) {
       activeKeys.value.push(item.title)
     }
   }

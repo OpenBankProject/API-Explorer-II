@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
-import OpeyClientService from '../services/OpeyClientService';
-import { OpeyConfig, UserInput } from '../schema/OpeySchema';
+import OpeyClientService from '../services/OpeyClientService.js';
+import { OpeyConfig, UserInput } from '../schema/OpeySchema.js';
 
 describe('getStatus', async () => {
     let opeyClientService: OpeyClientService;

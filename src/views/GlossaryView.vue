@@ -26,11 +26,36 @@
   -->
 
 <script setup lang="ts">
-import { reactive, ref, onBeforeMount, onMounted, inject } from 'vue'
+import { reactive, ref, onBeforeMount, onMounted, inject, computed } from 'vue'
 import SearchNav from '../components/GlossarySearchNav.vue'
 import { obpGlossaryKey } from '@/obp/keys';
 
-const glossary = ref(inject(obpGlossaryKey)!.glossary_items)
+const allGlossaryItems = ref(inject(obpGlossaryKey)!.glossary_items)
+
+// Filter out items with empty example values or "no-description-provided"
+const glossary = computed(() => {
+  return allGlossaryItems.value.filter((item: any) => {
+    const html = item.description?.html || ''
+
+    // Check if description contains "no-description-provided"
+    if (html.includes('no-description-provided')) {
+      return false
+    }
+
+    // Check if Example value is empty
+    // Matches: "Example value:</p>", "Example value: </p>", "Example value:&nbsp;</p>", etc.
+    if (html.match(/Example value:\s*(&nbsp;|\s)*<\/p>/i)) {
+      return false
+    }
+
+    // Also check for "Example value:" followed by empty tags or whitespace before closing
+    if (html.match(/Example value:\s*(<[^>]*>)*\s*<\/p>/i)) {
+      return false
+    }
+
+    return true
+  })
+})
 </script>
 
 <template>
@@ -121,9 +146,15 @@ div {
 .content :deep(strong) {
   font-family: 'Roboto';
 }
-a {
+span > a {
   text-decoration: none;
   color: #39455f;
+  display: block;
+  margin-top: 30px;
+  padding-top: 10px;
+}
+span:first-child > a {
+  margin-top: 0;
 }
 .content :deep(a) {
   text-decoration: underline;
@@ -134,5 +165,23 @@ a {
 }
 .content :deep(a):hover {
   background-color: #a4b2ce;
+}
+
+/* Make Scala code blocks readable */
+.content :deep(pre.language-scala) {
+  background-color: #f5f5f5 !important;
+  color: #333 !important;
+  font-family: 'Courier New', Courier, monospace !important;
+  padding: 1em !important;
+}
+
+.content :deep(pre.language-scala code) {
+  background-color: transparent !important;
+  color: #333 !important;
+  font-family: 'Courier New', Courier, monospace !important;
+}
+
+.content :deep(pre.language-scala .token) {
+  color: #333 !important;
 }
 </style>

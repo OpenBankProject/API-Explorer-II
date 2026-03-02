@@ -1,0 +1,61 @@
+### OBP-API Configuration ###
+VITE_OBP_API_PORTAL_HOST=http://127.0.0.1:8080                                    # OBP API Portal URL (for "Portal Home" navigation link)
+VITE_OBP_API_HOST=http://127.0.0.1:8080                                           # OBP API server base URL (for all backend API requests)
+# VITE_OBP_API_VERSION is NO LONGER USED - hardcoded to v5.1.0 in shared-constants.ts for stability
+VITE_OBP_API_MANAGER_HOST=https://apimanagersandbox.openbankproject.com          # OBP API Manager URL (optional - for navigation link)
+VITE_OBP_API_EXPLORER_HOST=http://localhost:5173                                 # API Explorer application URL (used for OAuth2 redirects and internal routing)
+VITE_OPB_SERVER_SESSION_PASSWORD=your-secret-session-password-here               # Secret key for session encryption (keep this secure!)
+VITE_SHOW_API_MANAGER_BUTTON=false                                               # Show/hide API Manager button in navigation (true/false)
+
+### Redis Configuration ###
+VITE_OBP_REDIS_URL=redis://127.0.0.1:6379                                        # Redis connection string for session storage (format: redis://host:port)
+
+### Opey Configuration ###
+VITE_CHATBOT_ENABLED=false                                                       # Enable/disable Opey chatbot widget (true/false)
+VITE_CHATBOT_URL=http://localhost:5000                                           # Opey chatbot service URL (only needed if chatbot is enabled)
+
+### OAuth2/OIDC Configuration ###
+VITE_OBP_OAUTH2_CLIENT_ID=48ac28e9-9ee3-47fd-8448-69a62764b779                   # OAuth2 client ID (UUID - must match OIDC server registration)
+VITE_OBP_OAUTH2_CLIENT_SECRET=fOTQF7jfg8C74u7ZhSjVQpoBYvD0KpWfM5UsEZBSFFM        # OAuth2 client secret (keep this secure!)
+VITE_OBP_OAUTH2_REDIRECT_URL=http://localhost:5173/api/oauth2/callback          # OAuth2 callback URL (must exactly match OIDC client registration)
+VITE_OBP_OAUTH2_WELL_KNOWN_URL=http://localhost:9000/obp-oidc/.well-known/openid-configuration  # OIDC discovery endpoint URL
+VITE_OBP_OAUTH2_TOKEN_REFRESH_THRESHOLD=300                                     # Seconds before token expiry to trigger refresh (default: 300)
+
+### Resource Documentation Version (Optional) ###
+# VITE_OBP_API_DEFAULT_RESOURCE_DOC_VERSION=OBPv5.1.0                            # Default resource docs version for frontend URLs (format: OBPv5.1.0 - with OBP prefix, auto-constructed if not set)
+
+### Session Configuration (Optional) ###
+# VITE_SESSION_MAX_AGE=3600                                                      # Session timeout in seconds (default: 3600 = 1 hour)
+                                                                                 # Common values:
+                                                                                 #   1800  = 30 minutes
+                                                                                 #   3600  = 1 hour (default)
+                                                                                 #   7200  = 2 hours
+                                                                                 #   14400 = 4 hours
+                                                                                 #   28800 = 8 hours (full work day)
+                                                                                 #   86400 = 24 hours
+
+### Styling Configuration (Optional) ###
+# VITE_OBP_LOGO_URL=https://example.com/logo.png                                # Custom logo image URL (uses default OBP logo if not set)
+# VITE_OBP_LINKS_COLOR=#3c8dbc                                                   # Primary link color (CSS color value)
+# VITE_OBP_HEADER_LINKS_COLOR=#39455f                                            # Header navigation link color
+# VITE_OBP_HEADER_LINKS_HOVER_COLOR=#39455f                                      # Header navigation link hover color
+# VITE_OBP_HEADER_LINKS_BACKGROUND_COLOR=#eef0f4                                 # Header navigation active link background color
+
+################################################################################
+# POTENTIALLY UNUSED ENVIRONMENT VARIABLES
+################################################################################
+# The following variable appears in this file but was NOT found in the codebase.
+# It may be unused and safe to remove, or it might be used in a way that wasn't
+# detected by code search.
+################################################################################
+
+# VITE_OBP_OAUTH2_TOKEN_REFRESH_THRESHOLD=300
+# ⚠️ NOT FOUND IN CODE - This variable is defined above but does not appear to
+# be referenced anywhere in the application code. It may have been intended for
+# a feature that was not implemented or was removed.
+# Consider removing this unless you know it's needed for a specific use case.
+
+################################################################################
+# Note: The comment "VITE_OBP_API_VERSION is NO LONGER USED" on line 3 is
+# correct - this variable was replaced by hardcoded version in shared-constants.ts
+################################################################################

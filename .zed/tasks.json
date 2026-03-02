@@ -1,0 +1,8 @@
+[
+  {
+    "label": "🟢 Open Terminal Here",
+    "command": "gnome-terminal",
+    "args": ["--title=\"🟢 API-Explorer\"", "--working-directory=${workspaceFolder}"],
+    "reveal": "never"
+  }
+]

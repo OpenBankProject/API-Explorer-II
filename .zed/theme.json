@@ -1,0 +1,28 @@
+{
+  "name": "API-Explorer-II-Green",
+  "author": "Portal/Opey Development Setup",
+  "themes": [
+    {
+      "name": "API-Explorer-II-Green",
+      "appearance": "dark",
+      "style": {
+        "background": "#1e1e1e",
+        "foreground": "#d4d4d4",
+        "cursor": "#28A745",
+        "selection": "#28A74533",
+        "selected_line_background": "#28A74511",
+        "line_number": "#858585",
+        "active_line_number": "#28A745",
+        "find_highlight": "#28A745",
+        "border": "#28A74566",
+        "panel_background": "#252526",
+        "panel_focused_border": "#28A745",
+        "tab_bar_background": "#2d2d30",
+        "tab_active_background": "#28A74588",
+        "status_bar_background": "#28A74566",
+        "title_bar_background": "#28A74544",
+        "toolbar_background": "#37373d"
+      }
+    }
+  ]
+}

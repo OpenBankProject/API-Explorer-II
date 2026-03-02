@@ -16,6 +16,4 @@ COPY --from=builder /home/node/app/dist-server /home/node/app
 RUN mkdir /home/node/node_modules
 COPY --from=builder /home/node/app/node_modules /home/node/node_modules
 WORKDIR /home/node/app
-CMD ["node", "app.js"]
-
-
+CMD ["node", "server/app.js"]

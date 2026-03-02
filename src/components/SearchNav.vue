@@ -26,6 +26,7 @@
   -->
 
 <script lang="ts">
+import { nextTick } from 'vue'
 import { obpResourceDocsKey } from '@/obp/keys'
 import { Search } from '@element-plus/icons-vue'
 import { inject, onBeforeMount, onMounted, reactive, ref, watch } from 'vue'
@@ -80,7 +81,7 @@ export const initializeAPICollections = async () => {
 
 <script setup lang="ts">
 const route = useRoute()
-let selectedVersion = route.query.version ? route.query.version : `${OBP_API_DEFAULT_RESOURCE_DOC_VERSION}`
+let selectedVersion = route.params.version ? route.params.version : `${OBP_API_DEFAULT_RESOURCE_DOC_VERSION}`
 let selectedTags = route.query.tags ? route.query.tags : 'NONE'
 onBeforeMount(async () => {
   resourceDocs.value = inject(obpResourceDocsKey)!
@@ -93,33 +94,110 @@ onBeforeMount(async () => {
   activeKeys.value = Object.keys(groups.value)
   sortedKeys.value = activeKeys.value.sort()
   await initializeAPICollections()
-  setTabActive(route.params.id)
+  setTabActive(route.query.operationid)
   let element = document.getElementById("selected-api-version")
   if (element !== null) {
     const totalRows = Object.values(groups.value).reduce((acc, currentValue) => acc + currentValue.length, 0)
     if(selectedTags === 'NONE') {
       element.textContent = `${selectedVersion} ( ${totalRows} APIs )`;
     } else {
-      element.textContent = `${selectedVersion} ( ${totalRows} APIs filtered by tags: ${selectedTags})`;
+      element.innerHTML = `${selectedVersion} ( ${totalRows} APIs filtered by tags: <a href="#" class="filter-tag-link" style="color: #409eff; text-decoration: none; cursor: pointer; transition: color 0.2s ease;">${selectedTags}</a>)`;
+
+      // Add hover effect
+      const tagLinkEl = element.querySelector('.filter-tag-link') as HTMLElement
+      if (tagLinkEl) {
+        tagLinkEl.addEventListener('mouseenter', () => {
+          tagLinkEl.style.color = '#66b1ff'
+          tagLinkEl.style.textDecoration = 'underline'
+        })
+        tagLinkEl.addEventListener('mouseleave', () => {
+          tagLinkEl.style.color = '#409eff'
+          tagLinkEl.style.textDecoration = 'none'
+        })
+      }
+
+
     }
   }
 })
 
-onMounted(() => {
-  routeToFirstAPI()
+onMounted(async () => {
+  // Only auto-route if there's already an operationid in the URL
+  if (route.query.operationid) {
+    await nextTick()
+    routeToFirstAPI()
+  }
 })
 
 watch(
-  () => route.query.version,
+  () => route.params.version,
   async (version) => {
+    console.log('SearchNav: version changed to:', version)
     selectedVersion = version
-    docs.value = getGroupedResourceDocs(version, resourceDocs.value)
+    selectedTags = route.query.tags ? route.query.tags : 'NONE'
+    if(selectedTags === 'NONE') {
+      docs.value = getGroupedResourceDocs(version, resourceDocs.value)
+    } else {
+      docs.value = getFilteredGroupedResourceDocs(version, selectedTags, resourceDocs.value)
+    }
+    groups.value = JSON.parse(JSON.stringify(docs.value))
+    activeKeys.value = Object.keys(groups.value)
+    sortedKeys.value = activeKeys.value.sort()
+    console.log('SearchNav: groups loaded, total groups:', activeKeys.value.length)
+    await initializeAPICollections()
+    await nextTick()
+    // Only auto-route if there's an operationid in the URL (user navigated directly to an endpoint)
+    if (route.query.operationid) {
+      console.log('SearchNav: calling routeToFirstAPI')
+      routeToFirstAPI()
+    } else {
+      console.log('SearchNav: no operationid, not auto-routing')
+    }
+    countApis()
+  }
+)
+
+watch(
+  () => route.query.tags,
+  async (tags) => {
+    console.log('SearchNav: tags changed to:', tags)
+    selectedTags = tags ? tags : 'NONE'
+    if(selectedTags === 'NONE') {
+      docs.value = getGroupedResourceDocs(selectedVersion, resourceDocs.value)
+    } else {
+      docs.value = getFilteredGroupedResourceDocs(selectedVersion, selectedTags, resourceDocs.value)
+    }
     groups.value = JSON.parse(JSON.stringify(docs.value))
     activeKeys.value = Object.keys(groups.value)
     sortedKeys.value = activeKeys.value.sort()
     await initializeAPICollections()
-    routeToFirstAPI()
+    await nextTick()
     countApis()
+    // Update the version display text
+    let element = document.getElementById("selected-api-version")
+    if (element !== null) {
+      const totalRows = Object.values(groups.value).reduce((acc, currentValue) => acc + currentValue.length, 0)
+      if(selectedTags === 'NONE') {
+        element.textContent = `${selectedVersion} ( ${totalRows} APIs )`;
+      } else {
+        element.innerHTML = `${selectedVersion} ( ${totalRows} APIs filtered by tags: <a href="#" class="filter-tag-link" style="color: #409eff; text-decoration: none; cursor: pointer; transition: color 0.2s ease;">${selectedTags}</a>)`;
+
+        // Add hover effect
+        const tagLinkEl = element.querySelector('.filter-tag-link') as HTMLElement
+        if (tagLinkEl) {
+          tagLinkEl.addEventListener('mouseenter', () => {
+            tagLinkEl.style.color = '#66b1ff'
+            tagLinkEl.style.textDecoration = 'underline'
+          })
+          tagLinkEl.addEventListener('mouseleave', () => {
+            tagLinkEl.style.color = '#409eff'
+            tagLinkEl.style.textDecoration = 'none'
+          })
+        }
+
+
+      }
+    }
   }
 )
 
@@ -136,7 +214,9 @@ const countApis = () => {
 const routeToFirstAPI = () => {
   let element
   const elements = document.getElementsByClassName('api-router-link')
-  const id = route.params.id
+  console.log('routeToFirstAPI: found', elements.length, 'api links')
+  const id = route.query.operationid
+  console.log('routeToFirstAPI: looking for operationid:', id)
   for (const el of elements) {
     if (el.id === id) {
       element = el
@@ -144,9 +224,16 @@ const routeToFirstAPI = () => {
     }
   }
   if (element) {
+    console.log('routeToFirstAPI: clicking matching element:', id)
     element.click()
   } else {
-    if (elements.item(0)) elements.item(0).click()
+    console.log('routeToFirstAPI: no match, clicking first element')
+    if (elements.item(0)) {
+      console.log('routeToFirstAPI: first element id:', elements.item(0).id)
+      elements.item(0).click()
+    } else {
+      console.log('routeToFirstAPI: NO ELEMENTS FOUND!')
+    }
   }
 }
 
@@ -194,7 +281,11 @@ const filterKeys = (keys, key) => {
 
 const searchEvent = (value) => {
   if (value) {
-    sortedKeys.value = filterKeys(activeKeys.value, value)
+    if (activeKeys.value && Array.isArray(activeKeys.value)) {
+      sortedKeys.value = filterKeys(activeKeys.value, value)
+    } else {
+      sortedKeys.value = []
+    }
   } else {
     groups.value = JSON.parse(JSON.stringify(docs.value))
     sortedKeys.value = Object.keys(groups.value).sort()
@@ -217,7 +308,7 @@ const searchEvent = (value) => {
             <div class="el-tabs--right">
               <div v-for="(value, key) of apiCollectionsEndpoint[api.api_collection_name]" :key="key" class="api-router-tab"
                 @click="setActive">
-                <RouterLink :to="{ name: 'api', params: { id: value }, query: { version: selectedVersion } }" :id="value"
+                <RouterLink :to="{ name: 'api', params: { version: selectedVersion }, query: { operationid: value } }" :id="value"
                   active-class="active-api-router-link" class="api-router-link">{{ operationIdTitle[value] }}</RouterLink>
               </div>
             </div>
@@ -227,14 +318,14 @@ const searchEvent = (value) => {
           <div class="el-tabs--right">
             <div v-for="(value, key) of sortLinks(groups[key])" :key="value" class="api-router-tab" @click="setActive">
               <RouterLink active-class="active-api-router-link" class="api-router-link" :id="value"
-                :to="{ name: 'api', params: { id: value }, query: { version: selectedVersion } }">{{ key }}</RouterLink>
+                :to="{ name: 'api', params: { version: selectedVersion }, query: { operationid: value } }">{{ key }}</RouterLink>
             </div>
           </div>
         </el-collapse-item>
       </el-collapse>
     </el-main>
   </el-container>
-  
+
 </template>
 
 <style scoped>
@@ -249,7 +340,7 @@ const searchEvent = (value) => {
   max-height: 100%;
   padding-right: 0;
   border-right: solid 1px var(--el-menu-border-color);
-  
+
 }
 .search-nav-collapse {
   height: 100%;
