@@ -31,7 +31,6 @@ jobs:
           fi
 
       - name: Upload container images
-        if: ${{ secrets.DOCKER_HUB_USERNAME != '' }}
         run: |
           echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin docker.io
           docker push docker.io/${{ env.DOCKER_HUB_ORGANIZATION }}/${{ env.DOCKER_HUB_REPOSITORY }} --all-tags
@@ -40,10 +39,8 @@ jobs:
 
       - uses: sigstore/cosign-installer@main
       - name: Write signing key to disk (only needed for `cosign sign --key`)
-        if: ${{ secrets.DOCKER_HUB_USERNAME != '' }}
         run: echo "${{ secrets.COSIGN_PRIVATE_KEY }}" > cosign.key
       - name: Sign container image with annotations from our environment
-        if: ${{ secrets.DOCKER_HUB_USERNAME != '' }}
         env:
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
         run: |
