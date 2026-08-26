@@ -50,6 +50,7 @@ const successResponseBody = ref('')
 const isLargeResponse = ref(false)
 const largeResponseJson = ref(null)
 const exampleRequestBody = ref('')
+const jsonEditorContainerRef = ref(null)
 const requiredRoles = ref([])
 const validations = ref([])
 const possibleErrors = ref([])
@@ -197,6 +198,22 @@ const setType = (method) => {
     }
   }
 }
+// exampleRequestBody only reflects the editor's content once vanilla-
+// jsoneditor's onChange fires, which is debounced (json-editor-vue defaults
+// to 300ms, and still resolves asynchronously even with debounce set to 0).
+// Submitting immediately after typing or programmatically setting the body
+// can race ahead of that sync and send stale (or empty) content. The
+// underlying CodeMirror editor's own DOM is updated synchronously on every
+// edit, so read the request body straight from there instead of relying on
+// the debounced ref. Falls back to exampleRequestBody if the DOM node isn't
+// found for any reason (e.g. editor not yet mounted).
+const getCurrentRequestBodyText = () => {
+  const editorContentEl = jsonEditorContainerRef.value?.querySelector?.('.cm-content')
+  if (editorContentEl) {
+    return editorContentEl.innerText
+  }
+  return exampleRequestBody.value
+}
 const submitRequest = async () => {
   if (url.value) {
     isLoading.value = true
@@ -207,7 +224,7 @@ const submitRequest = async () => {
             await create(
               url.value,
               (() => {
-                const rawBody = exampleRequestBody.value
+                const rawBody = getCurrentRequestBodyText()
                 const maybeBody = typeof rawBody === 'string' ? rawBody.trim() : rawBody
                 return maybeBody ? maybeBody : undefined
               })()
@@ -220,7 +237,7 @@ const submitRequest = async () => {
             await update(
               url.value,
               (() => {
-                const rawBody = exampleRequestBody.value
+                const rawBody = getCurrentRequestBodyText()
                 const maybeBody = typeof rawBody === 'string' ? rawBody.trim() : rawBody
                 return maybeBody ? maybeBody : undefined
               })()
@@ -803,7 +820,7 @@ const onError = (error) => {
     </div>
     <div class="json-editor-container" v-show="method === 'POST' || method === 'PUT' || method === 'DELETE'">
       <p class="header-container request-body-header">{{ exampleBodyTitle }}:</p>
-      <div class="json-editor jse-theme-dark">
+      <div class="json-editor jse-theme-dark" ref="jsonEditorContainerRef">
         <JsonEditorVue
           v-model="exampleRequestBody"
           :stringified="true"
