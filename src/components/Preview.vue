@@ -209,8 +209,22 @@ const setType = (method) => {
 // found for any reason (e.g. editor not yet mounted).
 const getCurrentRequestBodyText = () => {
   const editorContentEl = jsonEditorContainerRef.value?.querySelector?.('.cm-content')
-  if (editorContentEl) {
-    return editorContentEl.innerText
+  const domText = editorContentEl?.innerText
+  if (domText) {
+    try {
+      // CodeMirror virtualises long content -- only the rendered viewport is
+      // present in the DOM, so a sufficiently long example can come back
+      // truncated (and therefore invalid JSON) here even though the
+      // editor's actual document is complete. Validating before trusting it
+      // avoids silently submitting a truncated body; fall through to the
+      // ref below instead, which for an unedited pre-filled example still
+      // holds the complete text from the API response (never rendered
+      // through CodeMirror, so never truncated by it).
+      JSON.parse(domText.trim())
+      return domText
+    } catch (e) {
+      // fall through to exampleRequestBody.value below
+    }
   }
   return exampleRequestBody.value
 }
