@@ -29,6 +29,7 @@
 import { ref, computed, onBeforeMount } from 'vue'
 import { SuccessFilled, RemoveFilled, WarningFilled } from '@element-plus/icons-vue'
 import { serverStatus } from './../obp'
+import { runSseProbe, type SseProbeResult } from './../obp/sseProbe'
 
 interface OIDCProviderHealth {
   name: string
@@ -38,7 +39,13 @@ interface OIDCProviderHealth {
 }
 
 const status = ref<any>({})
+// Browser → server SSE transport check: verifies probe events arrive spaced,
+// not buffered by a proxy — the hop the server-side checks cannot see.
+const sseProbe = ref<SseProbeResult | null>(null)
 onBeforeMount(async () => {
+  runSseProbe().then((result) => {
+    sseProbe.value = result
+  })
   status.value = await serverStatus()
 })
 
@@ -90,6 +97,27 @@ const oauthProviders = computed<OIDCProviderHealth[]>(() => status.value.oauthPr
         <el-icon v-else style="vertical-align: middle; color: red"><RemoveFilled /></el-icon>
       </div>
 
+      <div
+        v-if="sseProbe"
+        data-testid="sse-streaming-browser"
+        :data-state="sseProbe.ok ? 'healthy' : 'unhealthy'"
+      >
+        <div class="sub-status">
+          <span class="status-label">sseStreaming (browser)</span>
+          &nbsp;&nbsp;&nbsp;<el-divider />&nbsp;&nbsp;&nbsp;
+          <el-icon
+            v-if="sseProbe.ok"
+            style="vertical-align: middle; color: green; font-size: 16px"
+            ><SuccessFilled
+          /></el-icon>
+          <el-icon v-else style="vertical-align: middle; color: red"><RemoveFilled /></el-icon>
+        </div>
+        <div v-if="sseProbe.error" class="provider-error">{{ sseProbe.error }}</div>
+        <div v-else class="provider-detail">
+          first event: {{ sseProbe.timeToFirstEventMs }}ms, spread: {{ sseProbe.eventSpreadMs }}ms
+        </div>
+      </div>
+
       <div v-if="oauthProviders.length > 0" class="providers-section">
         <span class="providers-title">OAuth2 / OIDC Providers</span>
         <div
@@ -110,9 +138,25 @@ const oauthProviders = computed<OIDCProviderHealth[]>(() => status.value.oauthPr
             <el-icon v-else style="vertical-align: middle; color: red"><RemoveFilled /></el-icon>
           </div>
           <div v-if="provider.error" class="provider-error">{{ provider.error }}</div>
-          <div v-else-if="provider.details?.token_test" class="provider-detail">
-            token test: {{ provider.details.token_test }}
-          </div>
+          <template v-else-if="provider.details?.token_test">
+            <div class="provider-detail">token test: {{ provider.details.token_test }}</div>
+            <div
+              v-if="provider.details.consumer_id"
+              class="provider-detail"
+              :data-testid="`provider-${provider.name}-consumer`"
+            >
+              consumer: {{ provider.details.consumer_name }}
+              (<a
+                v-if="provider.details.consumer_id_url"
+                :href="String(provider.details.consumer_id_url)"
+                class="provider-link"
+                >{{ provider.details.consumer_id }}</a
+              ><span v-else>{{ provider.details.consumer_id }}</span>)
+            </div>
+            <div v-else-if="provider.details.consumer" class="provider-detail">
+              consumer: {{ provider.details.consumer }}
+            </div>
+          </template>
         </div>
       </div>
     </div>
@@ -183,5 +227,9 @@ span {
   color: #7a8499;
   text-align: center;
   margin: 2px 0 8px;
+}
+.provider-link {
+  color: inherit;
+  text-decoration: underline;
 }
 </style>

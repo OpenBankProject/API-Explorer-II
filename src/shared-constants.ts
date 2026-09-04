@@ -37,3 +37,13 @@ export const GLOSSARY_API_VERSION = 'v5.1.0'
  */
 export const V5_1_0 = 'v5.1.0'
 export const V6_0_0 = 'v6.0.0'
+
+/**
+ * Browser → Node SSE transport probe (see /api/status/stream and the status
+ * page's browser-side check). The server emits SSE_PROBE_EVENT_COUNT events
+ * SSE_PROBE_SPACING_MS apart; the browser judges the transport buffered when
+ * they arrive closer together than half that spacing.
+ */
+export const SSE_PROBE_PATH = '/api/status/stream'
+export const SSE_PROBE_EVENT_COUNT = 2
+export const SSE_PROBE_SPACING_MS = 700

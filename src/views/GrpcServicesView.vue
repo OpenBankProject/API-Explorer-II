@@ -134,8 +134,10 @@ onMounted(load)
         <strong>Could not reach gRPC server.</strong>
         <div class="error-detail">{{ errorMessage }}</div>
         <div class="hint">
-          Check that a gRPC server is running at <code>{{ host || 'localhost:50051' }}</code> with
-          reflection enabled. Override with the <code>VITE_OBP_GRPC_HOST</code> environment variable.
+          Check that a gRPC server with reflection enabled is running at
+          <template v-if="host"><code>{{ host }}</code></template>
+          <template v-else>the default host, <code>grpc.&lt;API host&gt;:50051</code></template>.
+          Override with the <code>VITE_OBP_GRPC_HOST</code> environment variable.
         </div>
       </div>
 

@@ -195,6 +195,20 @@ server {
 }
 ```
 
+## gRPC connection (gRPC services browser)
+
+The gRPC services page connects to OBP-API over gRPC:
+
+- `VITE_OBP_GRPC_HOST` — explicit gRPC target as `host:port`; always wins when set.
+  When unset, the target is derived from `VITE_OBP_API_HOST`:
+  - `https://api.example.com` → `grpc.api.example.com:443` (TLS ingress convention)
+  - `http://api.example.com` → `grpc.api.example.com:50051`
+  - `http://localhost:8080` or an IP → `localhost:50051` / `<ip>:50051` (no `grpc.` prefix)
+- `VITE_OBP_GRPC_TLS` — `true` or `false`; forces TLS channel credentials on or off.
+  When unset, TLS is inferred from the port of the resolved host: `:443` → TLS on,
+  any other port → TLS off. Set this only for setups where the port is not a
+  reliable signal (e.g. TLS on a non-443 port).
+
 Note: if you have issues with session stickyness / login issues, enable #DEBUG=express-session in your .env
 and if you see messages like these in the log,
 
