@@ -29,11 +29,13 @@ import { Router } from 'express'
 import type { Request, Response } from 'express'
 import { Container } from 'typedi'
 import OBPClientService from '../services/OBPClientService.js'
+import { PublicDocsCache } from '../utils/publicDocsCache.js'
 
 const router = Router()
 
 // Get services from container
 const obpClientService = Container.get(OBPClientService)
+const publicDocsCache = new PublicDocsCache((path) => obpClientService.getWithoutAuth(path))
 
 /**
  * Check if user is authenticated
@@ -76,8 +78,14 @@ router.get('/get', async (req: Request, res: Response) => {
     const path = req.query.path as string
     const session = req.session as any
 
-    const oauthConfig = session.clientConfig || {}
     const bgConsentId = req.headers['x-bg-consent-id'] as string | undefined
+    // Public docs are shared by every visitor, so serve them from one server-side cache
+    // instead of sending each visitor's startup requests on to OBP-API.
+    if (!bgConsentId && (await publicDocsCache.send(path, req, res))) {
+      return
+    }
+
+    const oauthConfig = session.clientConfig || {}
     if (bgConsentId) {
       oauthConfig.berlinGroup = { consentId: bgConsentId }
     }

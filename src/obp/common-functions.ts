@@ -28,6 +28,28 @@
 import { isServerUp, serverStatus } from '.';
 import axios from 'axios';
 
+// A cache hit refreshes the docs from OBP-API at most this often. The docs are public and change
+// rarely, and a full refresh is large (~100 MB of resource docs), so freshness is traded for load.
+export const DOCS_REFRESH_INTERVAL_MS = 60 * 60 * 1000
+const LAST_REFRESH_ATTEMPT_KEY = '/last-refresh-attempt'
+
+export function isRefreshDue(lastAttempt: number, interval: number, now = Date.now()): boolean {
+  const age = now - lastAttempt
+  // A negative age means the clock moved backwards; refresh rather than wait indefinitely.
+  return age < 0 || age >= interval
+}
+
+export async function getLastRefreshAttempt(cacheStorage: any): Promise<number> {
+  const response = await cacheStorage.match(LAST_REFRESH_ATTEMPT_KEY)
+  const time = response ? Number(await response.text()) : 0
+  return Number.isFinite(time) ? time : 0
+}
+
+// Stamp the attempt before fetching, so failed attempts are throttled too.
+export async function recordRefreshAttempt(cacheStorage: any): Promise<void> {
+  await cacheStorage.put(LAST_REFRESH_ATTEMPT_KEY, new Response(String(Date.now())))
+}
+
 export function updateLoadingInfoMessage(logMessage: string) {
   // 1. Select the div element using the id property
   const spinner = document.getElementById('loading-api-spinner')

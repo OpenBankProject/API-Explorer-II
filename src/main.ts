@@ -37,7 +37,11 @@ import appRouter from './router'
 import { createI18n } from 'vue-i18n'
 import { languages, defaultLocale } from './language'
 
-import { cache as cacheResourceDocs, cacheDoc as cacheResourceDocsDoc } from './obp/resource-docs'
+import {
+  cache as cacheResourceDocs,
+  cacheDoc as cacheResourceDocsDoc,
+  getRequestedOperation
+} from './obp/resource-docs'
 import {
   cache as cacheMessageDocs,
   cacheDoc as cacheMessageDocsDoc,
@@ -316,7 +320,12 @@ async function setupData(app: App<Element>, worker: Worker) {
       glossary,
       apiVersions
     ] = await Promise.all([
-      cacheResourceDocs(cacheStorageOfResourceDocs, cachedResponseOfResourceDocs, worker),
+      cacheResourceDocs(
+        cacheStorageOfResourceDocs,
+        cachedResponseOfResourceDocs,
+        worker,
+        getRequestedOperation(window.location.pathname, window.location.search)
+      ),
       cacheMessageDocs(cacheStorageOfMessageDocs, cachedResponseOfMessageDocs, worker),
       cacheMessageDocsJsonSchema(
         cacheStorageOfMessageDocsJsonSchema,
