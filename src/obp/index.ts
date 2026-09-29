@@ -40,8 +40,14 @@ export async function serverStatus(): Promise<any> {
 }
 
 export async function isServerUp(): Promise<boolean> {
-  //Set the status to offline/down only if all the resource data is not availalbe.
-  return !Object.values(await serverStatus()).every((isTrue) => !isTrue)
+  try {
+    // /api/ready checks that the OBP API answers (one request to its root endpoint). /api/health
+    // would only say that this Explorer process is up, and /api/status is far heavier.
+    const response = await superagent.get('/api/ready')
+    return response.body?.status === 'ok'
+  } catch {
+    return false
+  }
 }
 
 export async function get(path: string): Promise<any> {

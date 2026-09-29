@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { getRequestedOperation } from '@/obp/resource-docs'
-import { isRefreshDue } from '@/obp/common-functions'
+import { documentationCacheAgeMs } from '@/obp/documentation-refresh'
 import { OBP_API_DEFAULT_RESOURCE_DOC_VERSION } from '@/obp'
 
 describe('getRequestedOperation', () => {
@@ -33,23 +33,20 @@ describe('getRequestedOperation', () => {
   })
 })
 
-describe('isRefreshDue', () => {
-  const hour = 60 * 60 * 1000
+describe('documentationCacheAgeMs', () => {
+  const entry = (writtenAt?: string) =>
+    new Response('{}', { headers: writtenAt ? { 'x-obp-cache-written-at': writtenAt } : {} })
 
-  it('is due when the last attempt is at least one interval old', () => {
-    expect(isRefreshDue(0, hour, hour)).toBe(true)
-    expect(isRefreshDue(1000, hour, 1000 + hour + 1)).toBe(true)
+  it('returns how long ago the entry was written', () => {
+    expect(documentationCacheAgeMs(entry('1000'), 6000)).toBe(5000)
   })
 
-  it('is not due within the interval', () => {
-    expect(isRefreshDue(1000, hour, 1000 + hour - 1)).toBe(false)
+  it('returns undefined for a legacy entry with no stamp', () => {
+    expect(documentationCacheAgeMs(entry(), 6000)).toBeUndefined()
   })
 
-  it('is due when there has never been an attempt', () => {
-    expect(isRefreshDue(0, hour, Date.now())).toBe(true)
-  })
-
-  it('is due when the clock has moved backwards', () => {
-    expect(isRefreshDue(5000, hour, 1000)).toBe(true)
+  it('returns undefined for an unreadable stamp or one in the future', () => {
+    expect(documentationCacheAgeMs(entry('nope'), 6000)).toBeUndefined()
+    expect(documentationCacheAgeMs(entry('9000'), 6000)).toBeUndefined()
   })
 })

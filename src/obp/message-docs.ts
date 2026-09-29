@@ -27,14 +27,8 @@
 
 import { OBP_API_VERSION, get, isServerUp } from '../obp'
 import { V6_0_0 } from '../shared-constants'
-import {
-  DOCS_REFRESH_INTERVAL_MS,
-  getLastRefreshAttempt,
-  isRefreshDue,
-  recordRefreshAttempt,
-  runWithConcurrency,
-  updateLoadingInfoMessage
-} from './common-functions'
+import { runWithConcurrency, updateLoadingInfoMessage } from './common-functions'
+import { putDocumentationCache, scheduleDocumentationRefreshIfDue } from './documentation-refresh'
 
 const MESSAGE_DOCS_CONCURRENCY = 4
 
@@ -178,9 +172,9 @@ export function getGroupedMessageDocsJsonSchema(docs: any): any {
 }
 
 export async function cacheDoc(cacheStorageOfMessageDocs: any): Promise<any> {
-  await recordRefreshAttempt(cacheStorageOfMessageDocs)
   const connectors = await getConnectors()
   const messageDocs: any = {}
+  let failed = 0
   await runWithConcurrency(connectors, MESSAGE_DOCS_CONCURRENCY, async (connector: string) => {
     const logMessage = `Caching message docs { connector: ${connector} }`
     console.log(logMessage)
@@ -189,16 +183,15 @@ export async function cacheDoc(cacheStorageOfMessageDocs: any): Promise<any> {
       const docs = await getOBPMessageDocs(connector)
       if (!Object.keys(docs).includes('code')) {
         messageDocs[connector] = getGroupedMessageDocs(docs)
+      } else {
+        failed++
       }
     } catch (error: any) {
+      failed++
       console.warn(`[CACHE] WARNING: Skipping message docs for connector ${connector}:`, error.message || error)
     }
   })
-  if (Object.keys(messageDocs).length === 0) {
-    console.warn('[CACHE] No message docs loaded, keeping the existing cache')
-    return messageDocs
-  }
-  await cacheStorageOfMessageDocs.put('/', new Response(JSON.stringify(messageDocs)))
+  await putDocumentationCache(cacheStorageOfMessageDocs, messageDocs, failed === 0, 'message docs')
   return messageDocs
 }
 
@@ -207,9 +200,9 @@ async function getCacheDoc(cacheStorageOfMessageDocs: any): Promise<any> {
 }
 
 export async function cacheDocJsonSchema(cacheStorageOfMessageDocsJsonSchema: any): Promise<any> {
-  await recordRefreshAttempt(cacheStorageOfMessageDocsJsonSchema)
   const connectors = await getConnectors()
   const messageDocsJsonSchema: any = {}
+  let failed = 0
   await runWithConcurrency(connectors, MESSAGE_DOCS_CONCURRENCY, async (connector: string) => {
     const logMessage = `Caching message docs JSON schema { connector: ${connector} }`
     console.log(logMessage)
@@ -218,18 +211,19 @@ export async function cacheDocJsonSchema(cacheStorageOfMessageDocsJsonSchema: an
       const docs = await getOBPMessageDocsJsonSchema(connector)
       if (!Object.keys(docs).includes('code')) {
         messageDocsJsonSchema[connector] = getGroupedMessageDocsJsonSchema(docs)
+      } else {
+        failed++
       }
     } catch (error: any) {
+      failed++
       console.warn(`[CACHE] WARNING: Skipping message docs JSON schema for connector ${connector}:`, error.message || error)
     }
   })
-  if (Object.keys(messageDocsJsonSchema).length === 0) {
-    console.warn('[CACHE] No message docs JSON schema loaded, keeping the existing cache')
-    return messageDocsJsonSchema
-  }
-  await cacheStorageOfMessageDocsJsonSchema.put(
-    '/',
-    new Response(JSON.stringify(messageDocsJsonSchema))
+  await putDocumentationCache(
+    cacheStorageOfMessageDocsJsonSchema,
+    messageDocsJsonSchema,
+    failed === 0,
+    'message docs JSON schemas'
   )
   return messageDocsJsonSchema
 }
@@ -241,11 +235,8 @@ async function getCacheDocJsonSchema(cacheStorageOfMessageDocsJsonSchema: any): 
 export async function cache(cacheStorage: any, cachedResponse: any, worker: any): Promise<any> {
   try {
     const messageDocs = await cachedResponse.json()
-    // Only a cache hit should schedule a background refresh; posting before the
-    // read would make a cold cache fetch everything twice via the worker echo.
-    if (isRefreshDue(await getLastRefreshAttempt(cacheStorage), DOCS_REFRESH_INTERVAL_MS)) {
-      worker.postMessage('update-message-docs')
-    }
+    // Legacy cache entries have no timestamp and refresh once after this successful read.
+    scheduleDocumentationRefreshIfDue(cachedResponse, worker, 'update-message-docs')
     return messageDocs
   } catch (error) {
     console.warn('No message docs cache or malformed cache.')
@@ -263,11 +254,8 @@ export async function cacheJsonSchema(
 ): Promise<any> {
   try {
     const messageDocsJsonSchema = await cachedResponse.json()
-    // Only a cache hit should schedule a background refresh; posting before the
-    // read would make a cold cache fetch everything twice via the worker echo.
-    if (isRefreshDue(await getLastRefreshAttempt(cacheStorage), DOCS_REFRESH_INTERVAL_MS)) {
-      worker.postMessage('update-message-docs-json-schema')
-    }
+    // Legacy cache entries have no timestamp and refresh once after this successful read.
+    scheduleDocumentationRefreshIfDue(cachedResponse, worker, 'update-message-docs-json-schema')
     return messageDocsJsonSchema
   } catch (error) {
     console.warn('No message docs JSON schema cache or malformed cache.')

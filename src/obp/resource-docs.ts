@@ -27,19 +27,17 @@
 
 import { get, isServerUp, OBP_API_DEFAULT_RESOURCE_DOC_VERSION } from '../obp'
 import { getOBPAPIVersions } from '../obp/api-version'
+import { runWithConcurrency, updateLoadingInfoMessage } from './common-functions'
 import {
-  DOCS_REFRESH_INTERVAL_MS,
-  getLastRefreshAttempt,
-  isRefreshDue,
-  recordRefreshAttempt,
-  runWithConcurrency,
-  updateLoadingInfoMessage
-} from './common-functions'
+  documentationCacheAgeMs,
+  putDocumentationCache,
+  scheduleDocumentationRefreshIfDue
+} from './documentation-refresh'
 import { RESOURCE_DOCS_API_VERSION } from '../shared-constants'
 
 const RESOURCE_DOCS_CONCURRENCY = 5
-// A deep link to an operation missing from the cache may refresh sooner than
-// DOCS_REFRESH_INTERVAL_MS, but not on every load, so a bad link reloaded repeatedly cannot
+// A deep link to an operation missing from the cache may refresh sooner than the usual minimum
+// age (see documentation-refresh.ts), but not on every load, so a bad link reloaded repeatedly cannot
 // hammer OBP-API.
 export const MISSING_OPERATION_REFRESH_INTERVAL_MS = 5 * 60 * 1000
 
@@ -133,7 +131,6 @@ async function getCachedMapping(cacheStorageOfResourceDocs: any): Promise<any> {
 
 export async function cacheDoc(cacheStorageOfResourceDocs: any): Promise<any> {
   try {
-    await recordRefreshAttempt(cacheStorageOfResourceDocs)
     const apiVersions = await getOBPAPIVersions()
     if (
       !apiVersions ||
@@ -152,6 +149,7 @@ export async function cacheDoc(cacheStorageOfResourceDocs: any): Promise<any> {
     const resourceDocsMapping: any = {}
     const total = activeVersions.length
     let completed = 0
+    let failed = 0
 
     const cacheOneVersion = async ({ api_standard, api_short_version }: any): Promise<void> => {
       if (api_standard) {
@@ -168,9 +166,11 @@ export async function cacheDoc(cacheStorageOfResourceDocs: any): Promise<any> {
             resourceDocsMapping[version] = resourceDocs
             console.log(`[CACHE] Successfully cached ${kind} for: ${version}`)
           } else {
+            failed++
             console.warn(`[CACHE] WARNING: Response for ${version} missing 'resource_docs' field`)
           }
         } catch (error: any) {
+          failed++
           console.warn(
             `[CACHE] WARNING: Skipping ${isDynamicEntity ? 'dynamic endpoint' : 'API version'} ${api_standard}${api_short_version}:`
           )
@@ -201,11 +201,8 @@ export async function cacheDoc(cacheStorageOfResourceDocs: any): Promise<any> {
 
     await runWithConcurrency(activeVersions, RESOURCE_DOCS_CONCURRENCY, cacheOneVersion)
 
-    if (Object.keys(resourceDocsMapping).length === 0) {
-      console.warn('[CACHE] No resource docs loaded, keeping the existing cache')
-      return {}
-    }
-    // Keep the previous copy of any active version that failed this time rather than drop it.
+    // Keep the previous copy of any active version that failed this time rather than drop it. The
+    // entry is still marked incomplete (failed > 0), so the failed versions are retried sooner.
     const previousMapping = await getCachedMapping(cacheStorageOfResourceDocs)
     for (const { api_standard, api_short_version } of activeVersions) {
       const version = `${api_standard?.toUpperCase()}${api_short_version}`
@@ -215,7 +212,7 @@ export async function cacheDoc(cacheStorageOfResourceDocs: any): Promise<any> {
       }
     }
 
-    await cacheStorageOfResourceDocs.put('/', new Response(JSON.stringify(resourceDocsMapping)))
+    await putDocumentationCache(cacheStorageOfResourceDocs, resourceDocsMapping, failed === 0, 'resource docs')
     return resourceDocsMapping
   } catch (error) {
     console.error('Failed to cache resource docs:', error)
@@ -263,7 +260,7 @@ export async function cache(
 ): Promise<any> {
   try {
     let resourceDocs = await cachedResponse.json()
-    const lastAttempt = await getLastRefreshAttempt(cachedStorage)
+    const cacheAge = documentationCacheAgeMs(cachedResponse)
     if (
       requestedOperation &&
       !getOperationDetails(
@@ -271,7 +268,7 @@ export async function cache(
         requestedOperation.operationId,
         resourceDocs
       ) &&
-      isRefreshDue(lastAttempt, MISSING_OPERATION_REFRESH_INTERVAL_MS)
+      (cacheAge === undefined || cacheAge >= MISSING_OPERATION_REFRESH_INTERVAL_MS)
     ) {
       // A deep link to an endpoint added since the cache was written would otherwise render
       // blank until the background refresh lands and the user reloads, so refresh now instead.
@@ -284,12 +281,9 @@ export async function cache(
       } else {
         console.warn('[CACHE] Refresh returned no docs, keeping the cached copy')
       }
-    } else if (isRefreshDue(lastAttempt, DOCS_REFRESH_INTERVAL_MS)) {
-      // Only a cache hit should schedule a background refresh; posting before the
-      // read would make a cold cache fetch everything twice via the worker echo.
-      worker.postMessage('update-resource-docs')
     } else {
-      console.log('[CACHE] Resource docs refreshed within the last hour, skipping refresh')
+      // Legacy cache entries have no timestamp and refresh once after this successful read.
+      scheduleDocumentationRefreshIfDue(cachedResponse, worker, 'update-resource-docs')
     }
     console.log(
       '[CACHE] Loaded cached resource docs, available versions:',
