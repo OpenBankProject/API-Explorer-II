@@ -32,7 +32,7 @@
   color: #888a;
 }
 pre code table {
-  background: #253047;
+  background: var(--obp-panel-dark-raised);
   max-height: 290px;
   table-layout: fixed;
   width: 100%;

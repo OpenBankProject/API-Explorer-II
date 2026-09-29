@@ -112,7 +112,7 @@ const clearCacheStorage = () => {
 }
 
 .about-content {
-  color: #39455f;
+  color: var(--obp-text-strong);
   font-family: 'Roboto';
   padding: 0;
 }
@@ -125,7 +125,7 @@ const clearCacheStorage = () => {
   font-size: 32px;
   font-weight: 700;
   margin-bottom: 30px;
-  color: #39455f;
+  color: var(--obp-text-strong);
 }
 
 .about-body {
@@ -140,17 +140,17 @@ const clearCacheStorage = () => {
 .about-table td {
   padding: 12px 16px;
   font-size: 14px;
-  border-bottom: 1px solid #ebeef5;
+  border-bottom: 1px solid var(--el-border-color-lighter);
 }
 
 .about-table .label {
   font-weight: 700;
   width: 140px;
-  color: #606266;
+  color: var(--el-text-color-regular);
 }
 
 .about-table a {
-  color: #409eff;
+  color: var(--el-color-primary);
   text-decoration: none;
 }
 

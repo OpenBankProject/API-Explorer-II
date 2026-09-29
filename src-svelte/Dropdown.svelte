@@ -147,7 +147,7 @@
   .dropdown-trigger {
     padding: 9px;
     margin: 3px;
-    color: #39455f;
+    color: var(--obp-header-link);
     font-family: 'Roboto', sans-serif;
     font-size: 14px;
     text-decoration: none;
@@ -181,8 +181,8 @@
     top: 100%;
     right: 0;
     margin-top: 4px;
-    background: white;
-    border: 1px solid #e4e7ed;
+    background: var(--el-bg-color-overlay);
+    border: 1px solid var(--el-border-color-light);
     border-radius: 8px;
     box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
     z-index: 2000;
@@ -212,7 +212,7 @@
     width: 100%;
     padding: 10px 20px;
     margin: 0;
-    color: #606266;
+    color: var(--el-text-color-regular);
     font-family: 'Roboto', sans-serif;
     font-size: 14px;
     text-align: left;
@@ -238,7 +238,7 @@
   .dropdown-divider {
     height: 1px;
     margin: 6px 0;
-    background-color: #e4e7ed;
+    background-color: var(--el-border-color-light);
   }
 
   /* Custom scrollbar styling */
@@ -264,5 +264,22 @@
   .dropdown-content {
     scrollbar-width: thin;
     scrollbar-color: #c1c1c1 #f5f5f5;
+  }
+
+  /* Dark mode: scrollbar one-offs (no exact variable for the light greys) */
+  :global(html.dark) .dropdown-content::-webkit-scrollbar-track {
+    background: #1d1e1f;
+  }
+
+  :global(html.dark) .dropdown-content::-webkit-scrollbar-thumb {
+    background: #4c4d4f;
+  }
+
+  :global(html.dark) .dropdown-content::-webkit-scrollbar-thumb:hover {
+    background: #6c6e72;
+  }
+
+  :global(html.dark) .dropdown-content {
+    scrollbar-color: #4c4d4f #1d1e1f;
   }
 </style>

@@ -38,6 +38,7 @@ import {
 } from '../obp/style-setting'
 import { obpApiActiveVersionsKey, obpGroupedMessageDocsKey, obpGroupedMessageDocsJsonSchemaKey, obpMyCollectionsEndpointKey } from '@/obp/keys'
 import SvelteDropdown from './SvelteDropdown.vue'
+import { theme, toggleTheme } from '../obp/theme'
 
 const route = useRoute()
 const router = useRouter()
@@ -222,7 +223,7 @@ const clearActiveTab = () => {
     // Skip login and logoff buttons
     if (active.id && active.id !== 'login' && active.id !== 'logoff') {
       active.style.backgroundColor = 'transparent'
-      active.style.color = '#39455f'
+      active.style.color = 'var(--obp-header-link)'
     }
   }
 }
@@ -394,6 +395,15 @@ const getCurrentPath = () => {
       <a v-bind:href="'/api/user/logoff?redirect=' + encodeURIComponent(getCurrentPath())" v-show="isShowLogOffButton" class="logoff-button router-link" id="logoff">
         {{ $t('header.logoff') }}
       </a>
+      <button
+        class="theme-toggle router-link"
+        id="header-nav-theme"
+        :title="theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'"
+        :aria-label="theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'"
+        @click="toggleTheme"
+      >
+        <el-icon :size="16"><Sunny v-if="theme === 'dark'" /><Moon v-else /></el-icon>
+      </button>
     </RouterView>
   </nav>
 
@@ -516,7 +526,7 @@ nav {
 .login-user {
   font-family: 'Roboto';
   padding: 9px;
-  color: #39455f;
+  color: var(--obp-text-strong);
   font-size: 14px;
   border-radius: 8px;
 }
@@ -524,7 +534,7 @@ nav {
 .router-link {
   padding: 9px;
   margin: 3px;
-  color: #39455f;
+  color: var(--obp-header-link);
   font-family: 'Roboto';
   font-size: 14px;
   text-decoration: none;
@@ -565,9 +575,23 @@ button.login-button-disabled {
   opacity: 0.6;
 }
 
+html.dark button.login-button-disabled {
+  color: #8d9095;
+  background-color: #2b2d31;
+  border-color: #4c4d4f;
+}
+
 .login-button:hover,
 .logoff-button:hover {
   color: #39455f;
+}
+
+button.theme-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  vertical-align: middle;
+  line-height: 0;
 }
 
 /* Custom dropdown containers */
@@ -588,7 +612,7 @@ button.login-button-disabled {
 .selection-hint {
   text-align: center;
   font-size: 14px;
-  color: #666;
+  color: var(--obp-text-muted);
   margin: 0 0 8px 0;
 }
 
@@ -651,6 +675,10 @@ button.login-button-disabled {
   border-top: 1px solid #e5e7eb;
 }
 
+html.dark .unavailable-section {
+  border-top-color: #3a3d44;
+}
+
 .unavailable-header {
   text-align: center;
   font-size: 13px;
@@ -668,6 +696,11 @@ button.login-button-disabled {
   margin-bottom: 8px;
 }
 
+html.dark .provider-unavailable {
+  border-color: #4c4d4f;
+  background-color: #1b1d22;
+}
+
 .provider-unavailable-header {
   display: flex;
   align-items: center;
@@ -679,6 +712,10 @@ button.login-button-disabled {
   flex: 1;
   color: #4b5563;
   font-size: 14px;
+}
+
+html.dark .provider-name {
+  color: #cfd3dc;
 }
 
 .unavailable-label {
@@ -705,6 +742,10 @@ button.login-button-disabled {
   word-break: break-word;
   white-space: pre-wrap;
   line-height: 1.4;
+}
+
+html.dark .provider-error-text {
+  color: #a3a6ad;
 }
 
 .copy-button {
@@ -739,5 +780,9 @@ button.login-button-disabled {
   font-size: 13px;
   color: #6b7280;
   margin: 0;
+}
+
+html.dark .error-hint {
+  color: #a3a6ad;
 }
 </style>

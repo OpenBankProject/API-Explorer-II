@@ -73,7 +73,7 @@ const hasContent = computed(() => helpContent.value !== null)
 }
 
 .help-content {
-  color: #39455f;
+  color: var(--obp-text-strong);
   font-family: 'Roboto';
   padding: 0;
 }
@@ -94,7 +94,7 @@ const hasContent = computed(() => helpContent.value !== null)
   font-size: 32px;
   font-weight: 700;
   margin-bottom: 20px;
-  color: #39455f;
+  color: var(--obp-text-strong);
   word-wrap: break-word;
   overflow-wrap: break-word;
 }
@@ -123,7 +123,7 @@ const hasContent = computed(() => helpContent.value !== null)
   font-weight: 700;
   margin-top: 24px;
   margin-bottom: 16px;
-  color: #39455f;
+  color: var(--obp-text-strong);
 }
 
 .content :deep(h1) {
@@ -169,12 +169,12 @@ const hasContent = computed(() => helpContent.value !== null)
 
 .content :deep(table th),
 .content :deep(table td) {
-  border: 1px solid #dcdfe6;
+  border: 1px solid var(--el-border-color);
   padding: 8px 12px;
 }
 
 .content :deep(table th) {
-  background-color: #f5f7fa;
+  background-color: var(--el-fill-color-light);
   font-weight: 700;
 }
 
@@ -183,7 +183,7 @@ const hasContent = computed(() => helpContent.value !== null)
   overflow-x: auto;
   white-space: pre-wrap;
   word-wrap: break-word;
-  background-color: #f5f7fa;
+  background-color: var(--el-fill-color-light);
   padding: 16px;
   border-radius: 4px;
   margin: 16px 0;
@@ -192,7 +192,7 @@ const hasContent = computed(() => helpContent.value !== null)
 .content :deep(code) {
   word-wrap: break-word;
   overflow-wrap: break-word;
-  background-color: #f5f7fa;
+  background-color: var(--el-fill-color-light);
   padding: 2px 6px;
   border-radius: 3px;
   font-family: 'Courier New', monospace;
@@ -213,21 +213,21 @@ const hasContent = computed(() => helpContent.value !== null)
   text-decoration: underline;
   font-family: 'Roboto';
   font-size: 14px;
-  color: #409eff;
+  color: var(--el-color-primary);
   border-radius: 3px;
   padding: 1px;
 }
 
 .content :deep(a):hover {
-  background-color: #ecf5ff;
+  background-color: var(--el-color-primary-light-9);
   color: #66b1ff;
 }
 
 .content :deep(blockquote) {
-  border-left: 4px solid #dcdfe6;
+  border-left: 4px solid var(--el-border-color);
   padding-left: 16px;
   margin: 16px 0;
-  color: #606266;
+  color: var(--el-text-color-regular);
   font-style: italic;
 }
 
@@ -238,13 +238,13 @@ const hasContent = computed(() => helpContent.value !== null)
 
 .not-found h1 {
   font-size: 24px;
-  color: #f56c6c;
+  color: var(--el-color-danger);
   margin-bottom: 16px;
 }
 
 .not-found p {
   font-size: 14px;
-  color: #909399;
+  color: var(--el-text-color-secondary);
   line-height: 1.6;
 }
 </style>

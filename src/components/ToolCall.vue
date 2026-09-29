@@ -144,7 +144,7 @@ export default {
 <style scoped>
 
 .tool-message-container {
-    background-color: #253047;
+    background-color: var(--obp-panel-dark-raised);
     color:#fff;
     font-size: small;
     padding: 10px;

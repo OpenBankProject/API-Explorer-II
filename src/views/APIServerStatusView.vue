@@ -79,7 +79,7 @@ const oauthProviders = computed<OIDCProviderHealth[]>(() => status.value.oauthPr
         /></el-icon>
         <el-icon
           v-else-if="overallStatus === 'partial'"
-          style="vertical-align: middle; color: #e6a23c; width: auto"
+          style="vertical-align: middle; color: var(--el-color-warning); width: auto"
           ><WarningFilled
         /></el-icon>
         <el-icon v-else style="vertical-align: middle; color: red"><RemoveFilled /></el-icon>
@@ -169,7 +169,7 @@ main {
   display: flex;
   justify-content: center;
   align-items: center;
-  color: #39455f;
+  color: var(--obp-text-strong);
   font-family: 'roboto';
   font-size: 30px;
 }
@@ -222,11 +222,17 @@ span {
   overflow-wrap: anywhere;
   margin: 2px 0 8px;
 }
+:global(html.dark) .provider-error {
+  color: #f56c6c;
+}
 .provider-detail {
   font-size: 12px;
   color: #7a8499;
   text-align: center;
   margin: 2px 0 8px;
+}
+:global(html.dark) .provider-detail {
+  color: #a3a6ad;
 }
 .provider-link {
   color: inherit;

@@ -311,7 +311,7 @@ onBeforeRouteUpdate(async (to) => {
             >
               {{ tag }}
             </a>
-            <span v-if="tags.length === 0" style="color: #909399; font-size: 12px;">No tags available</span>
+            <span v-if="tags.length === 0" style="color: var(--el-text-color-secondary); font-size: 12px;">No tags available</span>
           </div>
         </div>
       </el-main>
@@ -343,7 +343,7 @@ onBeforeRouteUpdate(async (to) => {
 <style scoped>
 main {
   margin: 25px;
-  color: #39455f;
+  color: var(--obp-text-strong);
   font-family: 'Roboto';
 }
 
@@ -362,16 +362,16 @@ span {
 .tags-label {
   font-size: 14px !important;
   font-weight: 600;
-  color: #606266;
+  color: var(--el-text-color-regular);
 }
 
 .tag-link {
   display: inline-block;
   padding: 4px 12px;
   font-size: 12px !important;
-  color: #409eff;
-  background-color: #ecf5ff;
-  border: 1px solid #d9ecff;
+  color: var(--el-color-primary);
+  background-color: var(--el-color-primary-light-9);
+  border: 1px solid var(--el-color-primary-light-8);
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -379,14 +379,14 @@ span {
 }
 
 .tag-link:hover {
-  background-color: #409eff;
+  background-color: var(--el-color-primary);
   color: white;
-  border-color: #409eff;
+  border-color: var(--el-color-primary);
 }
 
 .tag-link-all {
-  background-color: #67c23a;
-  border-color: #b3e19d;
+  background-color: var(--el-color-success);
+  border-color: var(--el-color-success-light-5);
   color: white;
   font-weight: 600;
 }
@@ -397,32 +397,32 @@ span {
 }
 
 .tag-link-active {
-  background-color: #409eff;
+  background-color: var(--el-color-primary);
   color: white;
-  border-color: #409eff;
+  border-color: var(--el-color-primary);
   font-weight: 600;
 }
 
 .tag-link-all.tag-link-active {
-  background-color: #67c23a;
-  border-color: #67c23a;
+  background-color: var(--el-color-success);
+  border-color: var(--el-color-success);
 }
 
 .placeholder-message {
   padding: 0;
-  color: #606266;
+  color: var(--el-text-color-regular);
 }
 
 .version-header {
   padding: 20px 0;
-  border-bottom: 2px solid #e4e7ed;
+  border-bottom: 2px solid var(--el-border-color-light);
   margin-bottom: 20px;
 }
 
 .version-header h1 {
   font-size: 1.75rem;
   font-weight: 600;
-  color: #303133;
+  color: var(--el-text-color-primary);
   margin: 0 0 0.5rem 0;
   word-wrap: break-word;
   overflow-wrap: break-word;
@@ -430,7 +430,7 @@ span {
 
 .version-subtitle {
   font-size: 1rem;
-  color: #909399;
+  color: var(--el-text-color-secondary);
   margin: 0;
 }
 
@@ -438,14 +438,14 @@ span {
   font-size: 16px;
   margin: 20px 0 10px 0;
   line-height: 1.6;
-  color: #606266;
+  color: var(--el-text-color-regular);
 }
 
 .version-instructions {
   font-size: 16px;
   margin: 10px 0 20px 0;
   line-height: 1.6;
-  color: #606266;
+  color: var(--el-text-color-regular);
 }
 
 .placeholder-tags {
@@ -456,7 +456,7 @@ span {
 .placeholder-tags h3 {
   font-size: 18px;
   margin-bottom: 20px;
-  color: #39455f;
+  color: var(--obp-text-strong);
 }
 
 .tags-grid {
@@ -478,12 +478,12 @@ div {
   line-height: 28px;
   padding: 5px;
   margin: 3px;
-  color: #39455f;
+  color: var(--obp-text-strong);
   font-family: 'Roboto';
   font-size: 14px;
   text-decoration: none;
   border-radius: 5px;
-  background-color: #eef0f4;
+  background-color: var(--obp-header-link-bg);
 }
 
 .pager {
@@ -514,7 +514,7 @@ div {
 .pager-router-link {
   font-family: 'Roboto';
   text-decoration: none;
-  color: #39455f;
+  color: var(--obp-text-strong);
 }
 
 .pager-router-link:hover,

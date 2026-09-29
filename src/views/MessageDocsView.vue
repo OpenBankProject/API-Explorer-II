@@ -93,12 +93,12 @@ function showDependentEndpoints(value: any) {
               <div>
                 <strong>Outbound Topic: </strong>
                 <el-tag v-if="value.outbound_topic" type="info" round>{{ value.outbound_topic }}</el-tag>
-                <el-tag v-else type="error" round>None</el-tag>
+                <el-tag v-else type="danger" round>None</el-tag>
               </div>
               <div>
                 <strong>Inbound Topic: </strong>
                 <el-tag v-if="value.inbound_topic" type="info" round>{{ value.inbound_topic }}</el-tag>
-                <el-tag v-else type="error" round>None</el-tag>
+                <el-tag v-else type="danger" round>None</el-tag>
               </div>
             </section>
 
@@ -190,7 +190,7 @@ function showDependentEndpoints(value: any) {
   padding: 10px;
 }
 .message-docs-content {
-  color: #39455f;
+  color: var(--obp-text-strong);
   font-family: 'Roboto';
   padding: 0;
 }
@@ -226,7 +226,7 @@ pre {
 
 a {
   text-decoration: none;
-  color: #39455f;
+  color: var(--obp-text-strong);
   word-wrap: break-word;
   overflow-wrap: break-word;
 }
@@ -255,14 +255,14 @@ div {
 
 .message-docs-header {
   padding: 20px 0;
-  border-bottom: 2px solid #e4e7ed;
+  border-bottom: 2px solid var(--el-border-color-light);
   margin-bottom: 20px;
 }
 
 .message-docs-header h1 {
   font-size: 1.75rem;
   font-weight: 600;
-  color: #303133;
+  color: var(--el-text-color-primary);
   margin: 0 0 0.5rem 0;
   word-wrap: break-word;
   overflow-wrap: break-word;
@@ -270,7 +270,7 @@ div {
 
 .connector-subtitle {
   font-size: 1rem;
-  color: #909399;
+  color: var(--el-text-color-secondary);
   margin: 0;
 }
 </style>

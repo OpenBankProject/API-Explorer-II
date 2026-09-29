@@ -215,7 +215,7 @@ function handleRefClick(href: string) {
 
 /* Left Sidebar - Search Navigation */
 .search-nav {
-  border-right: 1px solid #e4e7ed;
+  border-right: 1px solid var(--el-border-color-light);
 }
 
 .search-nav :deep(.el-scrollbar__wrap) {
@@ -228,7 +228,7 @@ function handleRefClick(href: string) {
 
 /* Main Content Area */
 .message-docs-content {
-  color: #39455f;
+  color: var(--obp-text-strong);
   font-family: 'Roboto';
   padding: 0;
 }
@@ -247,7 +247,7 @@ function handleRefClick(href: string) {
 
 /* Right Sidebar - Definitions Panel */
 .definitions-panel {
-  border-left: 2px solid #e4e7ed;
+  border-left: 2px solid var(--el-border-color-light);
   background-color: #f9fafb;
 }
 
@@ -269,12 +269,17 @@ function handleRefClick(href: string) {
   background-color: #f9fafb;
   padding: 10px 0 20px 0;
   margin-bottom: 10px;
-  border-bottom: 2px solid #e4e7ed;
+  border-bottom: 2px solid var(--el-border-color-light);
   z-index: 10;
 }
 
+:global(html.dark) .definitions-panel,
+:global(html.dark) .definitions-header {
+  background-color: #1b1d22;
+}
+
 .definitions-header h2 {
-  color: #303133;
+  color: var(--el-text-color-primary);
   margin: 0 0 8px 0;
   font-size: 1.3rem;
   font-family: 'Roboto';
@@ -282,7 +287,7 @@ function handleRefClick(href: string) {
 }
 
 .definitions-subtitle {
-  color: #909399;
+  color: var(--el-text-color-secondary);
   margin: 0;
   font-size: 0.85rem;
   font-family: 'Roboto';
@@ -310,7 +315,7 @@ pre {
 
 a {
   text-decoration: none;
-  color: #39455f;
+  color: var(--obp-text-strong);
   word-wrap: break-word;
   overflow-wrap: break-word;
 }
@@ -329,14 +334,14 @@ div {
 
 .message-docs-header {
   padding: 20px 0;
-  border-bottom: 2px solid #e4e7ed;
+  border-bottom: 2px solid var(--el-border-color-light);
   margin-bottom: 20px;
 }
 
 .message-docs-header h1 {
   font-size: 1.75rem;
   font-weight: 600;
-  color: #303133;
+  color: var(--el-text-color-primary);
   margin: 0 0 0.5rem 0;
   word-wrap: break-word;
   overflow-wrap: break-word;
@@ -344,13 +349,13 @@ div {
 
 .connector-subtitle {
   font-size: 1rem;
-  color: #909399;
+  color: var(--el-text-color-secondary);
   margin: 0;
 }
 
 .version-indicator {
   font-size: 0.75rem;
-  color: #67c23a;
+  color: var(--el-color-success);
   margin: 0.25rem 0 0 0;
   font-weight: 600;
 }
@@ -369,30 +374,30 @@ div {
 }
 
 .no-schema-message {
-  color: #909399;
+  color: var(--el-text-color-secondary);
   font-style: italic;
   padding: 15px;
-  background-color: #f5f7fa;
+  background-color: var(--el-fill-color-light);
   border-radius: 4px;
 }
 
 .definition-item {
   margin-bottom: 25px;
   padding: 15px;
-  background-color: #ffffff;
+  background-color: var(--el-bg-color);
   border-radius: 6px;
-  border: 1px solid #e4e7ed;
+  border: 1px solid var(--el-border-color-light);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   transition: all 0.2s ease;
 }
 
 .definition-item:hover {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border-color: #409eff;
+  border-color: var(--el-color-primary);
 }
 
 .definition-item h3 {
-  color: #409eff;
+  color: var(--el-color-primary);
   margin-top: 0;
   margin-bottom: 12px;
   font-size: 1rem;
@@ -413,7 +418,7 @@ div {
 .no-definitions {
   text-align: center;
   padding: 40px 20px;
-  color: #909399;
+  color: var(--el-text-color-secondary);
   font-style: italic;
   font-family: 'Roboto';
 }
@@ -433,7 +438,7 @@ div {
 
 .definition-item.highlight-definition {
   animation: highlight-pulse 0.6s ease-in-out 3;
-  border-color: #409eff;
+  border-color: var(--el-color-primary);
   box-shadow: 0 2px 12px rgba(64, 158, 255, 0.3);
 }
 </style>

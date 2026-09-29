@@ -1,0 +1,103 @@
+/*
+ * Open Bank Project -  API Explorer II
+ * Copyright (C) 2023-2026, TESOBE GmbH
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Email: contact@tesobe.com
+ * TESOBE GmbH
+ * Osloerstrasse 16/17
+ * Berlin 13359, Germany
+ *
+ *   This product includes software developed at
+ *   TESOBE (http://www.tesobe.com/)
+ *
+ */
+
+/*
+ * Colour tokens for light and dark mode. Dark mode is the `dark` class on <html>, the same switch
+ * Element Plus uses (element-plus/theme-chalk/dark/css-vars.css), so its --el-* variables flip too.
+ * Prefer the --el-* variables for generic text, borders, fills and status colours, and these
+ * --obp-* tokens for the app's own colours. See src/obp/theme.ts for how the class is set.
+ */
+:root {
+  color-scheme: light;
+
+  /* Page and panel surfaces */
+  --obp-bg: #ffffff;
+  --obp-bg-subtle: #f8f9fb;
+  --obp-bg-muted: #f5f7fa;
+
+  /* The navy used for headings, nav links and emphasis text */
+  --obp-text-strong: #39455f;
+  --obp-text: #333333;
+  --obp-text-muted: #666666;
+  --obp-border: #dddddd;
+
+  /* Header nav */
+  --obp-header-link: #39455f;
+  --obp-header-link-hover: #39455f;
+  --obp-header-link-bg: #eef0f4;
+
+  /* Links in search navs and pagers */
+  --obp-link: #52b165;
+
+  /* Panels that are dark in both modes (preview, chat, code) */
+  --obp-panel-dark: #151d30;
+  --obp-panel-dark-raised: #253047;
+  --obp-code-bg: #1e1e1e;
+  --obp-code-bg-raised: #2d2d2d;
+
+  --obp-code-text: #000000;
+  --obp-favorite: #fcc406;
+  --obp-loading-bg: #e3e3e3;
+}
+
+html.dark {
+  color-scheme: dark;
+
+  --obp-bg: #141414;
+  --obp-bg-subtle: #1b1d22;
+  --obp-bg-muted: #22252b;
+
+  --obp-text-strong: #c8d2e6;
+  --obp-text: #d6d8dc;
+  --obp-text-muted: #a3a6ad;
+  --obp-border: #3a3d44;
+
+  --obp-header-link: #c8d2e6;
+  --obp-header-link-hover: #ffffff;
+  --obp-header-link-bg: #2a3040;
+
+  --obp-link: #6cc57f;
+
+  /* Lifted slightly so they still stand out against the dark page */
+  --obp-panel-dark: #1a2236;
+  --obp-panel-dark-raised: #2a3550;
+  --obp-code-bg: #1e1e1e;
+  --obp-code-bg-raised: #2d2d2d;
+
+  --obp-code-text: #e5e7eb;
+  --obp-favorite: #fcc406;
+  --obp-loading-bg: #22252b;
+}
+
+body {
+  background-color: var(--obp-bg);
+}
+
+/* Light mode keeps the browser's default text colour; dark mode needs light text to inherit. */
+html.dark body {
+  color: var(--obp-text);
+}

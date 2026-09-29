@@ -41,7 +41,7 @@ main {
   display: flex;
   justify-content: center;
   align-items: center;
-  color: #39455f;
+  color: var(--obp-text-strong);
   font-family: 'roboto';
   font-size: 30px;
 }

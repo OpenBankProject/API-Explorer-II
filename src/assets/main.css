@@ -25,6 +25,7 @@
  *
  */
 
+@import './theme.css';
 @import './base.css';
 @import './element-plus-override.css';
 @import './highlightjs-override.css';
@@ -60,11 +61,11 @@ main {
 
 .activeFavoriteButton,
 .favoriteButton:hover {
-  color: #fcc406;
+  color: var(--obp-favorite);
 }
 
 .search-nav {
-  background-color: #f8f9fb;
+  background-color: var(--obp-bg-subtle);
   padding: 8px 0 8px 8px;
 }
 
@@ -77,6 +78,6 @@ code[class*='language-'],
 pre[class*='language-'],
 .content code,
 .content pre {
-  color: #000000;
+  color: var(--obp-code-text);
 }
 

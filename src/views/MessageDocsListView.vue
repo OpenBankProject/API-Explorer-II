@@ -75,7 +75,7 @@ function navigateToConnector(connectorId: string) {
 h1 {
   font-size: 1.5rem;
   font-weight: 600;
-  color: #303133;
+  color: var(--el-text-color-primary);
   margin-bottom: 1.5rem;
 }
 
@@ -87,7 +87,7 @@ h1 {
 
 .message-doc-link {
   padding: 12px 16px;
-  color: #409eff;
+  color: var(--el-color-primary);
   text-decoration: none;
   cursor: pointer;
   border-radius: 4px;
@@ -96,12 +96,12 @@ h1 {
 }
 
 .message-doc-link:hover {
-  background-color: #ecf5ff;
-  color: #337ecc;
+  background-color: var(--el-color-primary-light-9);
+  color: var(--el-color-primary-dark-2);
 }
 
 .empty-message {
-  color: #909399;
+  color: var(--el-text-color-secondary);
   font-style: italic;
 }
 </style>

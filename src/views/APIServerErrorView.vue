@@ -91,7 +91,7 @@ main {
   display: flex;
   justify-content: center;
   align-items: center;
-  color: #39455f;
+  color: var(--obp-text-strong);
   font-family: 'roboto';
   font-size: 30px;
 }
@@ -102,13 +102,13 @@ main {
   justify-content: center;
   align-items: center;
   margin-top: 10px;
-  color: #666;
+  color: var(--obp-text-muted);
 }
 
 .error-details {
   margin-top: 40px;
   background: #f5f5f5;
-  border: 1px solid #ddd;
+  border: 1px solid var(--obp-border);
   border-radius: 8px;
   padding: 20px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -119,13 +119,13 @@ main {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid var(--obp-border);
   padding-bottom: 10px;
 }
 
 .error-header h2 {
   margin: 0;
-  color: #39455f;
+  color: var(--obp-text-strong);
   font-family: 'roboto';
   font-size: 24px;
 }
@@ -133,7 +133,7 @@ main {
 .copy-btn {
   background: #e0e0e0;
   border: 1px solid #ccc;
-  color: #333;
+  color: var(--obp-text);
   padding: 8px 16px;
   cursor: pointer;
   border-radius: 4px;
@@ -156,20 +156,37 @@ main {
 .error-section strong {
   display: block;
   margin-bottom: 8px;
-  color: #39455f;
+  color: var(--obp-text-strong);
   font-size: 16px;
 }
 
 .error-section pre {
-  background: white;
+  background: var(--el-bg-color);
   border: 1px solid #ccc;
   border-radius: 4px;
   padding: 15px;
   overflow-x: auto;
   white-space: pre-wrap;
   word-wrap: break-word;
-  color: #333;
+  color: var(--obp-text);
   margin: 0;
   line-height: 1.5;
+}
+
+:global(html.dark) .error-details {
+  background: #1b1d22;
+}
+
+:global(html.dark) .copy-btn {
+  background: #222;
+  border-color: #4c4d4f;
+}
+
+:global(html.dark) .copy-btn:hover {
+  background: #3a3d44;
+}
+
+:global(html.dark) .error-section pre {
+  border-color: #4c4d4f;
 }
 </style>

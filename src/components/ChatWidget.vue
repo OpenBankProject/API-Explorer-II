@@ -187,7 +187,7 @@ export default {
     min-height: 470px;
     max-height: 90vh;
     max-width: 90vw;
-    background-color: #151d30;
+    background-color: var(--obp-panel-dark);
     resize: both;
     overflow: auto;
     transform: rotate(180deg);
@@ -245,7 +245,7 @@ export default {
 
 .chat-container .el-header, .chat-container .el-footer {
     color: #fff;
-    background-color: #253047;
+    background-color: var(--obp-panel-dark-raised);
 }
 
 .chat-container .el-footer {
@@ -253,7 +253,7 @@ export default {
 }
 
 .chat-container .el-main {
-    background-color:#151d30;
+    background-color: var(--obp-panel-dark);
     color: #fff;
 }
 
@@ -274,7 +274,7 @@ export default {
     flex-direction: row;
     justify-content: center;
     align-items: flex-start;
-    background-color: #151d30;
+    background-color: var(--obp-panel-dark);
     border-radius: 10px;
     padding: 10px;
     width: 70%;
@@ -304,7 +304,7 @@ export default {
   text-wrap: wrap;
   overflow-x: auto;
   overflow-y: auto;
-  background-color: #151d30;
+  background-color: var(--obp-panel-dark);
   resize: none;
   height: 100%;
   width: 100%;

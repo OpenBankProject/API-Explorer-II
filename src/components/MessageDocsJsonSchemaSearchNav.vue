@@ -126,7 +126,7 @@ const setDocs = () => {
   margin-left: 15px;
   font-family: 'Roboto';
   text-decoration: none;
-  color: #39455f;
+  color: var(--obp-text-strong);
   display: inline-block;
   word-wrap: break-word;
   overflow-wrap: break-word;
@@ -156,7 +156,7 @@ const setDocs = () => {
   font-size: 13px;
   font-family: 'Roboto';
   text-decoration: none;
-  color: #39455f;
+  color: var(--obp-text-strong);
   display: inline-block;
   word-wrap: break-word;
   overflow-wrap: break-word;

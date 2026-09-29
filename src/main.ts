@@ -52,12 +52,14 @@ import { OBP_API_VERSION, getMyAPICollections, getMyAPICollectionsEndpoint } fro
 import { getOBPGlossary } from './obp/glossary'
 
 import 'element-plus/dist/index.css'
+import 'element-plus/theme-chalk/dark/css-vars.css'
 import './assets/main.css'
 import '@fontsource/roboto/300.css'
 import '@fontsource/roboto/400.css'
 import '@fontsource/roboto/700.css'
 
 import { getCacheStorageInfo } from './obp/common-functions'
+import { initTheme } from './obp/theme'
 import { getOBPAPIVersions } from './obp/api-version'
 import {
   obpApiActiveVersionsKey,
@@ -70,6 +72,7 @@ import {
   obpResourceDocsKey
 } from './obp/keys'
 ;(async () => {
+  initTheme()
   const app = createApp(App)
   const router = await appRouter()
   for (const [key, component] of Object.entries(ElementPlusIconsVue)) {

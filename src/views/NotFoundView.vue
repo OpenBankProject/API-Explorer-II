@@ -38,7 +38,7 @@ main {
   display: flex;
   justify-content: center;
   align-items: center;
-  color: #39455f;
+  color: var(--obp-text-strong);
   font-family: 'Roboto';
   font-size: 30px;
 }

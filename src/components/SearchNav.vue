@@ -101,7 +101,7 @@ onBeforeMount(async () => {
     if(selectedTags === 'NONE') {
       element.textContent = `${selectedVersion} ( ${totalRows} APIs )`;
     } else {
-      element.innerHTML = `${selectedVersion} ( ${totalRows} APIs filtered by tags: <a href="#" class="filter-tag-link" style="color: #409eff; text-decoration: none; cursor: pointer; transition: color 0.2s ease;">${selectedTags}</a>)`;
+      element.innerHTML = `${selectedVersion} ( ${totalRows} APIs filtered by tags: <a href="#" class="filter-tag-link" style="color: var(--el-color-primary); text-decoration: none; cursor: pointer; transition: color 0.2s ease;">${selectedTags}</a>)`;
 
       // Add hover effect
       const tagLinkEl = element.querySelector('.filter-tag-link') as HTMLElement
@@ -111,7 +111,7 @@ onBeforeMount(async () => {
           tagLinkEl.style.textDecoration = 'underline'
         })
         tagLinkEl.addEventListener('mouseleave', () => {
-          tagLinkEl.style.color = '#409eff'
+          tagLinkEl.style.color = 'var(--el-color-primary)'
           tagLinkEl.style.textDecoration = 'none'
         })
       }
@@ -180,7 +180,7 @@ watch(
       if(selectedTags === 'NONE') {
         element.textContent = `${selectedVersion} ( ${totalRows} APIs )`;
       } else {
-        element.innerHTML = `${selectedVersion} ( ${totalRows} APIs filtered by tags: <a href="#" class="filter-tag-link" style="color: #409eff; text-decoration: none; cursor: pointer; transition: color 0.2s ease;">${selectedTags}</a>)`;
+        element.innerHTML = `${selectedVersion} ( ${totalRows} APIs filtered by tags: <a href="#" class="filter-tag-link" style="color: var(--el-color-primary); text-decoration: none; cursor: pointer; transition: color 0.2s ease;">${selectedTags}</a>)`;
 
         // Add hover effect
         const tagLinkEl = element.querySelector('.filter-tag-link') as HTMLElement
@@ -190,7 +190,7 @@ watch(
             tagLinkEl.style.textDecoration = 'underline'
           })
           tagLinkEl.addEventListener('mouseleave', () => {
-            tagLinkEl.style.color = '#409eff'
+            tagLinkEl.style.color = 'var(--el-color-primary)'
             tagLinkEl.style.textDecoration = 'none'
           })
         }
@@ -336,7 +336,7 @@ const searchEvent = (value) => {
   padding: 0;
 }
 .search-nav {
-  background-color: #f8f9fb;
+  background-color: var(--obp-bg-subtle);
   max-height: 100%;
   padding-right: 0;
   border-right: solid 1px var(--el-menu-border-color);
@@ -359,7 +359,7 @@ const searchEvent = (value) => {
   margin-left: 15px;
   font-family: 'Roboto';
   text-decoration: none;
-  color: #39455f;
+  color: var(--obp-text-strong);
   display: inline-block;
 }
 
@@ -384,7 +384,7 @@ const searchEvent = (value) => {
   vertical-align: middle;
   text-align: center;
   padding: 12px;
-  color: #39455f;
+  color: var(--obp-text-strong);
 }
 
 .child-collapse {

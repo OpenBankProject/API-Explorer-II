@@ -92,7 +92,7 @@ const glossary = computed(() => {
   padding: 10px;
 }
 .glossary-content {
-  color: #39455f;
+  color: var(--obp-text-strong);
   font-family: 'Roboto';
   padding: 0;
 }
@@ -148,7 +148,7 @@ div {
 }
 span > a {
   text-decoration: none;
-  color: #39455f;
+  color: var(--obp-text-strong);
   display: block;
   margin-top: 30px;
   padding-top: 10px;
@@ -166,22 +166,28 @@ span:first-child > a {
 .content :deep(a):hover {
   background-color: #a4b2ce;
 }
+:global(html.dark) .content :deep(a):hover {
+  background-color: #4c4d4f;
+}
 
 /* Make Scala code blocks readable */
 .content :deep(pre.language-scala) {
   background-color: #f5f5f5 !important;
-  color: #333 !important;
+  color: var(--obp-text) !important;
   font-family: 'Courier New', Courier, monospace !important;
   padding: 1em !important;
+}
+:global(html.dark) .content :deep(pre.language-scala) {
+  background-color: #1b1d22 !important;
 }
 
 .content :deep(pre.language-scala code) {
   background-color: transparent !important;
-  color: #333 !important;
+  color: var(--obp-text) !important;
   font-family: 'Courier New', Courier, monospace !important;
 }
 
 .content :deep(pre.language-scala .token) {
-  color: #333 !important;
+  color: var(--obp-text) !important;
 }
 </style>

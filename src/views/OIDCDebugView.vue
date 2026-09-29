@@ -263,7 +263,7 @@ onMounted(() => {
 
 h1 {
   font-size: 28px;
-  color: #303133;
+  color: var(--el-text-color-primary);
   margin: 0;
 }
 
@@ -273,7 +273,7 @@ h1 {
   justify-content: center;
   padding: 60px;
   font-size: 16px;
-  color: #909399;
+  color: var(--el-text-color-secondary);
 }
 
 .error-container {
@@ -305,12 +305,12 @@ h1 {
 
 .info-row label {
   font-weight: 500;
-  color: #606266;
+  color: var(--el-text-color-regular);
   min-width: 180px;
 }
 
 .info-row code {
-  background: #f4f4f5;
+  background: var(--el-color-info-light-9);
   padding: 4px 8px;
   border-radius: 3px;
   font-family: 'Courier New', monospace;
@@ -330,19 +330,23 @@ h1 {
 
 .provider-item {
   padding: 20px;
-  border: 2px solid #e4e7ed;
+  border: 2px solid var(--el-border-color-light);
   border-radius: 8px;
-  background: #fafafa;
+  background: var(--el-fill-color-lighter);
 }
 
 .provider-success {
-  border-color: #67c23a;
+  border-color: var(--el-color-success);
   background: #f0f9ff;
 }
 
+:global(html.dark) .provider-success {
+  background: #1b1d22;
+}
+
 .provider-error {
-  border-color: #f56c6c;
-  background: #fef0f0;
+  border-color: var(--el-color-danger);
+  background: var(--el-color-danger-light-9);
 }
 
 .provider-header {
@@ -351,13 +355,13 @@ h1 {
   align-items: center;
   margin-bottom: 15px;
   padding-bottom: 10px;
-  border-bottom: 2px solid #e4e7ed;
+  border-bottom: 2px solid var(--el-border-color-light);
 }
 
 .provider-header h3 {
   margin: 0;
   font-size: 20px;
-  color: #303133;
+  color: var(--el-text-color-primary);
 }
 
 .provider-details {
@@ -374,7 +378,7 @@ h1 {
 
 .detail-row label {
   font-weight: 600;
-  color: #303133;
+  color: var(--el-text-color-primary);
   font-size: 14px;
 }
 
@@ -383,8 +387,8 @@ h1 {
   align-items: center;
   gap: 10px;
   padding: 10px;
-  background: #fff;
-  border: 1px solid #dcdfe6;
+  background: var(--el-bg-color);
+  border: 1px solid var(--el-border-color);
   border-radius: 4px;
 }
 
@@ -402,19 +406,19 @@ h1 {
 
 .error-message {
   padding: 10px;
-  background: #fef0f0;
-  border-left: 4px solid #f56c6c;
+  background: var(--el-color-danger-light-9);
+  border-left: 4px solid var(--el-color-danger);
   border-radius: 4px;
-  color: #f56c6c;
+  color: var(--el-color-danger);
   font-size: 14px;
 }
 
 .warning-message {
   padding: 10px;
-  background: #fdf6ec;
-  border-left: 4px solid #e6a23c;
+  background: var(--el-color-warning-light-9);
+  border-left: 4px solid var(--el-color-warning);
   border-radius: 4px;
-  color: #e6a23c;
+  color: var(--el-color-warning);
   font-size: 14px;
 }
 
@@ -426,7 +430,7 @@ h1 {
 
 .endpoints-section label {
   font-weight: 600;
-  color: #303133;
+  color: var(--el-text-color-primary);
   font-size: 14px;
 }
 
@@ -435,8 +439,8 @@ h1 {
   flex-direction: column;
   gap: 8px;
   padding: 15px;
-  background: #fff;
-  border: 1px solid #dcdfe6;
+  background: var(--el-bg-color);
+  border: 1px solid var(--el-border-color);
   border-radius: 4px;
 }
 
@@ -449,12 +453,12 @@ h1 {
 
 .endpoint-label {
   font-weight: 500;
-  color: #909399;
+  color: var(--el-text-color-secondary);
   font-size: 13px;
 }
 
 .endpoint-row code {
-  background: #f4f4f5;
+  background: var(--el-color-info-light-9);
   padding: 4px 8px;
   border-radius: 3px;
   font-family: 'Courier New', monospace;

@@ -115,7 +115,7 @@ const isChatbotEnabled = import.meta.env.VITE_CHATBOT_ENABLED === 'true'
 }
 .preview {
   color: white;
-  background-color: #151d30;
+  background-color: var(--obp-panel-dark);
   height: 100%;
   overflow: auto;
 }
@@ -129,11 +129,11 @@ const isChatbotEnabled = import.meta.env.VITE_CHATBOT_ENABLED === 'true'
 /* Splitpanes handle styling */
 .splitpanes--vertical > .splitpanes__splitter {
   width: 5px;
-  background-color: #dcdfe6;
+  background-color: var(--el-border-color);
   border: none;
   cursor: col-resize;
 }
 .splitpanes--vertical > .splitpanes__splitter:hover {
-  background-color: #409eff;
+  background-color: var(--el-color-primary);
 }
 </style>
