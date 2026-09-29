@@ -188,13 +188,13 @@ const jsonElements = computed(() => {
   margin: 1rem 0;
   border-radius: 8px;
   overflow: hidden;
-  background: #1e1e1e;
+  background: var(--obp-code-bg);
   border: 1px solid #333;
   position: relative;
 }
 
 .schema-header {
-  background: #2d2d2d;
+  background: var(--obp-code-bg-raised);
   padding: 0.5rem 1rem;
   border-bottom: 1px solid #333;
   display: flex;
@@ -234,7 +234,7 @@ const jsonElements = computed(() => {
 .schema-pre {
   margin: 0;
   padding: 1.5rem;
-  background: #1e1e1e;
+  background: var(--obp-code-bg);
   color: #ddd;
   font-family: 'Fira Code', 'Courier New', monospace;
   font-size: 14px;
@@ -297,7 +297,7 @@ const jsonElements = computed(() => {
 }
 
 .schema-container::-webkit-scrollbar-track {
-  background: #2d2d2d;
+  background: var(--obp-code-bg-raised);
 }
 
 .schema-container::-webkit-scrollbar-thumb {
@@ -314,7 +314,7 @@ const jsonElements = computed(() => {
 }
 
 .schema-pre::-webkit-scrollbar-track {
-  background: #2d2d2d;
+  background: var(--obp-code-bg-raised);
 }
 
 .schema-pre::-webkit-scrollbar-thumb {

@@ -28,10 +28,18 @@
 import { get, isServerUp, OBP_API_DEFAULT_RESOURCE_DOC_VERSION } from '../obp'
 import { getOBPAPIVersions } from '../obp/api-version'
 import { runWithConcurrency, updateLoadingInfoMessage } from './common-functions'
-import { putDocumentationCache, scheduleDocumentationRefreshIfDue } from './documentation-refresh'
+import {
+  documentationCacheAgeMs,
+  putDocumentationCache,
+  scheduleDocumentationRefreshIfDue
+} from './documentation-refresh'
 import { RESOURCE_DOCS_API_VERSION } from '../shared-constants'
 
 const RESOURCE_DOCS_CONCURRENCY = 5
+// A deep link to an operation missing from the cache may refresh sooner than the usual minimum
+// age (see documentation-refresh.ts), but not on every load, so a bad link reloaded repeatedly cannot
+// hammer OBP-API.
+export const MISSING_OPERATION_REFRESH_INTERVAL_MS = 5 * 60 * 1000
 
 // Get Resource Docs
 export async function getOBPResourceDocs(apiStandardAndVersion: string): Promise<any> {
@@ -112,6 +120,15 @@ export function getOperationDetails(version: string, operation_id: string, docs:
   return docs[version].resource_docs.filter((doc: any) => doc.operation_id === operation_id)[0]
 }
 
+async function getCachedMapping(cacheStorageOfResourceDocs: any): Promise<any> {
+  try {
+    const response = await cacheStorageOfResourceDocs.match('/')
+    return response ? await response.json() : {}
+  } catch {
+    return {}
+  }
+}
+
 export async function cacheDoc(cacheStorageOfResourceDocs: any): Promise<any> {
   try {
     const apiVersions = await getOBPAPIVersions()
@@ -184,6 +201,17 @@ export async function cacheDoc(cacheStorageOfResourceDocs: any): Promise<any> {
 
     await runWithConcurrency(activeVersions, RESOURCE_DOCS_CONCURRENCY, cacheOneVersion)
 
+    // Keep the previous copy of any active version that failed this time rather than drop it. The
+    // entry is still marked incomplete (failed > 0), so the failed versions are retried sooner.
+    const previousMapping = await getCachedMapping(cacheStorageOfResourceDocs)
+    for (const { api_standard, api_short_version } of activeVersions) {
+      const version = `${api_standard?.toUpperCase()}${api_short_version}`
+      if (!resourceDocsMapping[version] && previousMapping[version]) {
+        console.warn(`[CACHE] Keeping previously cached docs for ${version}`)
+        resourceDocsMapping[version] = previousMapping[version]
+      }
+    }
+
     await putDocumentationCache(cacheStorageOfResourceDocs, resourceDocsMapping, failed === 0, 'resource docs')
     return resourceDocsMapping
   } catch (error) {
@@ -197,11 +225,66 @@ async function getCacheDoc(cacheStorageOfResourceDocs: any): Promise<any> {
   return await cacheDoc(cacheStorageOfResourceDocs)
 }
 
-export async function cache(cachedStorage: any, cachedResponse: any, worker: any): Promise<any> {
+// The operation a deep link asks for, e.g. /resource-docs/OBPv7.0.0?operationid=... or
+// /operationid/OBPv7.0.0-getBanks?version=OBPv7.0.0 (see router/index.ts).
+export function getRequestedOperation(
+  pathname: string,
+  search: string
+): { version: string; operationId: string } | undefined {
+  const query = new URLSearchParams(search)
+  const byOperationId = pathname.match(/^\/operationid\/([^/]+)\/?$/)
+  if (byOperationId) {
+    return {
+      version: query.get('version') || OBP_API_DEFAULT_RESOURCE_DOC_VERSION,
+      operationId: decodeURIComponent(byOperationId[1])
+    }
+  }
+  const byResourceDocs = pathname.match(/^\/resource-docs(?:\/([^/]+))?\/?$/)
+  const operationId = query.get('operationid')
+  if (byResourceDocs && operationId) {
+    return {
+      version: byResourceDocs[1]
+        ? decodeURIComponent(byResourceDocs[1])
+        : OBP_API_DEFAULT_RESOURCE_DOC_VERSION,
+      operationId
+    }
+  }
+  return undefined
+}
+
+export async function cache(
+  cachedStorage: any,
+  cachedResponse: any,
+  worker: any,
+  requestedOperation?: { version: string; operationId: string }
+): Promise<any> {
   try {
-    const resourceDocs = await cachedResponse.json()
-    // Legacy cache entries have no timestamp and refresh once after this successful read.
-    scheduleDocumentationRefreshIfDue(cachedResponse, worker, 'update-resource-docs')
+    let resourceDocs = await cachedResponse.json()
+    const cacheAge = documentationCacheAgeMs(cachedResponse)
+    if (
+      requestedOperation &&
+      !getOperationDetails(
+        requestedOperation.version,
+        requestedOperation.operationId,
+        resourceDocs
+      ) &&
+      (cacheAge === undefined || cacheAge >= MISSING_OPERATION_REFRESH_INTERVAL_MS)
+    ) {
+      // A deep link to an endpoint added since the cache was written would otherwise render
+      // blank until the background refresh lands and the user reloads, so refresh now instead.
+      console.log(
+        `[CACHE] ${requestedOperation.operationId} not in cached ${requestedOperation.version} docs, refreshing before render`
+      )
+      const freshDocs = await getCacheDoc(cachedStorage)
+      if (freshDocs && Object.keys(freshDocs).length > 0) {
+        resourceDocs = freshDocs
+      } else {
+        console.warn('[CACHE] Refresh returned no docs, keeping the cached copy')
+      }
+    } else {
+      // Legacy cache entries have no timestamp and refresh once after this successful read.
+      scheduleDocumentationRefreshIfDue(cachedResponse, worker, 'update-resource-docs')
+    }
     console.log(
       '[CACHE] Loaded cached resource docs, available versions:',
       Object.keys(resourceDocs)

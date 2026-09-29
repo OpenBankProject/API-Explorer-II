@@ -16,6 +16,19 @@ function refreshMinAgeMs(): number {
   return Number.isFinite(configured) && configured >= 0 ? configured : DEFAULT_REFRESH_MIN_AGE_MS
 }
 
+/**
+ * How long ago a documentation cache entry was written, or undefined when it has no usable stamp
+ * (a legacy entry, or a stamp in the future).
+ */
+export function documentationCacheAgeMs(
+  cachedResponse: Pick<Response, 'headers'>,
+  now: number = Date.now()
+): number | undefined {
+  const writtenAt = Number(cachedResponse.headers.get(WRITTEN_AT_HEADER) ?? NaN)
+  if (!Number.isFinite(writtenAt) || writtenAt > now) return undefined
+  return now - writtenAt
+}
+
 export function isDocumentationRefreshDue(
   cachedResponse: Pick<Response, 'headers'>,
   now: number = Date.now()

@@ -38,7 +38,8 @@ import {
   RESOURCE_DOCS_API_VERSION,
   MESSAGE_DOCS_API_VERSION,
   API_VERSIONS_LIST_API_VERSION,
-  V5_1_0
+  V5_1_0,
+  SSE_PROBE_SPACING_MS
 } from '../../src/shared-constants.js'
 
 const router = Router()
@@ -162,6 +163,26 @@ router.get('/health', (req: Request, res: Response) => {
 })
 
 /**
+ * GET /status/stream
+ * SSE transport probe for the status page: emits two spaced events so the
+ * browser can tell real streaming from a proxy-buffered response. Uses the
+ * same headers as the real Opey SSE stream and no proxy opt-outs
+ * (e.g. X-Accel-Buffering), so it experiences the same proxy behavior.
+ * Carries no data, so no auth.
+ */
+router.get('/status/stream', (req: Request, res: Response) => {
+  res.setHeader('Content-Type', 'text/event-stream')
+  res.setHeader('Cache-Control', 'no-cache')
+  res.setHeader('Connection', 'keep-alive')
+  res.write(':ok\n\ndata: {"seq":1}\n\n')
+  const timer = setTimeout(() => {
+    res.write('data: {"seq":2}\n\n')
+    res.end()
+  }, SSE_PROBE_SPACING_MS)
+  req.on('close', () => clearTimeout(timer))
+})
+
+/**
  * GET /ready
  * Whether the OBP API this Explorer talks to is reachable. One request to the API root, so it is
  * cheap enough for the front end to call at start-up and on a cold documentation cache; the result
@@ -278,7 +299,6 @@ router.get('/status/providers', (req: Request, res: Response) => {
     // Get env configuration (masked)
     const envConfig = {
       obpOidc: {
-        consumerId: process.env.VITE_OBP_CONSUMER_KEY || 'not configured',
         clientId: maskCredential(process.env.VITE_OBP_OIDC_CLIENT_ID)
       },
       keycloak: {

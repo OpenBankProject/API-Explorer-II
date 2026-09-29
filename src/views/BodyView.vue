@@ -56,13 +56,13 @@ const isChatbotEnabled = import.meta.env.VITE_CHATBOT_ENABLED === 'true'
 
   <AutoLogout v-if=isLoggedIn />
   <Splitpanes class="root">
-    <Pane :size="20" :min-size="10" :max-size="40">
+    <Pane :size="28" :min-size="10" :max-size="45">
       <div class="search-nav">
         <!--Left-->
         <SearchNav />
       </div>
     </Pane>
-    <Pane :size="80">
+    <Pane :size="72">
       <div class="main">
         <div class="menu">
           <Menu />
@@ -115,7 +115,7 @@ const isChatbotEnabled = import.meta.env.VITE_CHATBOT_ENABLED === 'true'
 }
 .preview {
   color: white;
-  background-color: #151d30;
+  background-color: var(--obp-panel-dark);
   height: 100%;
   overflow: auto;
 }
@@ -129,11 +129,11 @@ const isChatbotEnabled = import.meta.env.VITE_CHATBOT_ENABLED === 'true'
 /* Splitpanes handle styling */
 .splitpanes--vertical > .splitpanes__splitter {
   width: 5px;
-  background-color: #dcdfe6;
+  background-color: var(--el-border-color);
   border: none;
   cursor: col-resize;
 }
 .splitpanes--vertical > .splitpanes__splitter:hover {
-  background-color: #409eff;
+  background-color: var(--el-color-primary);
 }
 </style>

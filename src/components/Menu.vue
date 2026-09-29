@@ -164,11 +164,11 @@ a:hover {
 .endpoint-tags {
   margin-left: 10px;
   font-size: 12px;
-  color: #606266;
+  color: var(--el-text-color-regular);
 }
 
 .endpoint-tags :deep(.tag-link) {
-  color: #409eff;
+  color: var(--el-color-primary);
   text-decoration: none;
   cursor: pointer;
   transition: color 0.2s ease;

@@ -949,7 +949,7 @@ pre {
   padding: 0px 30px 0px 30px;
   max-height: 340px;
   overflow: auto;
-  background-color: #253047;
+  background-color: var(--obp-panel-dark-raised);
   font-size: 14px;
   margin: 0;
   font-family: 'Roboto';
@@ -967,7 +967,7 @@ input[type='text'] {
   width: 100%;
   height: 32px;
   padding-left: 10px;
-  background-color: #253047;
+  background-color: var(--obp-panel-dark-raised);
   -webkit-border-radius: 5px;
   -moz-border-radius: 5px;
   border-radius: 5px;
@@ -1025,10 +1025,10 @@ li:last-child {
   --jse-background-color: #010B20;
   --jse-context-menu-background: #010B20;
   --jse-theme-color-highlight: #010B20;
-  --jse-context-menu-pointer-hover-background: #253047;
-  --jse-context-menu-background-highlight: #253047;
-  --jse-context-menu-pointer-background: #253047;
-  --jse-context-menu-tip-background: #253047;
+  --jse-context-menu-pointer-hover-background: var(--obp-panel-dark-raised);
+  --jse-context-menu-background-highlight: var(--obp-panel-dark-raised);
+  --jse-context-menu-pointer-background: var(--obp-panel-dark-raised);
+  --jse-context-menu-tip-background: var(--obp-panel-dark-raised);
   --jse-modal-background: #010B20;
   --jse-panel-background: #010B20;
   --jse-font-family-mono: 'Roboto', 'Courier New', monospace;
@@ -1065,7 +1065,7 @@ li:last-child {
   color: var(--el-color-primary);
 }
 .divider {
-  border-top: 1px #253047 solid;
+  border-top: 1px var(--obp-panel-dark-raised) solid;
   margin-left: -25px;
   padding-right: 50px;
 }
@@ -1119,7 +1119,7 @@ li:last-child {
   white-space: nowrap;
 }
 .entitlement-owned-text {
-  color: #67c23a;
+  color: var(--el-color-success);
   font-weight: 500;
   font-size: 14px;
 }
@@ -1130,13 +1130,13 @@ li:last-child {
   flex-wrap: wrap;
 }
 .entitlement-label {
-  color: #67c23a;
+  color: var(--el-color-success);
   font-weight: 500;
   font-size: 13px;
 }
 .bank-id-badge {
   background-color: rgba(103, 194, 58, 0.2);
-  color: #67c23a;
+  color: var(--el-color-success);
   padding: 2px 10px;
   border-radius: 12px;
   font-size: 12px;
@@ -1153,13 +1153,13 @@ li:last-child {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
-  background-color: #253047;
+  background-color: var(--obp-panel-dark-raised);
 }
 .success-response-header {
   margin-top: 25px;
 }
 .success-response-container{
-  background-color: #253047;
+  background-color: var(--obp-panel-dark-raised);
   margin-right: -25px;
   margin-left: -25px;
 }

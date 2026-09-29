@@ -37,7 +37,11 @@ import appRouter from './router'
 import { createI18n } from 'vue-i18n'
 import { languages, defaultLocale } from './language'
 
-import { cache as cacheResourceDocs, cacheDoc as cacheResourceDocsDoc } from './obp/resource-docs'
+import {
+  cache as cacheResourceDocs,
+  cacheDoc as cacheResourceDocsDoc,
+  getRequestedOperation
+} from './obp/resource-docs'
 import {
   cache as cacheMessageDocs,
   cacheDoc as cacheMessageDocsDoc,
@@ -48,12 +52,15 @@ import { OBP_API_VERSION, getMyAPICollections, getMyAPICollectionsEndpoint } fro
 import { getOBPGlossary } from './obp/glossary'
 
 import 'element-plus/dist/index.css'
+import 'element-plus/theme-chalk/dark/css-vars.css'
 import './assets/main.css'
 import '@fontsource/roboto/300.css'
 import '@fontsource/roboto/400.css'
 import '@fontsource/roboto/700.css'
 
 import { getCacheStorageInfo } from './obp/common-functions'
+import { initTheme } from './obp/theme'
+import { getOBPAPIVersions } from './obp/api-version'
 import {
   obpApiActiveVersionsKey,
   obpApiHostKey,
@@ -65,6 +72,7 @@ import {
   obpResourceDocsKey
 } from './obp/keys'
 ;(async () => {
+  initTheme()
   const app = createApp(App)
   const router = await appRouter()
   for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
@@ -312,23 +320,43 @@ async function setupData(app: App<Element>, worker: Worker) {
       { resourceDocs, groupedDocs },
       messageDocs,
       messageDocsJsonSchema,
-      glossary
+      glossary,
+      apiVersions
     ] = await Promise.all([
-      cacheResourceDocs(cacheStorageOfResourceDocs, cachedResponseOfResourceDocs, worker),
+      cacheResourceDocs(
+        cacheStorageOfResourceDocs,
+        cachedResponseOfResourceDocs,
+        worker,
+        getRequestedOperation(window.location.pathname, window.location.search)
+      ),
       cacheMessageDocs(cacheStorageOfMessageDocs, cachedResponseOfMessageDocs, worker),
       cacheMessageDocsJsonSchema(
         cacheStorageOfMessageDocsJsonSchema,
         cachedResponseOfMessageDocsJsonSchema,
         worker
       ),
-      getOBPGlossary()
+      getOBPGlossary(),
+      getOBPAPIVersions()
     ])
+
+    // The versions the API says it serves, from GET /obp/{v}/api/versions. Deriving the list
+    // from the resource-doc cache instead would drop every version whose docs failed to load,
+    // so the menu would quietly disagree with the server.
+    const scannedVersions: string[] = (apiVersions?.scanned_api_versions ?? [])
+      .filter((version: any) => version?.is_active !== false)
+      .map((version: any) => String(version?.fully_qualified_version ?? ''))
+      .filter((version: string) => version.length > 0)
+      .sort()
 
     // Provide data to a component's descendants
     // App-level provides are available to all components rendered in the app
     // Info: https://vuejs.org/guide/components/provide-inject.html
     app.provide(obpResourceDocsKey, resourceDocs)
-    app.provide(obpApiActiveVersionsKey, Object.keys(resourceDocs).sort())
+    app.provide(
+      obpApiActiveVersionsKey,
+      // Fall back to the cached catalogues only if the endpoint could not be read at all.
+      scannedVersions.length > 0 ? scannedVersions : Object.keys(resourceDocs).sort()
+    )
     app.provide(obpGroupedResourceDocsKey, groupedDocs)
     app.provide(obpGroupedMessageDocsKey, messageDocs)
     app.provide(obpGroupedMessageDocsJsonSchemaKey, messageDocsJsonSchema)

@@ -134,8 +134,10 @@ onMounted(load)
         <strong>Could not reach gRPC server.</strong>
         <div class="error-detail">{{ errorMessage }}</div>
         <div class="hint">
-          Check that a gRPC server is running at <code>{{ host || 'localhost:50051' }}</code> with
-          reflection enabled. Override with the <code>VITE_OBP_GRPC_HOST</code> environment variable.
+          Check that a gRPC server with reflection enabled is running at
+          <template v-if="host"><code>{{ host }}</code></template>
+          <template v-else>the default host, <code>grpc.&lt;API host&gt;:50051</code></template>.
+          Override with the <code>VITE_OBP_GRPC_HOST</code> environment variable.
         </div>
       </div>
 
@@ -233,12 +235,12 @@ onMounted(load)
 h1 {
   font-size: 1.5rem;
   font-weight: 600;
-  color: #303133;
+  color: var(--el-text-color-primary);
   margin: 0;
 }
 
 .host-info {
-  color: #606266;
+  color: var(--el-text-color-regular);
   font-size: 0.9rem;
   margin: 0 0 1rem 0;
 }
@@ -249,28 +251,28 @@ h1 {
 }
 
 .state-message {
-  color: #909399;
+  color: var(--el-text-color-secondary);
   font-style: italic;
   padding: 1rem 0;
 }
 
 .error-message {
-  border: 1px solid #f56c6c;
-  background-color: #fef0f0;
-  color: #f56c6c;
+  border: 1px solid var(--el-color-danger);
+  background-color: var(--el-color-danger-light-9);
+  color: var(--el-color-danger);
   padding: 1rem;
   border-radius: 4px;
 }
 
 .error-detail {
   margin-top: 0.5rem;
-  color: #606266;
+  color: var(--el-text-color-regular);
   font-size: 0.9rem;
 }
 
 .hint {
   margin-top: 0.5rem;
-  color: #909399;
+  color: var(--el-text-color-secondary);
   font-size: 0.85rem;
 }
 
@@ -280,12 +282,12 @@ h1 {
 
 .service-name {
   font-weight: 600;
-  color: #303133;
+  color: var(--el-text-color-primary);
   margin-right: 1rem;
 }
 
 .method-count {
-  color: #909399;
+  color: var(--el-text-color-secondary);
   font-size: 0.85rem;
 }
 
@@ -296,16 +298,16 @@ h1 {
 }
 
 .method-card {
-  border: 1px solid #ebeef5;
+  border: 1px solid var(--el-border-color-lighter);
   border-radius: 4px;
   padding: 1rem;
-  background-color: #fafafa;
+  background-color: var(--el-fill-color-lighter);
 }
 
 .method-signature {
   font-family: 'Roboto Mono', monospace;
   padding-bottom: 0.75rem;
-  border-bottom: 1px solid #ebeef5;
+  border-bottom: 1px solid var(--el-border-color-lighter);
   margin-bottom: 0.75rem;
 }
 
@@ -315,7 +317,7 @@ h1 {
 
 .message-heading {
   font-size: 0.9rem;
-  color: #606266;
+  color: var(--el-text-color-regular);
   margin-bottom: 0.5rem;
 }
 
@@ -323,7 +325,7 @@ h1 {
   display: inline-block;
   margin-left: 0.5rem;
   padding: 1px 6px;
-  background-color: #409eff;
+  background-color: var(--el-color-primary);
   color: white;
   border-radius: 3px;
   font-size: 0.75rem;
@@ -339,24 +341,24 @@ h1 {
 .fields-table td {
   text-align: left;
   padding: 6px 10px;
-  border-bottom: 1px solid #ebeef5;
+  border-bottom: 1px solid var(--el-border-color-lighter);
 }
 
 .fields-table th {
   font-weight: 500;
-  color: #909399;
-  background-color: #f5f7fa;
+  color: var(--el-text-color-secondary);
+  background-color: var(--el-fill-color-light);
 }
 
 .empty-fields {
-  color: #909399;
+  color: var(--el-text-color-secondary);
   font-style: italic;
   font-size: 0.9rem;
 }
 
 code {
   font-family: 'Roboto Mono', monospace;
-  background-color: #f5f7fa;
+  background-color: var(--el-fill-color-light);
   padding: 1px 6px;
   border-radius: 3px;
   font-size: 0.85em;

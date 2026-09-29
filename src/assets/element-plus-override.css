@@ -78,7 +78,7 @@
 }
 
 .el-alert--info.is-light {
-  background-color: #253047;
+  background-color: var(--obp-panel-dark-raised);
 }
 
 .el-form-item,

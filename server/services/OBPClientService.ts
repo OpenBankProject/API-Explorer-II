@@ -211,7 +211,7 @@ export default class OBPClientService {
    * @param path - The API endpoint path (e.g., /obp/v5.1.0/api/versions)
    * @returns Response data from the API
    */
-  private async getWithoutAuth(path: string): Promise<any> {
+  async getWithoutAuth(path: string): Promise<any> {
     // Ensure proper slash handling between base URI and path
     const normalizedPath = path.startsWith('/') ? path : `/${path}`
     const url = `${this.clientConfig.baseUri}${normalizedPath}`

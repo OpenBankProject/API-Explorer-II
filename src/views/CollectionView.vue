@@ -218,7 +218,7 @@ onMounted(async () => {
   height: 100%;
   max-height: 100%;
   overflow: hidden;
-  background-color: #f8f9fb;
+  background-color: var(--obp-bg-subtle);
   border-right: solid 1px var(--el-menu-border-color);
 }
 .middle {
@@ -227,7 +227,7 @@ onMounted(async () => {
 }
 .preview {
   color: white;
-  background-color: #151d30;
+  background-color: var(--obp-panel-dark);
   max-height: 100%;
 }
 .search-nav-container {
@@ -244,14 +244,14 @@ onMounted(async () => {
 .collection-title {
   font-family: 'Roboto';
   font-size: 12px;
-  color: #909399;
+  color: var(--el-text-color-secondary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 .collection-id {
   font-family: 'Roboto';
   font-size: 13px;
-  color: #39455f;
+  color: var(--obp-text-strong);
   font-weight: 500;
   margin-top: 4px;
   word-break: break-all;
@@ -259,7 +259,7 @@ onMounted(async () => {
 .collection-count {
   font-family: 'Roboto';
   font-size: 12px;
-  color: #909399;
+  color: var(--el-text-color-secondary);
   margin-top: 4px;
 }
 .search-nav-search-bar {
@@ -279,7 +279,7 @@ onMounted(async () => {
   margin-left: 15px;
   font-family: 'Roboto';
   text-decoration: none;
-  color: #39455f;
+  color: var(--obp-text-strong);
   display: inline-block;
 }
 .api-router-tab {
@@ -296,12 +296,12 @@ onMounted(async () => {
 .loading-state {
   padding: 20px;
   text-align: center;
-  color: #909399;
+  color: var(--el-text-color-secondary);
   font-family: 'Roboto';
 }
 .error-state {
   padding: 20px;
-  color: #f56c6c;
+  color: var(--el-color-danger);
   font-family: 'Roboto';
   font-size: 14px;
 }

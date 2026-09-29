@@ -33,7 +33,7 @@
       <p><strong>Note:</strong> Client secrets are masked for security.</p>
       <p>
         <strong>Need more details?</strong> Visit the
-        <router-link to="/debug/oidc" style="color: #409eff; text-decoration: underline;">
+        <router-link to="/debug/oidc" style="color: var(--el-color-primary); text-decoration: underline;">
           OIDC Debug Page
         </router-link>
         for detailed discovery process information.
@@ -446,13 +446,13 @@ onMounted(() => {
 h1 {
   font-size: 28px;
   margin-bottom: 20px;
-  color: #303133;
+  color: var(--el-text-color-primary);
 }
 
 h2 {
   font-size: 20px;
   margin: 30px 0 15px 0;
-  color: #606266;
+  color: var(--el-text-color-regular);
 }
 
 .loading-container {
@@ -461,7 +461,7 @@ h2 {
   justify-content: center;
   padding: 60px;
   font-size: 16px;
-  color: #909399;
+  color: var(--el-text-color-secondary);
 }
 
 .error-container {
@@ -493,18 +493,22 @@ h2 {
   border-bottom: 1px solid #f0f0f0;
 }
 
+:global(html.dark) .summary-item {
+  border-bottom-color: #3a3d44;
+}
+
 .summary-item:last-child {
   border-bottom: none;
 }
 
 .summary-item label {
   font-weight: 500;
-  color: #606266;
+  color: var(--el-text-color-regular);
 }
 
 .summary-item .value {
   font-family: 'Courier New', monospace;
-  color: #303133;
+  color: var(--el-text-color-primary);
 }
 
 /* Provider Cards */
@@ -529,11 +533,11 @@ h2 {
 }
 
 .provider-healthy {
-  border-left: 4px solid #67c23a;
+  border-left: 4px solid var(--el-color-success);
 }
 
 .provider-unhealthy {
-  border-left: 4px solid #f56c6c;
+  border-left: 4px solid var(--el-color-danger);
 }
 
 .provider-header {
@@ -562,26 +566,26 @@ h2 {
 
 .provider-detail label {
   font-weight: 500;
-  color: #909399;
+  color: var(--el-text-color-secondary);
   margin-right: 10px;
 }
 
 .provider-detail span {
-  color: #303133;
+  color: var(--el-text-color-primary);
 }
 
 .status-ok {
-  color: #67c23a;
+  color: var(--el-color-success);
   font-weight: 600;
 }
 
 .status-error {
-  color: #f56c6c;
+  color: var(--el-color-danger);
   font-weight: 600;
 }
 
 .error-detail {
-  background: #fef0f0;
+  background: var(--el-color-danger-light-9);
   padding: 8px;
   border-radius: 4px;
   flex-direction: column;
@@ -590,10 +594,10 @@ h2 {
 
 /* Enhanced Error Section */
 .error-section {
-  background: #fef0f0;
+  background: var(--el-color-danger-light-9);
   padding: 16px;
   border-radius: 6px;
-  border-left: 4px solid #f56c6c;
+  border-left: 4px solid var(--el-color-danger);
   margin-top: 12px;
 }
 
@@ -605,38 +609,42 @@ h2 {
 }
 
 .error-icon {
-  color: #f56c6c;
+  color: var(--el-color-danger);
   font-size: 18px;
 }
 
 .error-category {
   font-weight: 600;
-  color: #f56c6c;
+  color: var(--el-color-danger);
   font-size: 14px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .error-message {
-  background: #fff;
+  background: var(--el-bg-color);
   padding: 10px 12px;
   border-radius: 4px;
   border: 1px solid #fbc4c4;
   margin-bottom: 12px;
   font-size: 13px;
   line-height: 1.6;
-  color: #303133;
+  color: var(--el-text-color-primary);
+}
+
+:global(html.dark) .error-message {
+  border-color: #4c4d4f;
 }
 
 .error-message strong {
-  color: #f56c6c;
+  color: var(--el-color-danger);
 }
 
 .troubleshooting-hints {
-  background: #fff;
+  background: var(--el-bg-color);
   padding: 12px;
   border-radius: 4px;
-  border: 1px solid #e4e7ed;
+  border: 1px solid var(--el-border-color-light);
   margin-bottom: 12px;
 }
 
@@ -645,14 +653,14 @@ h2 {
   align-items: center;
   gap: 6px;
   margin-bottom: 8px;
-  color: #409eff;
+  color: var(--el-color-primary);
   font-size: 13px;
 }
 
 .hint-list {
   margin: 0;
   padding-left: 20px;
-  color: #606266;
+  color: var(--el-text-color-regular);
   font-size: 13px;
   line-height: 1.8;
 }
@@ -669,9 +677,13 @@ h2 {
   border-top: 1px solid #fbc4c4;
 }
 
+:global(html.dark) .retry-section {
+  border-top-color: #4c4d4f;
+}
+
 .retry-hint {
   font-size: 12px;
-  color: #909399;
+  color: var(--el-text-color-secondary);
   font-style: italic;
 }
 
@@ -689,7 +701,7 @@ h2 {
 
 .env-config-content {
   padding: 10px 20px;
-  background: #fafafa;
+  background: var(--el-fill-color-lighter);
   border-radius: 4px;
 }
 
@@ -697,7 +709,7 @@ h2 {
   display: flex;
   justify-content: space-between;
   padding: 8px 0;
-  border-bottom: 1px solid #e4e7ed;
+  border-bottom: 1px solid var(--el-border-color-light);
 }
 
 .config-item:last-child {
@@ -706,18 +718,18 @@ h2 {
 
 .config-item label {
   font-weight: 500;
-  color: #606266;
+  color: var(--el-text-color-regular);
   min-width: 150px;
 }
 
 .config-item code {
-  background: #fff;
+  background: var(--el-bg-color);
   padding: 4px 8px;
   border-radius: 3px;
   font-family: 'Courier New', monospace;
   font-size: 13px;
-  color: #303133;
-  border: 1px solid #dcdfe6;
+  color: var(--el-text-color-primary);
+  border: 1px solid var(--el-border-color);
 }
 
 /* Note */
@@ -727,13 +739,13 @@ h2 {
   gap: 8px;
   margin-top: 30px;
   padding: 12px;
-  background: #f4f4f5;
+  background: var(--el-color-info-light-9);
   border-radius: 4px;
   font-size: 14px;
-  color: #606266;
+  color: var(--el-text-color-regular);
 }
 
 .note .el-icon {
-  color: #909399;
+  color: var(--el-text-color-secondary);
 }
 </style>

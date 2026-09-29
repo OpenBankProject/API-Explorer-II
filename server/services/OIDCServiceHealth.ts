@@ -27,6 +27,7 @@
 
 import { Container } from 'typedi'
 import { OAuth2ProviderManager } from './OAuth2ProviderManager.js'
+import OBPClientService from './OBPClientService.js'
 
 /**
  * Deep per-provider OIDC health checks for the /status page.
@@ -48,6 +49,18 @@ interface TokenTestOutcome {
   message: string
   responseTimeMs: number
   ranAt: number
+  /** The issued token, kept server-side so the consumer identity can be read with it. */
+  accessToken?: string
+  /** Which OBP Consumer the client is, read once per token from GET /obp/v7.0.0/consumers/current/identity. */
+  consumer?: ConsumerIdentity
+}
+
+/** The calling Consumer as OBP reports it: id and name only. */
+interface ConsumerIdentity {
+  consumer_id?: string
+  consumer_name?: string
+  /** Set when the OBP-API has no identity endpoint yet, or refused the token. */
+  note?: string
 }
 
 const FETCH_TIMEOUT_MS = 5000
@@ -92,6 +105,39 @@ async function fetchJson(url: string): Promise<any> {
   }
 }
 
+/**
+ * Which OBP Consumer a token belongs to. GET /obp/v7.0.0/consumers/current/identity needs no
+ * role and returns only consumer_id and consumer_name. Answers are attached to the cached
+ * token test, so this runs at most once per token.
+ */
+async function readConsumerIdentity(accessToken: string): Promise<ConsumerIdentity> {
+  const baseUri = Container.get(OBPClientService).getOBPClientConfig().baseUri.replace(/\/$/, '')
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort('timeout'), FETCH_TIMEOUT_MS)
+  try {
+    const response = await fetch(`${baseUri}/obp/v7.0.0/consumers/current/identity`, {
+      headers: { Accept: 'application/json', Authorization: `Bearer ${accessToken}` },
+      signal: controller.signal
+    })
+    const body = (await response.json().catch(() => ({}))) as {
+      consumer_id?: string
+      consumer_name?: string
+      message?: string
+    }
+    if (response.ok && body.consumer_id) {
+      return { consumer_id: body.consumer_id, consumer_name: body.consumer_name ?? '' }
+    }
+    if (response.status === 404) {
+      return { note: 'not available: this OBP-API has no GET /obp/v7.0.0/consumers/current/identity' }
+    }
+    return { note: `OBP did not identify the application (${response.status}): ${body.message ?? response.statusText}` }
+  } catch (err) {
+    return { note: err instanceof Error ? err.message : String(err) }
+  } finally {
+    clearTimeout(timeoutId)
+  }
+}
+
 async function runTokenTest(
   provider: string,
   tokenEndpoint: string,
@@ -125,7 +171,14 @@ async function runTokenTest(
     const responseTimeMs = Math.round(performance.now() - start)
 
     if (response.ok) {
-      outcome = { ok: true, message: 'token issued', responseTimeMs, ranAt: Date.now() }
+      let accessToken: string | undefined
+      try {
+        accessToken = ((await response.json()) as { access_token?: string }).access_token
+      } catch {
+        // Token body not JSON: the test still passed, only the identity lookup is skipped
+      }
+      outcome = { ok: true, message: 'token issued', responseTimeMs, ranAt: Date.now(), accessToken }
+      outcome.consumer = accessToken ? await readConsumerIdentity(accessToken) : undefined
     } else {
       let message = `${response.status} ${response.statusText}`
       try {
@@ -215,6 +268,16 @@ async function checkProvider(
       const outcome = await runTokenTest(name, discovery.token_endpoint, clientId, clientSecret)
       details.token_test = outcome.ok ? 'ok' : 'failed'
       details.token_test_ms = outcome.responseTimeMs
+      if (outcome.consumer?.consumer_id) {
+        details.consumer_id = outcome.consumer.consumer_id
+        details.consumer_name = outcome.consumer.consumer_name ?? ''
+        const managerUrl = process.env.VITE_API_MANAGER_URL?.replace(/\/$/, '')
+        if (managerUrl) {
+          details.consumer_id_url = `${managerUrl}/consumers/${encodeURIComponent(outcome.consumer.consumer_id)}`
+        }
+      } else if (outcome.consumer?.note) {
+        details.consumer = outcome.consumer.note
+      }
       if (!outcome.ok) {
         // Non-strict: surfaced in details but does not flip the provider
         // unhealthy — the client may be authorization_code-only.
