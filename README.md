@@ -239,25 +239,6 @@ proxy_set_header X-Forwarded-Proto $scheme;
 
 so that Node knows that the cookies have been sent securely over https.
 
-# Running Opey
-If you want to run Opey locally you'll need to have a local instance running. The repo can be found [here](https://github.com/OpenBankProject/OBP-Opey). 
-
-You will need to create a public-private key pair using open ssl (minimum 2048 bits).
-1. create the directory ./server/cert
-  ```
-  mkdir ./server/cert
-  cd ./server/cert  
-  ```
-2. Generate the public private key pair inside the ./server/cert directory
-```
-openssl genrsa -out private_key.pem 2048
-openssl rsa -in private_key.pem -pubout -out public_key.pem
-```
-3. Copy the public key to Opey top level directory 
-```
-cp public_key.pem {path-to-your-opey-install}/
-```
-
 # Building the frontend container
 
 As the frontend environment is read at build time, we need to reprocess the values 

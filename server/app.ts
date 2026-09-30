@@ -48,7 +48,6 @@ import oauth2Routes from './routes/oauth2.js'
 import userRoutes from './routes/user.js'
 import statusRoutes from './routes/status.js'
 import obpRoutes from './routes/obp.js'
-import opeyRoutes from './routes/opey.js'
 import grpcRoutes from './routes/grpc.js'
 
 // ES module equivalent of __dirname
@@ -135,7 +134,7 @@ let sessionObject = {
 }
 // Which proxies in front of API Explorer II Express believes about the browser's address
 // (req.ip) and protocol. This decides secure cookies and the Berlin Group PSU-IP-Address; the
-// X-Forwarded-For chain passed on to OBP-API and Opey does not depend on it (see utils/clientIp.ts).
+// X-Forwarded-For chain passed on to OBP-API does not depend on it (see utils/clientIp.ts).
 const trustProxy = parseTrustProxy(process.env.VITE_OBP_TRUST_PROXY, app.get('env'))
 app.set('trust proxy', trustProxy)
 console.info(`Trust proxy: ${trustProxy}`)
@@ -196,13 +195,11 @@ let instance: any
   app.use(routePrefix, userRoutes)
   app.use(routePrefix, statusRoutes)
   app.use(routePrefix, obpRoutes)
-  app.use(routePrefix, opeyRoutes)
   app.use(routePrefix, grpcRoutes)
   console.log('OAuth2 routes registered (plain Express)')
   console.log('User routes registered (plain Express)')
   console.log('Status routes registered (plain Express)')
   console.log('OBP routes registered (plain Express)')
-  console.log('Opey routes registered (plain Express)')
   console.log('gRPC routes registered (plain Express)')
   console.log('All routes migrated to plain Express - routing-controllers removed')
 

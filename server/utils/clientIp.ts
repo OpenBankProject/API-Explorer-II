@@ -28,9 +28,9 @@
 import type { Request } from 'express'
 
 /**
- * This module passes the end user's address on to OBP-API and Opey.
+ * This module passes the end user's address on to OBP-API.
  *
- * API Explorer II calls OBP-API (and Opey) from its own server, so without help OBP-API sees
+ * API Explorer II calls OBP-API from its own server, so without help OBP-API sees
  * every request coming from the API Explorer II server: per-IP rate limits, IP penalties and
  * the busiest-callers view would all see one address.
  *
@@ -47,7 +47,7 @@ import type { Request } from 'express'
  * `parseTrustProxy`).
  */
 
-/** Where a request to API Explorer II came from, as passed on to OBP-API and Opey. */
+/** Where a request to API Explorer II came from, as passed on to OBP-API. */
 export interface CallerAddress {
   /** The X-Forwarded-For chain to send on: the incoming chain plus this server's TCP peer. */
   forwardedFor?: string

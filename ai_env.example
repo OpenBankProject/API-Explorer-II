@@ -10,10 +10,6 @@ VITE_SHOW_API_MANAGER_BUTTON=false                                              
 ### Redis Configuration ###
 VITE_OBP_REDIS_URL=redis://127.0.0.1:6379                                        # Redis connection string for session storage (format: redis://host:port)
 
-### Opey Configuration ###
-VITE_CHATBOT_ENABLED=false                                                       # Enable/disable Opey chatbot widget (true/false)
-VITE_CHATBOT_URL=http://localhost:5000                                           # Opey chatbot service URL (only needed if chatbot is enabled)
-
 ### OAuth2/OIDC Configuration ###
 VITE_OBP_OIDC_CLIENT_ID=48ac28e9-9ee3-47fd-8448-69a62764b779                   # OAuth2 client ID (UUID - must match OIDC server registration)
 VITE_OBP_OIDC_CLIENT_SECRET=fOTQF7jfg8C74u7ZhSjVQpoBYvD0KpWfM5UsEZBSFFM        # OAuth2 client secret (keep this secure!)

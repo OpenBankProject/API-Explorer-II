@@ -8,9 +8,6 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AutoLogout: typeof import('./src/components/AutoLogout.vue')['default']
-    ChatMessage: typeof import('./src/components/ChatMessage.vue')['default']
-    ChatWidget: typeof import('./src/components/ChatWidget.vue')['default']
-    ChatWidgetOld: typeof import('./src/components/ChatWidgetOld.vue')['default']
     CodeBlock: typeof import('./src/components/CodeBlock.vue')['default']
     Collections: typeof import('./src/components/Collections.vue')['default']
     Content: typeof import('./src/components/Content.vue')['default']
@@ -51,7 +48,6 @@ declare module 'vue' {
     RouterView: typeof import('vue-router')['RouterView']
     SearchNav: typeof import('./src/components/SearchNav.vue')['default']
     SvelteDropdown: typeof import('./src/components/SvelteDropdown.vue')['default']
-    ToolCall: typeof import('./src/components/ToolCall.vue')['default']
   }
   export interface ComponentCustomProperties {
     vLoading: typeof import('element-plus/es')['ElLoadingDirective']

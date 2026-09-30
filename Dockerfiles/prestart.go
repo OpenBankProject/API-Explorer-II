@@ -20,7 +20,7 @@ func main() {
 	// url config variables are expected to be a valid URL in the container environment
 	url_config := []string{"VITE_OBP_API_HOST", "VITE_OBP_API_MANAGER_HOST", "VITE_OBP_API_PORTAL_HOST", "VITE_OBP_LOGO_URL"}
 	// DANGERZONE: The following strings will be replaced by container environment variables without any checking of whatever!!!
-	config := []string{"VITE_OBP_API_VERSION", "VITE_OBP_LINKS_COLOR", "VITE_OBP_HEADER_LINKS_COLOR", "VITE_OBP_HEADER_LINKS_HOVER_COLOR", "VITE_OBP_HEADER_LINKS_BACKGROUND_COLOR", "VITE_OBP_API_DEFAULT_RESOURCE_DOC_VERSION", "VITE_CHATBOT_ENABLED", "VITE_CHATBOT_URL"}
+	config := []string{"VITE_OBP_API_VERSION", "VITE_OBP_LINKS_COLOR", "VITE_OBP_HEADER_LINKS_COLOR", "VITE_OBP_HEADER_LINKS_HOVER_COLOR", "VITE_OBP_HEADER_LINKS_BACKGROUND_COLOR", "VITE_OBP_API_DEFAULT_RESOURCE_DOC_VERSION"}
 	configMap := make(map[string]string)
 
 	for _, key := range config {

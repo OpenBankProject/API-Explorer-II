@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import Menu from '../components/Menu.vue'
 import AutoLogout from '../components/AutoLogout.vue'
-import ChatWidget from '../components/ChatWidget.vue'
 import { Search } from '@element-plus/icons-vue'
 import { onMounted, ref, computed, inject, reactive, nextTick } from 'vue'
 import { getCurrentUser, getAPICollectionEndpoints, OBP_API_DEFAULT_RESOURCE_DOC_VERSION } from '../obp'
@@ -32,8 +31,6 @@ const hasOperationId = computed(() => {
 const endpointCount = computed(() => {
   return Object.values(groups.value).reduce((acc: number, items: any[]) => acc + items.length, 0)
 })
-
-const isChatbotEnabled = import.meta.env.VITE_CHATBOT_ENABLED === 'true'
 
 const sortLinks = (items: any[]) => {
   const uniqueLinks: Record<string, string> = {}
@@ -198,7 +195,6 @@ onMounted(async () => {
           </el-main>
         </el-container>
       </el-container>
-      <ChatWidget v-if="isChatbotEnabled" />
     </el-main>
   </el-container>
 </template>

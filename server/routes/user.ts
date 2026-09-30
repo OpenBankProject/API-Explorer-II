@@ -210,7 +210,6 @@ router.get('/user/logoff', (req: Request, res: Response) => {
   delete session.oauth2_user
   delete session.oauth2_provider
   delete session.clientConfig
-  delete session.opeyConfig
 
   // Destroy the session completely
   session.destroy((err: any) => {
