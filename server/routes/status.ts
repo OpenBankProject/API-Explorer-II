@@ -33,6 +33,7 @@ import { OAuth2ProviderManager } from '../services/OAuth2ProviderManager.js'
 import { OAuth2ProviderFactory } from '../services/OAuth2ProviderFactory.js'
 import { checkOIDCProviders } from '../services/OIDCServiceHealth.js'
 import { createCachedReachability } from '../services/ObpReachability.js'
+import { callerAddressOf, type CallerAddress } from '../utils/clientIp.js'
 import { commitId } from '../app.js'
 import {
   RESOURCE_DOCS_API_VERSION,
@@ -110,10 +111,14 @@ function isCodeError(response: any, path: string): boolean {
 /**
  * Check if resource docs are accessible
  */
-async function checkResourceDocs(oauthConfig: any, version: string): Promise<boolean> {
+async function checkResourceDocs(
+  oauthConfig: any,
+  version: string,
+  caller?: CallerAddress
+): Promise<boolean> {
   try {
     const path = `/obp/${RESOURCE_DOCS_API_VERSION}/resource-docs/${version}/obp`
-    const resourceDocs = await obpClientService.get(path, oauthConfig)
+    const resourceDocs = await obpClientService.get(path, oauthConfig, caller)
     return !isCodeError(resourceDocs, path)
   } catch (error) {
     return false
@@ -123,12 +128,16 @@ async function checkResourceDocs(oauthConfig: any, version: string): Promise<boo
 /**
  * Check if message docs are accessible
  */
-async function checkMessageDocs(oauthConfig: any, version: string): Promise<boolean> {
+async function checkMessageDocs(
+  oauthConfig: any,
+  version: string,
+  caller?: CallerAddress
+): Promise<boolean> {
   try {
     const messageDocsCodeResult = await Promise.all(
       connectors.map(async (connector) => {
         const path = `/obp/${MESSAGE_DOCS_API_VERSION}/message-docs/${connector}`
-        return !isCodeError(await obpClientService.get(path, oauthConfig), path)
+        return !isCodeError(await obpClientService.get(path, oauthConfig, caller), path)
       })
     )
     return messageDocsCodeResult.every((isCodeError: boolean) => isCodeError)
@@ -140,10 +149,14 @@ async function checkMessageDocs(oauthConfig: any, version: string): Promise<bool
 /**
  * Check if API versions are accessible
  */
-async function checkApiVersions(oauthConfig: any, version: string): Promise<boolean> {
+async function checkApiVersions(
+  oauthConfig: any,
+  version: string,
+  caller?: CallerAddress
+): Promise<boolean> {
   try {
     const path = `/obp/${API_VERSIONS_LIST_API_VERSION}/api/versions`
-    const versions = await obpClientService.get(path, oauthConfig)
+    const versions = await obpClientService.get(path, oauthConfig, caller)
     return !isCodeError(versions, path)
   } catch (error) {
     return false
@@ -206,6 +219,7 @@ router.get('/status', async (req: Request, res: Response) => {
   try {
     const session = req.session as any
     const oauthConfig = session.clientConfig
+    const caller = callerAddressOf(req)
     const version = obpClientService.getOBPVersion()
 
     const isAuthenticated = !!(oauthConfig && oauthConfig.oauth2?.accessToken)
@@ -213,8 +227,8 @@ router.get('/status', async (req: Request, res: Response) => {
     // Public OBP endpoints — run regardless of auth so the page shows real
     // server reachability to anonymous visitors instead of all-red.
     const [apiVersions, resourceDocs, oauthProviders] = await Promise.all([
-      checkApiVersions(oauthConfig, version),
-      checkResourceDocs(oauthConfig, version),
+      checkApiVersions(oauthConfig, version, caller),
+      checkResourceDocs(oauthConfig, version, caller),
       checkOIDCProviders()
     ])
 
@@ -225,10 +239,11 @@ router.get('/status', async (req: Request, res: Response) => {
       try {
         const userResponse = await obpClientService.get(
           `/obp/${version}/users/current`,
-          oauthConfig
+          oauthConfig,
+          caller
         )
         currentUser = !isCodeError(userResponse, `/obp/${version}/users/current`)
-        messageDocs = await checkMessageDocs(oauthConfig, version)
+        messageDocs = await checkMessageDocs(oauthConfig, version, caller)
       } catch (error) {
         console.error('Status: Error fetching authenticated data:', error)
         currentUser = false

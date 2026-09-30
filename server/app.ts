@@ -37,6 +37,7 @@ import path from 'path'
 import { execSync } from 'child_process'
 import { OAuth2ProviderManager } from './services/OAuth2ProviderManager.js'
 import { BerlinGroupSignatureService } from './services/BerlinGroupSignatureService.js'
+import { parseTrustProxy } from './utils/clientIp.js'
 import { fileURLToPath } from 'url'
 import { dirname } from 'path'
 
@@ -132,8 +133,13 @@ let sessionObject = {
     maxAge: sessionMaxAgeSeconds * 1000 // maxAge in milliseconds
   }
 }
+// Which proxies in front of API Explorer II Express believes about the browser's address
+// (req.ip) and protocol. This decides secure cookies and the Berlin Group PSU-IP-Address; the
+// X-Forwarded-For chain passed on to OBP-API and Opey does not depend on it (see utils/clientIp.ts).
+const trustProxy = parseTrustProxy(process.env.VITE_OBP_TRUST_PROXY, app.get('env'))
+app.set('trust proxy', trustProxy)
+console.info(`Trust proxy: ${trustProxy}`)
 if (app.get('env') === 'production') {
-  app.set('trust proxy', 1) // trust first proxy
   sessionObject.cookie.secure = true // serve secure cookies
 }
 app.use(session(sessionObject))

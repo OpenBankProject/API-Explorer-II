@@ -34,6 +34,7 @@ import OBPClientService from '../services/OBPClientService.js'
 import OpeyClientService from '../services/OpeyClientService.js'
 import OBPConsentsService from '../services/OBPConsentsService.js'
 import { UserInput } from '../schema/OpeySchema.js'
+import { callerAddressOf } from '../utils/clientIp.js'
 
 const router = Router()
 
@@ -152,7 +153,7 @@ router.post('/opey/stream', async (req: Request, res: Response) => {
     try {
       // Read web stream from OpeyClientService
       console.log('Calling OpeyClientService.stream')
-      stream = await opeyClientService.stream(user_input, opeyConfig)
+      stream = await opeyClientService.stream(user_input, opeyConfig, callerAddressOf(req))
     } catch (error) {
       console.error('Error reading stream: ', error)
       return res.status(500).json({ error: 'Internal Server Error' })
@@ -228,7 +229,7 @@ router.post('/opey/invoke', async (req: Request, res: Response) => {
       return res.status(500).json({ error: 'Internal Server Error' })
     }
 
-    const opey_response = await opeyClientService.invoke(user_input, opeyConfig)
+    const opey_response = await opeyClientService.invoke(user_input, opeyConfig, callerAddressOf(req))
     res.status(200).json(opey_response)
   } catch (error) {
     console.error('Error in /opey/invoke:', error)
@@ -249,12 +250,12 @@ router.post('/opey/consent', async (req: Request, res: Response) => {
     session.opeyConfig = opeyConfig
 
     // Check if user already has a consent for opey
-    const consentId = await obpConsentsService.getExistingOpeyConsentId(session)
+    const consentId = await obpConsentsService.getExistingOpeyConsentId(session, callerAddressOf(req))
 
     if (consentId) {
       console.log('Existing consent ID: ', consentId)
       // If we have a consent id, we can get the consent from OBP
-      const consent = await obpConsentsService.getConsentByConsentId(session, consentId)
+      const consent = await obpConsentsService.getConsentByConsentId(session, consentId, callerAddressOf(req))
 
       // Establish (or confirm) the Opey session now, so a consent that OBP accepts but
       // Opey rejects surfaces here instead of failing silently on the first chat message.
@@ -265,7 +266,7 @@ router.post('/opey/consent', async (req: Request, res: Response) => {
       console.log('No existing consent ID found')
     }
 
-    await obpConsentsService.createConsent(session)
+    await obpConsentsService.createConsent(session, callerAddressOf(req))
 
     console.log('Consent at controller: ', session.opeyConfig)
 

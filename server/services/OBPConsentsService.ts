@@ -13,6 +13,7 @@ import { AxiosResponse } from 'axios'
 import axios from 'axios'
 import { Session } from 'express-session'
 import { DEFAULT_OBP_API_VERSION } from '../../src/shared-constants.js'
+import { forwardedForHeaders, type CallerAddress } from '../utils/clientIp.js'
 
 @Service()
 /**
@@ -36,6 +37,10 @@ import { DEFAULT_OBP_API_VERSION } from '../../src/shared-constants.js'
  * @requires InlineResponse2017
  * @requires ConsentsIMPLICITBody1
  * @requires axios
+ *
+ * The methods that call OBP-API take an optional caller: where the request to API Explorer II
+ * came from. Its X-Forwarded-For chain is sent on (see utils/clientIp.ts) so that OBP-API sees
+ * the end user rather than the API Explorer II server.
  */
 export default class OBPConsentsService {
   private consentApiConfig: Configuration
@@ -85,7 +90,7 @@ export default class OBPConsentsService {
     }
   }
 
-  async createConsent(session: Session): Promise<InlineResponse2017 | undefined> {
+  async createConsent(session: Session, caller?: CallerAddress): Promise<InlineResponse2017 | undefined> {
     // Create a consent as the logged in user, using Opey's consumerID
     // I.e. give permission to Opey to do anything on behalf of the logged in user
 
@@ -120,7 +125,7 @@ export default class OBPConsentsService {
 
     try {
       const consentResponse = await client.oBPv510CreateConsentImplicit(body, {
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json', ...forwardedForHeaders(caller) }
       })
 
       // Save the consent in the session
@@ -151,11 +156,12 @@ export default class OBPConsentsService {
    *
    * @param session - The user's session object, which must contain clientConfig with valid OAuth tokens
    * @param consentId - The unique identifier of the consent to retrieve
+   * @param caller - Where the request came from, if known
    * @returns Promise resolving to the consent data retrieved from OBP API
    * @throws Error if the user is not logged in (no valid clientConfig or accessToken)
    * @throws Error if the request to get the consent fails
    */
-  async getConsentByConsentId(session: Session, consentId: string): Promise<any> {
+  async getConsentByConsentId(session: Session, consentId: string, caller?: CallerAddress): Promise<any> {
     const clientConfig = session['clientConfig']
     if (!clientConfig || !clientConfig.oauth2?.accessToken) {
       throw new Error('User is not logged in')
@@ -166,7 +172,8 @@ export default class OBPConsentsService {
       const response = await this._sendOBPRequest(
         `/obp/${DEFAULT_OBP_API_VERSION}/user/current/consents/${consentId}`,
         'GET',
-        clientConfig
+        clientConfig,
+        caller
       )
 
       session['opeyConfig'] = {
@@ -192,7 +199,7 @@ export default class OBPConsentsService {
     return exp < now
   }
 
-  async getExistingOpeyConsentId(session: Session): Promise<any> {
+  async getExistingOpeyConsentId(session: Session, caller?: CallerAddress): Promise<any> {
     // Get Consents for the current user, check if any of them are for Opey
     // If so, return the consent
 
@@ -220,7 +227,7 @@ export default class OBPConsentsService {
 
     let opeyConsentId: string | null = null
     try {
-      const response = await this._sendOBPRequest(consentInfosPath, 'GET', clientConfig)
+      const response = await this._sendOBPRequest(consentInfosPath, 'GET', clientConfig, caller)
       const consents = response.data.consents
 
       const opeyConsumerID = process.env.VITE_OPEY_CONSUMER_ID
@@ -256,7 +263,7 @@ export default class OBPConsentsService {
     }
   }
 
-  async _sendOBPRequest(path: string, method: string, clientConfig: any) {
+  async _sendOBPRequest(path: string, method: string, clientConfig: any, caller?: CallerAddress) {
     // Get OAuth2 Bearer token from clientConfig
     if (!clientConfig.oauth2?.accessToken) {
       throw new Error('OAuth2 access token not found in clientConfig')
@@ -266,7 +273,8 @@ export default class OBPConsentsService {
     const config = {
       headers: {
         Authorization: bearerToken,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        ...forwardedForHeaders(caller)
       }
     }
     return axios.get(`${clientConfig.baseUri}${path}`, config)

@@ -31,6 +31,7 @@ import { Container } from 'typedi'
 import OBPClientService from '../services/OBPClientService.js'
 import { OAuth2ProviderManager } from '../services/OAuth2ProviderManager.js'
 import { DEFAULT_OBP_API_VERSION } from '../../src/shared-constants.js'
+import { callerAddressOf } from '../utils/clientIp.js'
 
 const router = Router()
 
@@ -145,7 +146,11 @@ router.get('/user/current', async (req: Request, res: Response) => {
       try {
         const version = DEFAULT_OBP_API_VERSION
         console.log('User: Fetching OBP user from /obp/' + version + '/users/current')
-        const obpUser = await obpClientService.get(`/obp/${version}/users/current`, clientConfig)
+        const obpUser = await obpClientService.get(
+          `/obp/${version}/users/current`,
+          clientConfig,
+          callerAddressOf(req)
+        )
         if (obpUser && obpUser.user_id) {
           obpUserId = obpUser.user_id
           console.log('User: Got OBP user ID:', obpUserId, '(was:', oauth2User.sub, ')')

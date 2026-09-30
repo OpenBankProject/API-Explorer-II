@@ -1,6 +1,7 @@
 import { Service } from 'typedi'
 import { UserInput, StreamInput, OpeyConfig, ConsentRequestResponse } from '../schema/OpeySchema.js'
 import OBPClientService from './OBPClientService.js'
+import { forwardedForHeaders, type CallerAddress } from '../utils/clientIp.js'
 
 @Service()
 export default class OpeyClientService {
@@ -115,13 +116,19 @@ export default class OpeyClientService {
      * @param user_input - The user's input message and settings to send to Opey
      * @param opeyConfig - Configuration object for Opey connection
      *                     Contains details like baseUri, paths, and authentication settings
+     * @param caller - Where the request came from; its X-Forwarded-For chain is sent to Opey,
+     *                 which passes it on to OBP-API (see utils/clientIp.ts)
      * 
      * @returns A Promise resolving to a ReadableStream containing the streamed response
      * @throws Error if authentication is not valid
      * @throws Error if there's no response body
      * @throws Error if there's any issue streaming from Opey
      */
-    async stream(user_input: UserInput, opeyConfig?: Partial<OpeyConfig>): Promise<ReadableStream> {
+    async stream(
+        user_input: UserInput,
+        opeyConfig?: Partial<OpeyConfig>,
+        caller?: CallerAddress
+    ): Promise<ReadableStream> {
         console.log("OpeyConfig: ", opeyConfig) //DEBUG
         
         const config = await this.getOpeyConfig(opeyConfig)
@@ -152,7 +159,7 @@ export default class OpeyClientService {
 
             const response = await fetch(url, {
                 method: 'POST',
-                headers: { ...authHeaders, 'Cookie': sessionCookie },
+                headers: { ...authHeaders, 'Cookie': sessionCookie, ...forwardedForHeaders(caller) },
                 body: JSON.stringify(stream_input)
             })
             if (!response.body) {
@@ -179,10 +186,11 @@ export default class OpeyClientService {
      * 
      * @param user_input - The input data to be sent to the Opey API
      * @param opeyConfig - Optional configuration overrides for this specific request
+     * @param caller - Where the request came from; its X-Forwarded-For chain is sent to Opey
      * @returns A Promise resolving to the response from the Opey API
      * @throws Error if authentication is invalid or if the API request fails
      */
-    async invoke(user_input: UserInput, opeyConfig?: Partial<OpeyConfig>): Promise<any> {
+    async invoke(user_input: UserInput, opeyConfig?: Partial<OpeyConfig>, caller?: CallerAddress): Promise<any> {
         
         const config = await this.getOpeyConfig(opeyConfig)
 
@@ -206,7 +214,7 @@ export default class OpeyClientService {
         try {
             const response = await fetch(url, {
                 method: 'POST',
-                headers: { ...authHeaders, 'Cookie': sessionCookie },
+                headers: { ...authHeaders, 'Cookie': sessionCookie, ...forwardedForHeaders(caller) },
                 body: JSON.stringify(user_input)
             })
             if (response.status === 200) {
