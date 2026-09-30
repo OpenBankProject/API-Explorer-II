@@ -29,7 +29,6 @@
 import SearchNav from '../components/SearchNav.vue'
 import Menu from '../components/Menu.vue'
 import AutoLogout from '../components/AutoLogout.vue'
-import ChatWidget from '../components/ChatWidget.vue'
 import { Splitpanes, Pane } from 'splitpanes'
 import 'splitpanes/dist/splitpanes.css'
 import { onMounted, ref, computed } from 'vue'
@@ -48,8 +47,6 @@ onMounted(async () => {
 const hasOperationId = computed(() => {
   return !!route.query.operationid
 })
-
-const isChatbotEnabled = import.meta.env.VITE_CHATBOT_ENABLED === 'true'
 </script>
 
 <template>
@@ -85,7 +82,6 @@ const isChatbotEnabled = import.meta.env.VITE_CHATBOT_ENABLED === 'true'
           </div>
         </div>
       </div>
-      <ChatWidget v-if="isChatbotEnabled" />
     </Pane>
   </Splitpanes>
 </template>

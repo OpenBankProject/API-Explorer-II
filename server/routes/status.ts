@@ -33,13 +33,13 @@ import { OAuth2ProviderManager } from '../services/OAuth2ProviderManager.js'
 import { OAuth2ProviderFactory } from '../services/OAuth2ProviderFactory.js'
 import { checkOIDCProviders } from '../services/OIDCServiceHealth.js'
 import { createCachedReachability } from '../services/ObpReachability.js'
+import { callerAddressOf, type CallerAddress } from '../utils/clientIp.js'
 import { commitId } from '../app.js'
 import {
   RESOURCE_DOCS_API_VERSION,
   MESSAGE_DOCS_API_VERSION,
   API_VERSIONS_LIST_API_VERSION,
-  V5_1_0,
-  SSE_PROBE_SPACING_MS
+  V5_1_0
 } from '../../src/shared-constants.js'
 
 const router = Router()
@@ -110,10 +110,14 @@ function isCodeError(response: any, path: string): boolean {
 /**
  * Check if resource docs are accessible
  */
-async function checkResourceDocs(oauthConfig: any, version: string): Promise<boolean> {
+async function checkResourceDocs(
+  oauthConfig: any,
+  version: string,
+  caller?: CallerAddress
+): Promise<boolean> {
   try {
     const path = `/obp/${RESOURCE_DOCS_API_VERSION}/resource-docs/${version}/obp`
-    const resourceDocs = await obpClientService.get(path, oauthConfig)
+    const resourceDocs = await obpClientService.get(path, oauthConfig, caller)
     return !isCodeError(resourceDocs, path)
   } catch (error) {
     return false
@@ -123,12 +127,16 @@ async function checkResourceDocs(oauthConfig: any, version: string): Promise<boo
 /**
  * Check if message docs are accessible
  */
-async function checkMessageDocs(oauthConfig: any, version: string): Promise<boolean> {
+async function checkMessageDocs(
+  oauthConfig: any,
+  version: string,
+  caller?: CallerAddress
+): Promise<boolean> {
   try {
     const messageDocsCodeResult = await Promise.all(
       connectors.map(async (connector) => {
         const path = `/obp/${MESSAGE_DOCS_API_VERSION}/message-docs/${connector}`
-        return !isCodeError(await obpClientService.get(path, oauthConfig), path)
+        return !isCodeError(await obpClientService.get(path, oauthConfig, caller), path)
       })
     )
     return messageDocsCodeResult.every((isCodeError: boolean) => isCodeError)
@@ -140,10 +148,14 @@ async function checkMessageDocs(oauthConfig: any, version: string): Promise<bool
 /**
  * Check if API versions are accessible
  */
-async function checkApiVersions(oauthConfig: any, version: string): Promise<boolean> {
+async function checkApiVersions(
+  oauthConfig: any,
+  version: string,
+  caller?: CallerAddress
+): Promise<boolean> {
   try {
     const path = `/obp/${API_VERSIONS_LIST_API_VERSION}/api/versions`
-    const versions = await obpClientService.get(path, oauthConfig)
+    const versions = await obpClientService.get(path, oauthConfig, caller)
     return !isCodeError(versions, path)
   } catch (error) {
     return false
@@ -160,26 +172,6 @@ router.get('/health', (req: Request, res: Response) => {
   res.status(200).json({
     status: 'ok'
   })
-})
-
-/**
- * GET /status/stream
- * SSE transport probe for the status page: emits two spaced events so the
- * browser can tell real streaming from a proxy-buffered response. Uses the
- * same headers as the real Opey SSE stream and no proxy opt-outs
- * (e.g. X-Accel-Buffering), so it experiences the same proxy behavior.
- * Carries no data, so no auth.
- */
-router.get('/status/stream', (req: Request, res: Response) => {
-  res.setHeader('Content-Type', 'text/event-stream')
-  res.setHeader('Cache-Control', 'no-cache')
-  res.setHeader('Connection', 'keep-alive')
-  res.write(':ok\n\ndata: {"seq":1}\n\n')
-  const timer = setTimeout(() => {
-    res.write('data: {"seq":2}\n\n')
-    res.end()
-  }, SSE_PROBE_SPACING_MS)
-  req.on('close', () => clearTimeout(timer))
 })
 
 /**
@@ -206,6 +198,7 @@ router.get('/status', async (req: Request, res: Response) => {
   try {
     const session = req.session as any
     const oauthConfig = session.clientConfig
+    const caller = callerAddressOf(req)
     const version = obpClientService.getOBPVersion()
 
     const isAuthenticated = !!(oauthConfig && oauthConfig.oauth2?.accessToken)
@@ -213,8 +206,8 @@ router.get('/status', async (req: Request, res: Response) => {
     // Public OBP endpoints — run regardless of auth so the page shows real
     // server reachability to anonymous visitors instead of all-red.
     const [apiVersions, resourceDocs, oauthProviders] = await Promise.all([
-      checkApiVersions(oauthConfig, version),
-      checkResourceDocs(oauthConfig, version),
+      checkApiVersions(oauthConfig, version, caller),
+      checkResourceDocs(oauthConfig, version, caller),
       checkOIDCProviders()
     ])
 
@@ -225,10 +218,11 @@ router.get('/status', async (req: Request, res: Response) => {
       try {
         const userResponse = await obpClientService.get(
           `/obp/${version}/users/current`,
-          oauthConfig
+          oauthConfig,
+          caller
         )
         currentUser = !isCodeError(userResponse, `/obp/${version}/users/current`)
-        messageDocs = await checkMessageDocs(oauthConfig, version)
+        messageDocs = await checkMessageDocs(oauthConfig, version, caller)
       } catch (error) {
         console.error('Status: Error fetching authenticated data:', error)
         currentUser = false

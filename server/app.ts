@@ -37,6 +37,7 @@ import path from 'path'
 import { execSync } from 'child_process'
 import { OAuth2ProviderManager } from './services/OAuth2ProviderManager.js'
 import { BerlinGroupSignatureService } from './services/BerlinGroupSignatureService.js'
+import { parseTrustProxy } from './utils/clientIp.js'
 import { fileURLToPath } from 'url'
 import { dirname } from 'path'
 
@@ -47,7 +48,6 @@ import oauth2Routes from './routes/oauth2.js'
 import userRoutes from './routes/user.js'
 import statusRoutes from './routes/status.js'
 import obpRoutes from './routes/obp.js'
-import opeyRoutes from './routes/opey.js'
 import grpcRoutes from './routes/grpc.js'
 
 // ES module equivalent of __dirname
@@ -132,8 +132,13 @@ let sessionObject = {
     maxAge: sessionMaxAgeSeconds * 1000 // maxAge in milliseconds
   }
 }
+// Which proxies in front of API Explorer II Express believes about the browser's address
+// (req.ip) and protocol. This decides secure cookies and the Berlin Group PSU-IP-Address; the
+// X-Forwarded-For chain passed on to OBP-API does not depend on it (see utils/clientIp.ts).
+const trustProxy = parseTrustProxy(process.env.VITE_OBP_TRUST_PROXY, app.get('env'))
+app.set('trust proxy', trustProxy)
+console.info(`Trust proxy: ${trustProxy}`)
 if (app.get('env') === 'production') {
-  app.set('trust proxy', 1) // trust first proxy
   sessionObject.cookie.secure = true // serve secure cookies
 }
 app.use(session(sessionObject))
@@ -190,13 +195,11 @@ let instance: any
   app.use(routePrefix, userRoutes)
   app.use(routePrefix, statusRoutes)
   app.use(routePrefix, obpRoutes)
-  app.use(routePrefix, opeyRoutes)
   app.use(routePrefix, grpcRoutes)
   console.log('OAuth2 routes registered (plain Express)')
   console.log('User routes registered (plain Express)')
   console.log('Status routes registered (plain Express)')
   console.log('OBP routes registered (plain Express)')
-  console.log('Opey routes registered (plain Express)')
   console.log('gRPC routes registered (plain Express)')
   console.log('All routes migrated to plain Express - routing-controllers removed')
 

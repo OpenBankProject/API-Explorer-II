@@ -110,12 +110,14 @@ export class BerlinGroupSignatureService {
    * @param method - HTTP method (GET, POST, PUT, DELETE)
    * @param body - Request body (empty string for GET/DELETE)
    * @param consentId - Optional Consent-ID for account data endpoints
+   * @param clientIp - The end user's address for PSU-IP-Address; VITE_BG_PSU_IP_ADDRESS when unknown
    * @returns Object containing all required Berlin Group headers
    */
   generateHeaders(
     method: string,
     body: string,
-    consentId?: string
+    consentId?: string,
+    clientIp?: string
   ): BerlinGroupHeaders {
     if (!this.privateKey || !this.certificate || !this.config) {
       throw new Error('BerlinGroupSignatureService: Cannot generate headers - not configured')
@@ -159,7 +161,7 @@ export class BerlinGroupSignatureService {
       'TPP-Signature-Certificate': certificateBase64,
       'PSU-Device-ID': this.config.psuDeviceId,
       'PSU-Device-Name': this.config.psuDeviceName,
-      'PSU-IP-Address': this.config.psuIpAddress
+      'PSU-IP-Address': clientIp || this.config.psuIpAddress
     }
 
     // Add redirect URIs for POST requests

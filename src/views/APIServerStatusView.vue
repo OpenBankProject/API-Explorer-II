@@ -29,7 +29,6 @@
 import { ref, computed, onBeforeMount } from 'vue'
 import { SuccessFilled, RemoveFilled, WarningFilled } from '@element-plus/icons-vue'
 import { serverStatus } from './../obp'
-import { runSseProbe, type SseProbeResult } from './../obp/sseProbe'
 
 interface OIDCProviderHealth {
   name: string
@@ -39,13 +38,7 @@ interface OIDCProviderHealth {
 }
 
 const status = ref<any>({})
-// Browser → server SSE transport check: verifies probe events arrive spaced,
-// not buffered by a proxy — the hop the server-side checks cannot see.
-const sseProbe = ref<SseProbeResult | null>(null)
 onBeforeMount(async () => {
-  runSseProbe().then((result) => {
-    sseProbe.value = result
-  })
   status.value = await serverStatus()
 })
 
@@ -95,27 +88,6 @@ const oauthProviders = computed<OIDCProviderHealth[]>(() => status.value.oauthPr
           ><SuccessFilled
         /></el-icon>
         <el-icon v-else style="vertical-align: middle; color: red"><RemoveFilled /></el-icon>
-      </div>
-
-      <div
-        v-if="sseProbe"
-        data-testid="sse-streaming-browser"
-        :data-state="sseProbe.ok ? 'healthy' : 'unhealthy'"
-      >
-        <div class="sub-status">
-          <span class="status-label">sseStreaming (browser)</span>
-          &nbsp;&nbsp;&nbsp;<el-divider />&nbsp;&nbsp;&nbsp;
-          <el-icon
-            v-if="sseProbe.ok"
-            style="vertical-align: middle; color: green; font-size: 16px"
-            ><SuccessFilled
-          /></el-icon>
-          <el-icon v-else style="vertical-align: middle; color: red"><RemoveFilled /></el-icon>
-        </div>
-        <div v-if="sseProbe.error" class="provider-error">{{ sseProbe.error }}</div>
-        <div v-else class="provider-detail">
-          first event: {{ sseProbe.timeToFirstEventMs }}ms, spread: {{ sseProbe.eventSpreadMs }}ms
-        </div>
       </div>
 
       <div v-if="oauthProviders.length > 0" class="providers-section">

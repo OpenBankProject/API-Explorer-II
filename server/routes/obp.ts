@@ -30,6 +30,7 @@ import type { Request, Response } from 'express'
 import { Container } from 'typedi'
 import OBPClientService from '../services/OBPClientService.js'
 import { PublicDocsCache } from '../utils/publicDocsCache.js'
+import { callerAddressOf } from '../utils/clientIp.js'
 
 const router = Router()
 
@@ -90,7 +91,7 @@ router.get('/get', async (req: Request, res: Response) => {
       oauthConfig.berlinGroup = { consentId: bgConsentId }
     }
 
-    const result = await obpClientService.get(path, oauthConfig)
+    const result = await obpClientService.get(path, oauthConfig, callerAddressOf(req))
     res.json(result)
   } catch (error: any) {
     // 401 errors are expected when user is not authenticated - log as info, not error
@@ -132,7 +133,7 @@ router.post('/create', async (req: Request, res: Response) => {
     console.log('  oauth2_user exists:', session?.oauth2_user ? 'YES' : 'NO')
     console.log('  berlinGroup consentId:', bgConsentId || 'N/A')
 
-    const result = await obpClientService.create(path, data, oauthConfig)
+    const result = await obpClientService.create(path, data, oauthConfig, callerAddressOf(req))
     res.json(result)
   } catch (error: any) {
     console.error('OBP.create error:', error)
@@ -159,7 +160,7 @@ router.put('/update', async (req: Request, res: Response) => {
       oauthConfig.berlinGroup = { consentId: bgConsentId }
     }
 
-    const result = await obpClientService.update(path, data, oauthConfig)
+    const result = await obpClientService.update(path, data, oauthConfig, callerAddressOf(req))
     res.json(result)
   } catch (error: any) {
     console.error('OBP.update error:', error)
@@ -184,7 +185,7 @@ router.delete('/delete', async (req: Request, res: Response) => {
       oauthConfig.berlinGroup = { consentId: bgConsentId }
     }
 
-    const result = await obpClientService.discard(path, oauthConfig)
+    const result = await obpClientService.discard(path, oauthConfig, callerAddressOf(req))
     res.json(result)
   } catch (error: any) {
     console.error('OBP.delete error:', error)

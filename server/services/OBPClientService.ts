@@ -29,6 +29,7 @@ import { Service, Container } from 'typedi'
 import { DEFAULT_OBP_API_VERSION } from '../../src/shared-constants.js'
 import { BerlinGroupSignatureService } from './BerlinGroupSignatureService.js'
 import type { BerlinGroupSessionData } from '../types/berlin-group.js'
+import { forwardedForHeaders, type CallerAddress } from '../utils/clientIp.js'
 
 // Custom error class to preserve HTTP status codes
 class OBPAPIError extends Error {
@@ -61,6 +62,9 @@ interface APIClientConfig {
  * This service handles API communication with OBP using OAuth2 Bearer token authentication,
  * making HTTP requests (GET, POST, PUT, DELETE).
  *
+ * Each public request method takes an optional caller: where the request to API Explorer II
+ * came from. Its X-Forwarded-For chain is sent on to OBP-API (see utils/clientIp.ts).
+ *
  * @class OBPClientService
  *
  * @property {APIClientConfig} clientConfig - API client configuration
@@ -81,33 +85,33 @@ export default class OBPClientService {
       version: DEFAULT_OBP_API_VERSION
     }
   }
-  async get(path: string, clientConfig: any): Promise<any> {
+  async get(path: string, clientConfig: any, caller?: CallerAddress): Promise<any> {
     const config = this.getSessionConfig(clientConfig)
 
     // Check if this is a Berlin Group path and signing is enabled
     const bgService = Container.get(BerlinGroupSignatureService)
     if (BerlinGroupSignatureService.isBerlinGroupPath(path) && bgService.isEnabled()) {
       return await this.requestWithBerlinGroupHeaders(
-        path, 'GET', '', config, config?.berlinGroup?.consentId
+        path, 'GET', '', config, config?.berlinGroup?.consentId, caller
       )
     }
 
     // If no config or no access token, make unauthenticated request
     if (!config || !config.oauth2?.accessToken) {
-      return await this.getWithoutAuth(path)
+      return await this.getWithoutAuth(path, caller)
     }
 
-    return await this.getWithBearer(path, config.oauth2.accessToken)
+    return await this.getWithBearer(path, config.oauth2.accessToken, caller)
   }
 
-  async create(path: string, body: any, clientConfig: any): Promise<any> {
+  async create(path: string, body: any, clientConfig: any, caller?: CallerAddress): Promise<any> {
     const config = this.getSessionConfig(clientConfig)
 
     // Check if this is a Berlin Group path and signing is enabled
     const bgService = Container.get(BerlinGroupSignatureService)
     if (BerlinGroupSignatureService.isBerlinGroupPath(path) && bgService.isEnabled()) {
       return await this.requestWithBerlinGroupHeaders(
-        path, 'POST', JSON.stringify(body), config, config?.berlinGroup?.consentId
+        path, 'POST', JSON.stringify(body), config, config?.berlinGroup?.consentId, caller
       )
     }
 
@@ -115,17 +119,17 @@ export default class OBPClientService {
       throw new Error('Authentication required for creating resources.')
     }
 
-    return await this.createWithBearer(path, body, config.oauth2.accessToken)
+    return await this.createWithBearer(path, body, config.oauth2.accessToken, caller)
   }
 
-  async update(path: string, body: any, clientConfig: any): Promise<any> {
+  async update(path: string, body: any, clientConfig: any, caller?: CallerAddress): Promise<any> {
     const config = this.getSessionConfig(clientConfig)
 
     // Check if this is a Berlin Group path and signing is enabled
     const bgService = Container.get(BerlinGroupSignatureService)
     if (BerlinGroupSignatureService.isBerlinGroupPath(path) && bgService.isEnabled()) {
       return await this.requestWithBerlinGroupHeaders(
-        path, 'PUT', JSON.stringify(body), config, config?.berlinGroup?.consentId
+        path, 'PUT', JSON.stringify(body), config, config?.berlinGroup?.consentId, caller
       )
     }
 
@@ -133,17 +137,17 @@ export default class OBPClientService {
       throw new Error('Authentication required for updating resources.')
     }
 
-    return await this.updateWithBearer(path, body, config.oauth2.accessToken)
+    return await this.updateWithBearer(path, body, config.oauth2.accessToken, caller)
   }
 
-  async discard(path: string, clientConfig: any): Promise<any> {
+  async discard(path: string, clientConfig: any, caller?: CallerAddress): Promise<any> {
     const config = this.getSessionConfig(clientConfig)
 
     // Check if this is a Berlin Group path and signing is enabled
     const bgService = Container.get(BerlinGroupSignatureService)
     if (BerlinGroupSignatureService.isBerlinGroupPath(path) && bgService.isEnabled()) {
       return await this.requestWithBerlinGroupHeaders(
-        path, 'DELETE', '', config, config?.berlinGroup?.consentId
+        path, 'DELETE', '', config, config?.berlinGroup?.consentId, caller
       )
     }
 
@@ -151,7 +155,7 @@ export default class OBPClientService {
       throw new Error('Authentication required for deleting resources.')
     }
 
-    return await this.discardWithBearer(path, config.oauth2.accessToken)
+    return await this.discardWithBearer(path, config.oauth2.accessToken, caller)
   }
   /**
    * Make a request to a Berlin Group API path with TPP signature headers.
@@ -162,13 +166,14 @@ export default class OBPClientService {
     method: string,
     body: string,
     clientConfig: APIClientConfig | null,
-    consentId?: string
+    consentId?: string,
+    caller?: CallerAddress
   ): Promise<any> {
     const bgService = Container.get(BerlinGroupSignatureService)
-    const bgHeaders = bgService.generateHeaders(method, body, consentId)
+    const bgHeaders = bgService.generateHeaders(method, body, consentId, caller?.clientIp)
 
     // Merge with OAuth2 Bearer token if available
-    const headers: Record<string, string> = { ...bgHeaders }
+    const headers: Record<string, string> = { ...bgHeaders, ...forwardedForHeaders(caller) }
     if (clientConfig?.oauth2?.accessToken) {
       headers['Authorization'] = `Bearer ${clientConfig.oauth2.accessToken}`
     }
@@ -209,9 +214,10 @@ export default class OBPClientService {
    * Make a GET request without authentication (for public endpoints)
    *
    * @param path - The API endpoint path (e.g., /obp/v5.1.0/api/versions)
+   * @param caller - Where the request came from, if it is made on behalf of an end user
    * @returns Response data from the API
    */
-  async getWithoutAuth(path: string): Promise<any> {
+  async getWithoutAuth(path: string, caller?: CallerAddress): Promise<any> {
     // Ensure proper slash handling between base URI and path
     const normalizedPath = path.startsWith('/') ? path : `/${path}`
     const url = `${this.clientConfig.baseUri}${normalizedPath}`
@@ -220,7 +226,8 @@ export default class OBPClientService {
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        ...forwardedForHeaders(caller)
       }
     })
 
@@ -256,9 +263,10 @@ export default class OBPClientService {
    *
    * @param path - The API endpoint path (e.g., /obp/v5.1.0/banks)
    * @param accessToken - OAuth2 access token
+   * @param caller - Where the request came from, if known
    * @returns Response data from the API
    */
-  private async getWithBearer(path: string, accessToken: string): Promise<any> {
+  private async getWithBearer(path: string, accessToken: string, caller?: CallerAddress): Promise<any> {
     // Ensure proper slash handling between base URI and path
     const normalizedPath = path.startsWith('/') ? path : `/${path}`
     const url = `${this.clientConfig.baseUri}${normalizedPath}`
@@ -268,7 +276,8 @@ export default class OBPClientService {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        ...forwardedForHeaders(caller)
       }
     })
 
@@ -298,9 +307,15 @@ export default class OBPClientService {
    * @param path - The API endpoint path
    * @param body - Request body data
    * @param accessToken - OAuth2 access token
+   * @param caller - Where the request came from, if known
    * @returns Response data from the API
    */
-  private async createWithBearer(path: string, body: any, accessToken: string): Promise<any> {
+  private async createWithBearer(
+    path: string,
+    body: any,
+    accessToken: string,
+    caller?: CallerAddress
+  ): Promise<any> {
     // Ensure proper slash handling between base URI and path
     const normalizedPath = path.startsWith('/') ? path : `/${path}`
     const url = `${this.clientConfig.baseUri}${normalizedPath}`
@@ -310,7 +325,8 @@ export default class OBPClientService {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        ...forwardedForHeaders(caller)
       },
       body: JSON.stringify(body)
     })
@@ -334,9 +350,15 @@ export default class OBPClientService {
    * @param path - The API endpoint path
    * @param body - Request body data
    * @param accessToken - OAuth2 access token
+   * @param caller - Where the request came from, if known
    * @returns Response data from the API
    */
-  private async updateWithBearer(path: string, body: any, accessToken: string): Promise<any> {
+  private async updateWithBearer(
+    path: string,
+    body: any,
+    accessToken: string,
+    caller?: CallerAddress
+  ): Promise<any> {
     // Ensure proper slash handling between base URI and path
     const normalizedPath = path.startsWith('/') ? path : `/${path}`
     const url = `${this.clientConfig.baseUri}${normalizedPath}`
@@ -346,7 +368,8 @@ export default class OBPClientService {
       method: 'PUT',
       headers: {
         Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        ...forwardedForHeaders(caller)
       },
       body: JSON.stringify(body)
     })
@@ -369,9 +392,10 @@ export default class OBPClientService {
    *
    * @param path - The API endpoint path
    * @param accessToken - OAuth2 access token
+   * @param caller - Where the request came from, if known
    * @returns Response data from the API
    */
-  private async discardWithBearer(path: string, accessToken: string): Promise<any> {
+  private async discardWithBearer(path: string, accessToken: string, caller?: CallerAddress): Promise<any> {
     // Ensure proper slash handling between base URI and path
     const normalizedPath = path.startsWith('/') ? path : `/${path}`
     const url = `${this.clientConfig.baseUri}${normalizedPath}`
@@ -381,7 +405,8 @@ export default class OBPClientService {
       method: 'DELETE',
       headers: {
         Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        ...forwardedForHeaders(caller)
       }
     })
 
