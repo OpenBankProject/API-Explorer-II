@@ -42,7 +42,6 @@ import {
   summaryDisplayName
 } from '../obp/resource-docs'
 import { SEARCH_LINKS_COLOR as searchLinksColorSetting } from '../obp/style-setting'
-import { escapeHtml } from '../obp/common-functions'
 const operationIdTitle = {}
 const resourceDocs = ref({})
 const docs = ref({})
@@ -119,30 +118,7 @@ onBeforeMount(async () => {
   sortedKeys.value = activeKeys.value.sort(byTagDisplayName(selectedFilter.bankId))
   await initializeAPICollections()
   setTabActive(route.query.operationid)
-  let element = document.getElementById("selected-api-version")
-  if (element !== null) {
-    const totalRows = Object.values(groups.value).reduce((acc, currentValue) => acc + currentValue.length, 0)
-    if(selectedTags === 'NONE') {
-      element.textContent = `${versionLabel()} ( ${totalRows} APIs )`;
-    } else {
-      element.innerHTML = `${escapeHtml(versionLabel())} ( ${totalRows} APIs filtered by tags: <a href="#" class="filter-tag-link" style="color: var(--el-color-primary); text-decoration: none; cursor: pointer; transition: color 0.2s ease;">${escapeHtml(selectedTagsLabel())}</a>)`;
-
-      // Add hover effect
-      const tagLinkEl = element.querySelector('.filter-tag-link') as HTMLElement
-      if (tagLinkEl) {
-        tagLinkEl.addEventListener('mouseenter', () => {
-          tagLinkEl.style.color = '#66b1ff'
-          tagLinkEl.style.textDecoration = 'underline'
-        })
-        tagLinkEl.addEventListener('mouseleave', () => {
-          tagLinkEl.style.color = 'var(--el-color-primary)'
-          tagLinkEl.style.textDecoration = 'none'
-        })
-      }
-
-
-    }
-  }
+  countApis()
 })
 
 onMounted(async () => {
@@ -199,41 +175,19 @@ watch(
     await initializeAPICollections()
     await nextTick()
     countApis()
-    // Update the version display text
-    let element = document.getElementById("selected-api-version")
-    if (element !== null) {
-      const totalRows = Object.values(groups.value).reduce((acc, currentValue) => acc + currentValue.length, 0)
-      if(selectedTags === 'NONE') {
-        element.textContent = `${versionLabel()} ( ${totalRows} APIs )`;
-      } else {
-        element.innerHTML = `${escapeHtml(versionLabel())} ( ${totalRows} APIs filtered by tags: <a href="#" class="filter-tag-link" style="color: var(--el-color-primary); text-decoration: none; cursor: pointer; transition: color 0.2s ease;">${escapeHtml(selectedTagsLabel())}</a>)`;
-
-        // Add hover effect
-        const tagLinkEl = element.querySelector('.filter-tag-link') as HTMLElement
-        if (tagLinkEl) {
-          tagLinkEl.addEventListener('mouseenter', () => {
-            tagLinkEl.style.color = '#66b1ff'
-            tagLinkEl.style.textDecoration = 'underline'
-          })
-          tagLinkEl.addEventListener('mouseleave', () => {
-            tagLinkEl.style.color = 'var(--el-color-primary)'
-            tagLinkEl.style.textDecoration = 'none'
-          })
-        }
-
-
-      }
-    }
   }
 )
 
 
 
+// The label above the panel, e.g. OBPv7.0.0 · Dynamic · ogcr · Certification Scheme (8)
 const countApis = () => {
-  let element = document.getElementById("selected-api-version")
+  const element = document.getElementById('selected-api-version')
   if (element !== null) {
     const totalRows = Object.values(groups.value).reduce((acc, currentValue) => acc + currentValue.length, 0)
-    element.textContent = `${versionLabel()} ( ${totalRows} APIs )`;
+    const tags = selectedTags === 'NONE' ? '' : ` · ${selectedTagsLabel()}`
+    element.textContent = `${versionLabel()}${tags} (${totalRows})`
+    element.title = element.textContent
   }
 }
 

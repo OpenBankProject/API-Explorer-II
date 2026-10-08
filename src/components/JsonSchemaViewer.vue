@@ -236,7 +236,7 @@ const jsonElements = computed(() => {
   padding: 1.5rem;
   background: var(--obp-code-bg);
   color: #ddd;
-  font-family: 'Fira Code', 'Courier New', monospace;
+  font-family: 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
   font-size: 14px;
   line-height: 1.5;
   overflow-x: auto;

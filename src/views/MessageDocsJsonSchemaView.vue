@@ -31,6 +31,7 @@ import { useRoute } from 'vue-router'
 import SearchNav from '../components/MessageDocsJsonSchemaSearchNav.vue'
 import { obpGroupedMessageDocsJsonSchemaKey } from '@/obp/keys'
 import JsonSchemaViewer from '../components/JsonSchemaViewer.vue'
+import MessageDocsConnectorSelect from '../components/MessageDocsConnectorSelect.vue'
 
 const route = useRoute()
 const groupedMessageDocsJsonSchema = ref(inject(obpGroupedMessageDocsJsonSchemaKey) || {})
@@ -129,7 +130,10 @@ function handleRefClick(href: string) {
       <el-scrollbar>
         <el-backtop :right="100" :bottom="100" />
         <div class="message-docs-header">
-          <h1>{{ connector }}</h1>
+          <div class="title-row">
+            <h1>{{ connector }}</h1>
+            <MessageDocsConnectorSelect />
+          </div>
           <p class="connector-subtitle">Message Docs - JSON Schema</p>
           <p class="version-indicator">v1.2.4 - Debug Click Events</p>
         </div>
@@ -440,5 +444,35 @@ div {
   animation: highlight-pulse 0.6s ease-in-out 3;
   border-color: var(--el-color-primary);
   box-shadow: 0 2px 12px rgba(64, 158, 255, 0.3);
+}
+/* The title, with the connector picker to its right (below it when there is no room). */
+.title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 24px;
+  margin-bottom: 0.5rem;
+}
+
+.title-row h1 {
+  margin: 0;
+}
+/* Each message: its name, description and the titles of its sections. */
+.message-docs-content h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+  color: var(--el-text-color-primary);
+}
+
+.message-docs-content h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 1.25rem 0 0.5rem;
+  color: var(--el-text-color-regular);
+}
+
+.message-docs-content p {
+  line-height: 1.6;
 }
 </style>

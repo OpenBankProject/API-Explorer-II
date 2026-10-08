@@ -28,4 +28,6 @@
 body {
   margin: 0;
   padding: 0;
+  /* Roboto is bundled (see main.ts); text with no font of its own would otherwise be the browser's serif. */
+  font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
