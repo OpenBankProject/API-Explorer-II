@@ -29,14 +29,13 @@ import { Router } from 'express'
 import type { Request, Response } from 'express'
 import { Container } from 'typedi'
 import OBPClientService from '../services/OBPClientService.js'
-import { PublicDocsCache } from '../utils/publicDocsCache.js'
+import { publicDocsCache } from '../services/PublicDocs.js'
 import { callerAddressOf } from '../utils/clientIp.js'
 
 const router = Router()
 
 // Get services from container
 const obpClientService = Container.get(OBPClientService)
-const publicDocsCache = new PublicDocsCache((path) => obpClientService.getWithoutAuth(path))
 
 /**
  * Check if user is authenticated

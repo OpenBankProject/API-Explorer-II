@@ -96,6 +96,15 @@ export class PublicDocsCache {
     return true
   }
 
+  /**
+   * Whether OBP-API serves this docs path anonymously, answered from the cache (fetching it once if
+   * needed). False for paths that are not public docs.
+   */
+  async isPublic(path: string | undefined): Promise<boolean> {
+    const key = normalizeDocsPath(path)
+    return key ? (await this.lookup(key)).isPublic : false
+  }
+
   private async lookup(key: string): Promise<Entry> {
     const cached = this.entries.get(key)
     if (cached && cached.expiresAt > this.now()) return cached

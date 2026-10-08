@@ -128,6 +128,9 @@ let sessionObject = {
   saveUninitialized: false, // Don't save empty sessions (better for authenticated apps)
   cookie: {
     httpOnly: true,
+    // Not sent on cross-site POST/PUT/DELETE, so another site cannot make the browser call the API
+    // proxy as the logged-in user. Top-level GET navigations (e.g. the OAuth2 callback) still carry it.
+    sameSite: 'lax',
     secure: false,
     maxAge: sessionMaxAgeSeconds * 1000 // maxAge in milliseconds
   }

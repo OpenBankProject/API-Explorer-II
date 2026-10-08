@@ -58,7 +58,7 @@ import '@fontsource/roboto/300.css'
 import '@fontsource/roboto/400.css'
 import '@fontsource/roboto/700.css'
 
-import { getCacheStorageInfo } from './obp/common-functions'
+import { escapeHtml, getCacheStorageInfo } from './obp/common-functions'
 import { initTheme } from './obp/theme'
 import { getOBPAPIVersions } from './obp/api-version'
 import {
@@ -130,14 +130,14 @@ import {
         errorText = `Application Error\n\nMessage:\n${error.message}\n\nStack:\n${error.stack || 'No stack trace available'}`
         errorDiv.innerHTML = `
           <strong style="font-size: 18px;">Application Error</strong><br><br>
-          <strong>Message:</strong><br>${error.message}<br><br>
-          <strong>Stack:</strong><br>${error.stack || 'No stack trace available'}
+          <strong>Message:</strong><br>${escapeHtml(error.message)}<br><br>
+          <strong>Stack:</strong><br>${escapeHtml(error.stack || 'No stack trace available')}
         `
       } else {
         errorText = `Application Error\n\n${JSON.stringify(error, null, 2)}`
         errorDiv.innerHTML = `
           <strong style="font-size: 18px;">Application Error</strong><br><br>
-          ${JSON.stringify(error, null, 2)}
+          ${escapeHtml(JSON.stringify(error, null, 2) ?? String(error))}
         `
       }
 
@@ -215,14 +215,14 @@ import {
       errorText = `API Explorer II Error\n\nMessage:\n${error.message}\n\nStack:\n${error.stack || 'No stack trace available'}`
       errorDiv.innerHTML = `
         <strong style="font-size: 18px;">API Explorer II Error</strong><br><br>
-        <strong>Message:</strong><br>${error.message}<br><br>
-        <strong>Stack:</strong><br>${error.stack || 'No stack trace available'}
+        <strong>Message:</strong><br>${escapeHtml(error.message)}<br><br>
+        <strong>Stack:</strong><br>${escapeHtml(error.stack || 'No stack trace available')}
       `
     } else {
       errorText = `API Explorer II Error\n\n${JSON.stringify(error, null, 2)}`
       errorDiv.innerHTML = `
         <strong style="font-size: 18px;">API Explorer II Error</strong><br><br>
-        ${JSON.stringify(error, null, 2)}
+        ${escapeHtml(JSON.stringify(error, null, 2) ?? String(error))}
       `
     }
 

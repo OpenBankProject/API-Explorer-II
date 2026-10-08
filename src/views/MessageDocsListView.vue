@@ -28,15 +28,15 @@
 <script setup lang="ts">
 import { ref, inject, computed } from 'vue'
 import { obpGlossaryKey, obpGroupedMessageDocsJsonSchemaKey, obpGroupedMessageDocsKey } from '@/obp/keys'
+import { safeHtml } from '@/obp/safe-html'
 
 const groupedMessageDocs = ref(inject(obpGroupedMessageDocsKey) || {})
 const groupedMessageDocsJsonSchema = ref(inject(obpGroupedMessageDocsJsonSchemaKey) || {})
 const glossary = inject(obpGlossaryKey, undefined)
 
 // The introduction is OBP-API's own glossary entry, so it stays in step with the server.
-const introHtml = computed(
-  () =>
-    glossary?.glossary_items?.find((item: any) => item.title === 'Message Doc')?.description?.html || ''
+const introHtml = computed(() =>
+  safeHtml(glossary?.glossary_items?.find((item: any) => item.title === 'Message Doc')?.description?.html)
 )
 
 const connectorList = computed(() => {

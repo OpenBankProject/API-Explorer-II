@@ -29,6 +29,7 @@
 import { ref, onBeforeMount, inject, computed } from 'vue'
 import { obpGlossaryKey } from '@/obp/keys'
 import { getGlossaryItemByTitle } from '@/obp/glossary'
+import { safeHtml } from '@/obp/safe-html'
 
 const glossary = ref(inject(obpGlossaryKey)!)
 const helpContent = ref<any>(null)
@@ -53,7 +54,7 @@ const hasContent = computed(() => helpContent.value !== null)
         <el-backtop :right="100" :bottom="100" />
         <div v-if="hasContent">
           <h1 class="help-title">{{ helpContent.title }}</h1>
-          <div v-html="helpContent.description.html" class="content"></div>
+          <div v-html="safeHtml(helpContent.description.html)" class="content"></div>
         </div>
         <div v-else-if="notFound" class="not-found">
           <h1>Help Content Not Available</h1>

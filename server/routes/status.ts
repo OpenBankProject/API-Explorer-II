@@ -33,6 +33,8 @@ import { OAuth2ProviderManager } from '../services/OAuth2ProviderManager.js'
 import { OAuth2ProviderFactory } from '../services/OAuth2ProviderFactory.js'
 import { checkOIDCProviders } from '../services/OIDCServiceHealth.js'
 import { createCachedReachability } from '../services/ObpReachability.js'
+import { cachedResult } from '../utils/cachedResult.js'
+import { publicDocsCache } from '../services/PublicDocs.js'
 import { callerAddressOf, type CallerAddress } from '../utils/clientIp.js'
 import { commitId } from '../app.js'
 import {
@@ -107,6 +109,30 @@ function isCodeError(response: any, path: string): boolean {
   return false
 }
 
+// Whether a docs path can be loaded, answered from the shared public docs cache so a status check
+// never downloads documentation again. When OBP-API does not serve the path anonymously, a logged-in
+// visitor's token is tried instead; that answer is shared for 30 seconds, per path.
+const authenticatedDocChecks = new Map<string, (oauthConfig: any, caller?: CallerAddress) => Promise<boolean>>()
+
+async function isDocAvailable(path: string, oauthConfig: any, caller?: CallerAddress): Promise<boolean> {
+  try {
+    if (await publicDocsCache.isPublic(path)) return true
+    if (!oauthConfig?.oauth2?.accessToken) return false
+    let check = authenticatedDocChecks.get(path)
+    if (!check) {
+      check = cachedResult(
+        async (config: any, from?: CallerAddress) =>
+          !isCodeError(await obpClientService.get(path, config, from), path),
+        30_000
+      )
+      authenticatedDocChecks.set(path, check)
+    }
+    return await check(oauthConfig, caller)
+  } catch (error) {
+    return false
+  }
+}
+
 /**
  * Check if resource docs are accessible
  */
@@ -115,13 +141,7 @@ async function checkResourceDocs(
   version: string,
   caller?: CallerAddress
 ): Promise<boolean> {
-  try {
-    const path = `/obp/${RESOURCE_DOCS_API_VERSION}/resource-docs/${version}/obp`
-    const resourceDocs = await obpClientService.get(path, oauthConfig, caller)
-    return !isCodeError(resourceDocs, path)
-  } catch (error) {
-    return false
-  }
+  return isDocAvailable(`/obp/${RESOURCE_DOCS_API_VERSION}/resource-docs/${version}/obp`, oauthConfig, caller)
 }
 
 /**
@@ -132,17 +152,12 @@ async function checkMessageDocs(
   version: string,
   caller?: CallerAddress
 ): Promise<boolean> {
-  try {
-    const messageDocsCodeResult = await Promise.all(
-      connectors.map(async (connector) => {
-        const path = `/obp/${MESSAGE_DOCS_API_VERSION}/message-docs/${connector}`
-        return !isCodeError(await obpClientService.get(path, oauthConfig, caller), path)
-      })
+  const available = await Promise.all(
+    connectors.map((connector) =>
+      isDocAvailable(`/obp/${MESSAGE_DOCS_API_VERSION}/message-docs/${connector}`, oauthConfig, caller)
     )
-    return messageDocsCodeResult.every((isCodeError: boolean) => isCodeError)
-  } catch (error) {
-    return false
-  }
+  )
+  return available.every(Boolean)
 }
 
 /**
@@ -153,13 +168,7 @@ async function checkApiVersions(
   version: string,
   caller?: CallerAddress
 ): Promise<boolean> {
-  try {
-    const path = `/obp/${API_VERSIONS_LIST_API_VERSION}/api/versions`
-    const versions = await obpClientService.get(path, oauthConfig, caller)
-    return !isCodeError(versions, path)
-  } catch (error) {
-    return false
-  }
+  return isDocAvailable(`/obp/${API_VERSIONS_LIST_API_VERSION}/api/versions`, oauthConfig, caller)
 }
 
 /**
@@ -194,71 +203,85 @@ router.get('/ready', async (req: Request, res: Response) => {
  * GET /status
  * Get application status and health checks
  */
+// Each provider check fetches its discovery document and keys, so the result is shared for 30 seconds.
+const oidcProvidersHealth = cachedResult(checkOIDCProviders, 30_000)
+
+async function buildStatus(oauthConfig: any, caller: CallerAddress | undefined) {
+  const version = obpClientService.getOBPVersion()
+
+  const isAuthenticated = !!(oauthConfig && oauthConfig.oauth2?.accessToken)
+
+  // Public OBP endpoints — run regardless of auth so the page shows real
+  // server reachability to anonymous visitors instead of all-red.
+  const [apiVersions, resourceDocs, oauthProviders] = await Promise.all([
+    checkApiVersions(oauthConfig, version, caller),
+    checkResourceDocs(oauthConfig, version, caller),
+    oidcProvidersHealth()
+  ])
+
+  // Auth-gated checks — only meaningful when logged in.
+  let currentUser: boolean | undefined
+  let messageDocs: boolean | undefined
+  if (isAuthenticated) {
+    try {
+      const userResponse = await obpClientService.get(
+        `/obp/${version}/users/current`,
+        oauthConfig,
+        caller
+      )
+      currentUser = !isCodeError(userResponse, `/obp/${version}/users/current`)
+      messageDocs = await checkMessageDocs(oauthConfig, version, caller)
+    } catch (error) {
+      console.error('Status: Error fetching authenticated data:', error)
+      currentUser = false
+    }
+  }
+
+  const coreOk = isAuthenticated
+    ? apiVersions && resourceDocs && !!messageDocs && !!currentUser
+    : apiVersions && resourceDocs
+
+  // OIDC providers form one login group: users need only one working
+  // provider, so failed providers alongside a healthy one degrade the
+  // overall status to 'partial' rather than 'unhealthy'.
+  const oauthHealthy = oauthProviders.filter((p) => p.status === 'healthy').length
+  const oauthUnhealthy = oauthProviders.filter((p) => p.status === 'unhealthy').length
+
+  let overallStatus: 'healthy' | 'partial' | 'unhealthy'
+  if (!coreOk || (oauthUnhealthy > 0 && oauthHealthy === 0)) {
+    overallStatus = 'unhealthy'
+  } else if (oauthUnhealthy > 0) {
+    overallStatus = 'partial'
+  } else {
+    overallStatus = 'healthy'
+  }
+
+  return {
+    // Kept boolean for existing consumers: core OBP reachability only
+    status: coreOk,
+    overallStatus,
+    apiVersions,
+    resourceDocs,
+    ...(isAuthenticated ? { messageDocs, currentUser } : {}),
+    isAuthenticated,
+    oauthProviders,
+    commitId
+  }
+}
+
+// The checks above read from caches; the report for visitors who are not logged in is shared too,
+// for 30 seconds. A logged-in visitor's report adds their own users/current check.
+const anonymousStatus = cachedResult(
+  (caller: CallerAddress | undefined) => buildStatus(undefined, caller),
+  30_000
+)
+
 router.get('/status', async (req: Request, res: Response) => {
   try {
-    const session = req.session as any
-    const oauthConfig = session.clientConfig
+    const oauthConfig = (req.session as any).clientConfig
     const caller = callerAddressOf(req)
-    const version = obpClientService.getOBPVersion()
-
     const isAuthenticated = !!(oauthConfig && oauthConfig.oauth2?.accessToken)
-
-    // Public OBP endpoints — run regardless of auth so the page shows real
-    // server reachability to anonymous visitors instead of all-red.
-    const [apiVersions, resourceDocs, oauthProviders] = await Promise.all([
-      checkApiVersions(oauthConfig, version, caller),
-      checkResourceDocs(oauthConfig, version, caller),
-      checkOIDCProviders()
-    ])
-
-    // Auth-gated checks — only meaningful when logged in.
-    let currentUser: boolean | undefined
-    let messageDocs: boolean | undefined
-    if (isAuthenticated) {
-      try {
-        const userResponse = await obpClientService.get(
-          `/obp/${version}/users/current`,
-          oauthConfig,
-          caller
-        )
-        currentUser = !isCodeError(userResponse, `/obp/${version}/users/current`)
-        messageDocs = await checkMessageDocs(oauthConfig, version, caller)
-      } catch (error) {
-        console.error('Status: Error fetching authenticated data:', error)
-        currentUser = false
-      }
-    }
-
-    const coreOk = isAuthenticated
-      ? apiVersions && resourceDocs && !!messageDocs && !!currentUser
-      : apiVersions && resourceDocs
-
-    // OIDC providers form one login group: users need only one working
-    // provider, so failed providers alongside a healthy one degrade the
-    // overall status to 'partial' rather than 'unhealthy'.
-    const oauthHealthy = oauthProviders.filter((p) => p.status === 'healthy').length
-    const oauthUnhealthy = oauthProviders.filter((p) => p.status === 'unhealthy').length
-
-    let overallStatus: 'healthy' | 'partial' | 'unhealthy'
-    if (!coreOk || (oauthUnhealthy > 0 && oauthHealthy === 0)) {
-      overallStatus = 'unhealthy'
-    } else if (oauthUnhealthy > 0) {
-      overallStatus = 'partial'
-    } else {
-      overallStatus = 'healthy'
-    }
-
-    res.json({
-      // Kept boolean for existing consumers: core OBP reachability only
-      status: coreOk,
-      overallStatus,
-      apiVersions,
-      resourceDocs,
-      ...(isAuthenticated ? { messageDocs, currentUser } : {}),
-      isAuthenticated,
-      oauthProviders,
-      commitId
-    })
+    res.json(isAuthenticated ? await buildStatus(oauthConfig, caller) : await anonymousStatus(caller))
   } catch (error) {
     console.error('Status: Error getting status:', error)
     res.status(500).json({
@@ -344,9 +367,25 @@ router.get('/status/providers', (req: Request, res: Response) => {
  * POST /status/providers/:providerName/retry
  * Manually retry initialization for a failed provider
  */
+// Anyone can ask for a retry, which re-runs the provider's discovery, so each known provider is
+// retried at most once per RETRY_COOLDOWN_MS. Only providers the manager knows are recorded.
+const RETRY_COOLDOWN_MS = 30_000
+const lastRetryAt = new Map<string, number>()
+
 router.post('/status/providers/:providerName/retry', async (req: Request, res: Response) => {
   try {
     const { providerName } = req.params
+    const retriedAgo = Date.now() - (lastRetryAt.get(providerName) ?? 0)
+    if (retriedAgo < RETRY_COOLDOWN_MS) {
+      const wait = Math.ceil((RETRY_COOLDOWN_MS - retriedAgo) / 1000)
+      res.setHeader('Retry-After', String(wait))
+      return res.status(429).json({
+        success: false,
+        message: `Provider ${providerName} was retried moments ago. Try again in ${wait} seconds.`,
+        status: providerManager.getProviderStatus(providerName)
+      })
+    }
+    if (providerManager.getProviderStatus(providerName)) lastRetryAt.set(providerName, Date.now())
     console.log(`Status: Retrying provider: ${providerName}`)
 
     const success = await providerManager.retryProvider(providerName)
@@ -379,177 +418,183 @@ router.post('/status/providers/:providerName/retry', async (req: Request, res: R
  * Get detailed OIDC discovery information for debugging
  * Shows the full discovery process and configuration for all providers
  */
-router.get('/status/oidc-debug', async (req: Request, res: Response) => {
+async function buildOidcDebug() {
+  console.log('OIDC Debug: Starting detailed discovery process...')
+
+  // Step 1: Get OBP API well-known endpoint info
+  const obpApiHost = obpClientService.getOBPClientConfig().baseUri
+  const wellKnownEndpoint = `${obpApiHost}/obp/${V5_1_0}/well-known`
+
+  const step1 = {
+    description: 'Discovery of OIDC providers from OBP API',
+    endpoint: wellKnownEndpoint,
+    success: false,
+    response: null as any,
+    error: null as string | null,
+    providers: [] as any[]
+  }
+
   try {
-    console.log('OIDC Debug: Starting detailed discovery process...')
+    console.log(`OIDC Debug: Fetching from ${wellKnownEndpoint}`)
+    const wellKnownResponse = await obpClientService.get(`/obp/${V5_1_0}/well-known`, null)
+    step1.response = wellKnownResponse
+    step1.success = !!(wellKnownResponse && wellKnownResponse.well_known_uris)
+    step1.providers = wellKnownResponse.well_known_uris || []
+    console.log(`OIDC Debug: Found ${step1.providers.length} providers`)
+  } catch (error) {
+    step1.error = error instanceof Error ? error.message : 'Unknown error'
+    console.error('OIDC Debug: Error fetching OBP well-known:', error)
+  }
 
-    // Step 1: Get OBP API well-known endpoint info
-    const obpApiHost = obpClientService.getOBPClientConfig().baseUri
-    const wellKnownEndpoint = `${obpApiHost}/obp/${V5_1_0}/well-known`
+  // Step 2: For each provider, fetch their OIDC configuration
+  const providerDetails = []
 
-    const step1 = {
-      description: 'Discovery of OIDC providers from OBP API',
-      endpoint: wellKnownEndpoint,
+  for (const provider of step1.providers) {
+    console.log(`OIDC Debug: Fetching OIDC config for ${provider.provider}`)
+    const detail = {
+      providerName: provider.provider,
+      wellKnownUrl: provider.url,
       success: false,
-      response: null as any,
+      explorerCredentialsConfigured: providerFactory.hasStrategy(provider.provider),
+      explorerEnvVars: getProviderEnvVarNames(provider.provider),
+      oidcConfiguration: null as any,
       error: null as string | null,
-      providers: [] as any[]
+      endpoints: {
+        authorization: null as string | null,
+        token: null as string | null,
+        userinfo: null as string | null,
+        jwks: null as string | null
+      },
+      issuer: null as string | null,
+      supportedFeatures: {
+        pkce: false,
+        scopes: [] as string[],
+        responseTypes: [] as string[],
+        grantTypes: [] as string[]
+      }
     }
 
     try {
-      console.log(`OIDC Debug: Fetching from ${wellKnownEndpoint}`)
-      const wellKnownResponse = await obpClientService.get(`/obp/${V5_1_0}/well-known`, null)
-      step1.response = wellKnownResponse
-      step1.success = !!(wellKnownResponse && wellKnownResponse.well_known_uris)
-      step1.providers = wellKnownResponse.well_known_uris || []
-      console.log(`OIDC Debug: Found ${step1.providers.length} providers`)
+      const response = await fetch(provider.url)
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+
+      const config = await response.json()
+      detail.oidcConfiguration = config
+      detail.success = true
+      detail.issuer = config.issuer
+
+      // Extract endpoints
+      detail.endpoints.authorization = config.authorization_endpoint
+      detail.endpoints.token = config.token_endpoint
+      detail.endpoints.userinfo = config.userinfo_endpoint
+      detail.endpoints.jwks = config.jwks_uri
+
+      // Extract supported features
+      detail.supportedFeatures.pkce =
+        config.code_challenge_methods_supported?.includes('S256') || false
+      detail.supportedFeatures.scopes = config.scopes_supported || []
+      detail.supportedFeatures.responseTypes = config.response_types_supported || []
+      detail.supportedFeatures.grantTypes = config.grant_types_supported || []
+
+      console.log(`OIDC Debug: Successfully fetched config for ${provider.provider}`)
     } catch (error) {
-      step1.error = error instanceof Error ? error.message : 'Unknown error'
-      console.error('OIDC Debug: Error fetching OBP well-known:', error)
+      detail.error = error instanceof Error ? error.message : 'Unknown error'
+      console.error(`OIDC Debug: Error fetching config for ${provider.provider}:`, error)
     }
 
-    // Step 2: For each provider, fetch their OIDC configuration
-    const providerDetails = []
+    providerDetails.push(detail)
+  }
 
-    for (const provider of step1.providers) {
-      console.log(`OIDC Debug: Fetching OIDC config for ${provider.provider}`)
-      const detail = {
-        providerName: provider.provider,
-        wellKnownUrl: provider.url,
-        success: false,
-        explorerCredentialsConfigured: providerFactory.hasStrategy(provider.provider),
-        explorerEnvVars: getProviderEnvVarNames(provider.provider),
-        oidcConfiguration: null as any,
-        error: null as string | null,
-        endpoints: {
-          authorization: null as string | null,
-          token: null as string | null,
-          userinfo: null as string | null,
-          jwks: null as string | null
-        },
-        issuer: null as string | null,
-        supportedFeatures: {
-          pkce: false,
-          scopes: [] as string[],
-          responseTypes: [] as string[],
-          grantTypes: [] as string[]
-        }
-      }
+  // Step 3: Get current provider status from manager
+  const currentStatus = providerManager.getAllProviderStatus()
+  const availableProviders = providerManager.getAvailableProviders()
 
-      try {
-        const response = await fetch(provider.url)
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-        }
-
-        const config = await response.json()
-        detail.oidcConfiguration = config
-        detail.success = true
-        detail.issuer = config.issuer
-
-        // Extract endpoints
-        detail.endpoints.authorization = config.authorization_endpoint
-        detail.endpoints.token = config.token_endpoint
-        detail.endpoints.userinfo = config.userinfo_endpoint
-        detail.endpoints.jwks = config.jwks_uri
-
-        // Extract supported features
-        detail.supportedFeatures.pkce =
-          config.code_challenge_methods_supported?.includes('S256') || false
-        detail.supportedFeatures.scopes = config.scopes_supported || []
-        detail.supportedFeatures.responseTypes = config.response_types_supported || []
-        detail.supportedFeatures.grantTypes = config.grant_types_supported || []
-
-        console.log(`OIDC Debug: Successfully fetched config for ${provider.provider}`)
-      } catch (error) {
-        detail.error = error instanceof Error ? error.message : 'Unknown error'
-        console.error(`OIDC Debug: Error fetching config for ${provider.provider}:`, error)
-      }
-
-      providerDetails.push(detail)
+  // Step 4: Get environment configuration
+  const maskCredential = (value: string | undefined): string => {
+    if (!value || value.length < 6) {
+      return value ? '***masked***' : 'not configured'
     }
+    return `${value.substring(0, 2)}...${value.substring(value.length - 2)}`
+  }
 
-    // Step 3: Get current provider status from manager
-    const currentStatus = providerManager.getAllProviderStatus()
-    const availableProviders = providerManager.getAvailableProviders()
-
-    // Step 4: Get environment configuration
-    const maskCredential = (value: string | undefined): string => {
-      if (!value || value.length < 6) {
-        return value ? '***masked***' : 'not configured'
-      }
-      return `${value.substring(0, 2)}...${value.substring(value.length - 2)}`
+  const envConfig = {
+    obpOidc: {
+      clientId: maskCredential(process.env.VITE_OBP_OIDC_CLIENT_ID),
+      clientSecret: process.env.VITE_OBP_OIDC_CLIENT_SECRET ? 'configured' : 'not configured',
+      configured: !!(
+        process.env.VITE_OBP_OIDC_CLIENT_ID && process.env.VITE_OBP_OIDC_CLIENT_SECRET
+      )
+    },
+    keycloak: {
+      clientId: maskCredential(process.env.VITE_KEYCLOAK_CLIENT_ID),
+      clientSecret: process.env.VITE_KEYCLOAK_CLIENT_SECRET ? 'configured' : 'not configured',
+      configured: !!(
+        process.env.VITE_KEYCLOAK_CLIENT_ID && process.env.VITE_KEYCLOAK_CLIENT_SECRET
+      )
+    },
+    google: {
+      clientId: maskCredential(process.env.VITE_GOOGLE_CLIENT_ID),
+      clientSecret: process.env.VITE_GOOGLE_CLIENT_SECRET ? 'configured' : 'not configured',
+      configured: !!(process.env.VITE_GOOGLE_CLIENT_ID && process.env.VITE_GOOGLE_CLIENT_SECRET)
+    },
+    github: {
+      clientId: maskCredential(process.env.VITE_GITHUB_CLIENT_ID),
+      clientSecret: process.env.VITE_GITHUB_CLIENT_SECRET ? 'configured' : 'not configured',
+      configured: !!(process.env.VITE_GITHUB_CLIENT_ID && process.env.VITE_GITHUB_CLIENT_SECRET)
+    },
+    custom: {
+      providerName: process.env.VITE_CUSTOM_OIDC_PROVIDER_NAME || 'not configured',
+      clientId: maskCredential(process.env.VITE_CUSTOM_OIDC_CLIENT_ID),
+      clientSecret: process.env.VITE_CUSTOM_OIDC_CLIENT_SECRET ? 'configured' : 'not configured',
+      configured: !!(
+        process.env.VITE_CUSTOM_OIDC_CLIENT_ID && process.env.VITE_CUSTOM_OIDC_CLIENT_SECRET
+      )
+    },
+    shared: {
+      redirectUrl: process.env.VITE_OAUTH2_REDIRECT_URL || 'not configured',
+      obpApiHost: process.env.VITE_OBP_API_HOST || 'not configured'
     }
+  }
 
-    const envConfig = {
-      obpOidc: {
-        clientId: maskCredential(process.env.VITE_OBP_OIDC_CLIENT_ID),
-        clientSecret: process.env.VITE_OBP_OIDC_CLIENT_SECRET ? 'configured' : 'not configured',
-        configured: !!(
-          process.env.VITE_OBP_OIDC_CLIENT_ID && process.env.VITE_OBP_OIDC_CLIENT_SECRET
-        )
-      },
-      keycloak: {
-        clientId: maskCredential(process.env.VITE_KEYCLOAK_CLIENT_ID),
-        clientSecret: process.env.VITE_KEYCLOAK_CLIENT_SECRET ? 'configured' : 'not configured',
-        configured: !!(
-          process.env.VITE_KEYCLOAK_CLIENT_ID && process.env.VITE_KEYCLOAK_CLIENT_SECRET
-        )
-      },
-      google: {
-        clientId: maskCredential(process.env.VITE_GOOGLE_CLIENT_ID),
-        clientSecret: process.env.VITE_GOOGLE_CLIENT_SECRET ? 'configured' : 'not configured',
-        configured: !!(process.env.VITE_GOOGLE_CLIENT_ID && process.env.VITE_GOOGLE_CLIENT_SECRET)
-      },
-      github: {
-        clientId: maskCredential(process.env.VITE_GITHUB_CLIENT_ID),
-        clientSecret: process.env.VITE_GITHUB_CLIENT_SECRET ? 'configured' : 'not configured',
-        configured: !!(process.env.VITE_GITHUB_CLIENT_ID && process.env.VITE_GITHUB_CLIENT_SECRET)
-      },
-      custom: {
-        providerName: process.env.VITE_CUSTOM_OIDC_PROVIDER_NAME || 'not configured',
-        clientId: maskCredential(process.env.VITE_CUSTOM_OIDC_CLIENT_ID),
-        clientSecret: process.env.VITE_CUSTOM_OIDC_CLIENT_SECRET ? 'configured' : 'not configured',
-        configured: !!(
-          process.env.VITE_CUSTOM_OIDC_CLIENT_ID && process.env.VITE_CUSTOM_OIDC_CLIENT_SECRET
-        )
-      },
-      shared: {
-        redirectUrl: process.env.VITE_OAUTH2_REDIRECT_URL || 'not configured',
-        obpApiHost: process.env.VITE_OBP_API_HOST || 'not configured'
-      }
-    }
+  // Compile summary
+  const explorerConfiguredStrategies = providerFactory.getConfiguredProviders()
 
-    // Compile summary
-    const explorerConfiguredStrategies = providerFactory.getConfiguredProviders()
+  const summary = {
+    timestamp: new Date().toISOString(),
+    obpApiReachable: step1.success,
+    totalProvidersDiscovered: step1.providers.length,
+    successfulConfigurations: providerDetails.filter((p) => p.success).length,
+    failedConfigurations: providerDetails.filter((p) => !p.success).length,
+    currentlyAvailable: availableProviders.length,
+    configuredInEnvironment: Object.values(envConfig).filter(
+      (c) => typeof c === 'object' && 'configured' in c && c.configured
+    ).length,
+    explorerConfiguredStrategies
+  }
 
-    const summary = {
-      timestamp: new Date().toISOString(),
-      obpApiReachable: step1.success,
-      totalProvidersDiscovered: step1.providers.length,
-      successfulConfigurations: providerDetails.filter((p) => p.success).length,
-      failedConfigurations: providerDetails.filter((p) => !p.success).length,
-      currentlyAvailable: availableProviders.length,
-      configuredInEnvironment: Object.values(envConfig).filter(
-        (c) => typeof c === 'object' && 'configured' in c && c.configured
-      ).length,
-      explorerConfiguredStrategies
-    }
+  return {
+    summary,
+    discoveryProcess: {
+      step1_obpApiDiscovery: step1,
+      step2_providerConfigurations: providerDetails,
+      step3_currentStatus: currentStatus
+    },
+    environment: envConfig,
+    recommendations: generateRecommendations(step1, providerDetails, envConfig, currentStatus),
+    note: 'This debug information shows the complete OIDC discovery process for troubleshooting'
+  }
+}
 
-    res.json({
-      summary,
-      discoveryProcess: {
-        step1_obpApiDiscovery: step1,
-        step2_providerConfigurations: providerDetails,
-        step3_currentStatus: currentStatus
-      },
-      environment: envConfig,
-      recommendations: generateRecommendations(step1, providerDetails, envConfig, currentStatus),
-      note: 'This debug information shows the complete OIDC discovery process for troubleshooting'
-    })
+// Each report re-fetches OBP-API's well-known endpoint and every provider's discovery document,
+// and the route is public (the debug page is most needed when login is broken), so it is shared for 30 seconds.
+const oidcDebugReport = cachedResult(buildOidcDebug, 30_000)
 
-    console.log('OIDC Debug: Response sent successfully')
+router.get('/status/oidc-debug', async (req: Request, res: Response) => {
+  try {
+    res.json(await oidcDebugReport())
   } catch (error) {
     console.error('OIDC Debug: Error generating debug info:', error)
     res.status(500).json({
