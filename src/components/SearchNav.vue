@@ -39,6 +39,7 @@ import {
   resourceDocsFilterQuery
 } from '../obp/resource-docs'
 import { SEARCH_LINKS_COLOR as searchLinksColorSetting } from '../obp/style-setting'
+import { escapeHtml } from '../obp/common-functions'
 const operationIdTitle = {}
 const resourceDocs = ref({})
 const docs = ref({})
@@ -89,6 +90,13 @@ const route = useRoute()
 let selectedVersion = route.params.version ? route.params.version : `${OBP_API_DEFAULT_RESOURCE_DOC_VERSION}`
 let selectedTags = route.query.tags ? route.query.tags : 'NONE'
 let selectedFilter = resourceDocsFilterFromQuery(route.query)
+
+// The version, plus which docs the ?content= and ?bank_id= filters show, e.g. OBPv7.0.0 · Dynamic · ogcr
+const versionLabel = () => {
+  const { content, bankId } = selectedFilter
+  const kind = content === 'dynamic' ? ' · Dynamic' : content === 'static' ? ' · Static' : ''
+  return `${selectedVersion}${kind}${bankId ? ` · ${bankId}` : ''}`
+}
 onBeforeMount(async () => {
   resourceDocs.value = inject(obpResourceDocsKey)!
   if(selectedTags === 'NONE') {
@@ -105,9 +113,9 @@ onBeforeMount(async () => {
   if (element !== null) {
     const totalRows = Object.values(groups.value).reduce((acc, currentValue) => acc + currentValue.length, 0)
     if(selectedTags === 'NONE') {
-      element.textContent = `${selectedVersion} ( ${totalRows} APIs )`;
+      element.textContent = `${versionLabel()} ( ${totalRows} APIs )`;
     } else {
-      element.innerHTML = `${selectedVersion} ( ${totalRows} APIs filtered by tags: <a href="#" class="filter-tag-link" style="color: var(--el-color-primary); text-decoration: none; cursor: pointer; transition: color 0.2s ease;">${selectedTags}</a>)`;
+      element.innerHTML = `${escapeHtml(versionLabel())} ( ${totalRows} APIs filtered by tags: <a href="#" class="filter-tag-link" style="color: var(--el-color-primary); text-decoration: none; cursor: pointer; transition: color 0.2s ease;">${escapeHtml(String(selectedTags))}</a>)`;
 
       // Add hover effect
       const tagLinkEl = element.querySelector('.filter-tag-link') as HTMLElement
@@ -186,9 +194,9 @@ watch(
     if (element !== null) {
       const totalRows = Object.values(groups.value).reduce((acc, currentValue) => acc + currentValue.length, 0)
       if(selectedTags === 'NONE') {
-        element.textContent = `${selectedVersion} ( ${totalRows} APIs )`;
+        element.textContent = `${versionLabel()} ( ${totalRows} APIs )`;
       } else {
-        element.innerHTML = `${selectedVersion} ( ${totalRows} APIs filtered by tags: <a href="#" class="filter-tag-link" style="color: var(--el-color-primary); text-decoration: none; cursor: pointer; transition: color 0.2s ease;">${selectedTags}</a>)`;
+        element.innerHTML = `${escapeHtml(versionLabel())} ( ${totalRows} APIs filtered by tags: <a href="#" class="filter-tag-link" style="color: var(--el-color-primary); text-decoration: none; cursor: pointer; transition: color 0.2s ease;">${escapeHtml(String(selectedTags))}</a>)`;
 
         // Add hover effect
         const tagLinkEl = element.querySelector('.filter-tag-link') as HTMLElement
@@ -215,7 +223,7 @@ const countApis = () => {
   let element = document.getElementById("selected-api-version")
   if (element !== null) {
     const totalRows = Object.values(groups.value).reduce((acc, currentValue) => acc + currentValue.length, 0)
-    element.textContent = `${selectedVersion} ( ${totalRows} APIs )`;
+    element.textContent = `${versionLabel()} ( ${totalRows} APIs )`;
   }
 }
 

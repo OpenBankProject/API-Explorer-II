@@ -27,6 +27,14 @@
 
 import { isServerUp, serverStatus } from '.';
 
+// Escapes text, e.g. a tag or bank id from the URL or from resource docs, for use in innerHTML.
+export function escapeHtml(text: string): string {
+  return text.replace(
+    /[&<>"']/g,
+    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!
+  )
+}
+
 export function updateLoadingInfoMessage(logMessage: string) {
   // 1. Select the div element using the id property
   const spinner = document.getElementById('loading-api-spinner')

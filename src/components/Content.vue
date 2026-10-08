@@ -46,6 +46,7 @@ import {
   type ResourceDocsFilter
 } from '../obp/resource-docs'
 import { SUMMARY_PAGER_LINKS_COLOR as summaryPagerLinksColorSetting } from '../obp/style-setting'
+import { escapeHtml } from '../obp/common-functions'
 import { initializeAPICollections, setTabActive } from './SearchNav.vue'
 
 const route = useRoute()
@@ -63,8 +64,8 @@ const next = ref({ id: 'next' })
 const favoriteButtonStyle = ref('favorite favoriteButton')
 const summaryPagerLinksColor = ref(summaryPagerLinksColorSetting)
 const showPlaceholder = ref(false)
-const placeholderVersion = ref('')
-const totalEndpoints = ref(0)
+const placeholderTitle = ref('')
+const placeholderSubtitle = ref('')
 let routeId = ''
 let version = obpVersion
 let filter: ResourceDocsFilter = {}
@@ -87,7 +88,7 @@ const updateHeaderTags = (tagsList: string[]) => {
   if (element) {
     if (tagsList.length > 0) {
       const tagsHTML = tagsList.map(tag =>
-        `<a class="tag-link" data-tag="${tag}" href="#">${tag}</a>`
+        `<a class="tag-link" data-tag="${escapeHtml(tag)}" href="#">${escapeHtml(tag)}</a>`
       ).join(', ')
       element.innerHTML = `Tags: ${tagsHTML}`
 
@@ -218,6 +219,25 @@ const getAllTags = (version: string) => {
   return Array.from(tagSet).sort()
 }
 
+// Says what the version overview is showing: which docs (static, dynamic, or all), from which
+// namespace, and with which tags, as the ?content=, ?bank_id= and ?tags= query params ask.
+const describePlaceholder = (tags: string | undefined) => {
+  const { content, bankId } = filter
+  const tagList = tags && tags !== 'NONE' ? tags.split(',') : []
+  const docs = getVersionResourceDocs(version, resourceDocs, filter).filter(
+    (doc: any) => tagList.length === 0 || doc.tags?.some((tag: string) => tagList.includes(tag))
+  )
+
+  // The version, the namespace if one is picked, and how many endpoints show, e.g. OBPv7.0.0 SYS (457)
+  placeholderTitle.value = `${version}${bankId ? ` ${bankId}` : ''} (${docs.length})`
+  placeholderSubtitle.value =
+    content === 'dynamic'
+      ? 'Dynamic API Documentation (Dynamic Entities, Dynamic Endpoints and Dynamic Resource Docs)'
+      : content === 'static'
+        ? 'Static API Documentation (built into OBP-API)'
+        : 'API Documentation (static and dynamic)'
+}
+
 onMounted(async () => {
   routeId = route.query.operationid
   version = route.params.version ? route.params.version : obpVersion
@@ -226,8 +246,7 @@ onMounted(async () => {
   if (!routeId) {
     // No operation selected, show placeholder
     showPlaceholder.value = true
-    placeholderVersion.value = version
-    totalEndpoints.value = getVersionResourceDocs(version, resourceDocs, filter).length
+    describePlaceholder(route.query.tags as string | undefined)
     allTags.value = getAllTags(version)
     clearHeaderTags()
   } else {
@@ -245,8 +264,7 @@ onBeforeRouteUpdate(async (to) => {
   if (!routeId) {
     // Version changed but no endpoint selected
     showPlaceholder.value = true
-    placeholderVersion.value = version
-    totalEndpoints.value = getVersionResourceDocs(version, resourceDocs, filter).length
+    describePlaceholder(to.query.tags as string | undefined)
     allTags.value = getAllTags(version)
     clearHeaderTags()
   } else {
@@ -264,10 +282,9 @@ onBeforeRouteUpdate(async (to) => {
       <el-main>
         <div v-if="showPlaceholder" class="placeholder-message">
           <div class="version-header">
-            <h1>{{ placeholderVersion }}</h1>
-            <p class="version-subtitle">API Documentation</p>
+            <h1>{{ placeholderTitle }}</h1>
+            <p class="version-subtitle">{{ placeholderSubtitle }}</p>
           </div>
-          <p class="version-info">There are {{ totalEndpoints }} endpoints available in this version.</p>
           <p class="version-instructions">Please click an endpoint on the left or browse by tags below.</p>
 
           <div v-if="allTags.length > 0" class="placeholder-tags">
@@ -444,16 +461,9 @@ span {
   margin: 0;
 }
 
-.version-info {
-  font-size: 16px;
-  margin: 20px 0 10px 0;
-  line-height: 1.6;
-  color: var(--el-text-color-regular);
-}
-
 .version-instructions {
   font-size: 16px;
-  margin: 10px 0 20px 0;
+  margin: 20px 0;
   line-height: 1.6;
   color: var(--el-text-color-regular);
 }
