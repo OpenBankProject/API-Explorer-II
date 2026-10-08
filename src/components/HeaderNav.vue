@@ -36,7 +36,8 @@ import {
   HEADER_LINKS_HOVER_COLOR as headerLinksHoverColorSetting,
   HEADER_LINKS_BACKGROUND_COLOR as headerLinksBackgroundColorSetting
 } from '../obp/style-setting'
-import { obpApiActiveVersionsKey, obpGroupedMessageDocsKey, obpGroupedMessageDocsJsonSchemaKey, obpMyCollectionsEndpointKey } from '@/obp/keys'
+import { obpApiActiveVersionsKey, obpGroupedMessageDocsKey, obpGroupedMessageDocsJsonSchemaKey, obpMyCollectionsEndpointKey, obpResourceDocsKey } from '@/obp/keys'
+import { getDynamicNamespaces } from '../obp/resource-docs'
 import SvelteDropdown from './SvelteDropdown.vue'
 import { theme, toggleTheme } from '../obp/theme'
 
@@ -60,6 +61,70 @@ const combinedMessageDocs = computed(() => {
   const jsonSchemaDocs = (obpMessageDocsJsonSchema.value || []).map(connector => `${connector} J Schema`)
   return [...regularDocs, ...jsonSchemaDocs]
 })
+
+// On the API Explorer page the header filters its docs by ?content= instead of linking to it.
+const isResourceDocsPage = computed(() => route.name === 'api')
+const contentFilters = [
+  { value: 'static', label: 'Static' },
+  { value: 'dynamic', label: 'Dynamic' },
+  { value: 'all', label: 'All' }
+]
+const activeContentFilter = computed(() =>
+  route.query.content === 'static' || route.query.content === 'dynamic' ? route.query.content : 'all'
+)
+const contentFilterLink = (value: string) => {
+  const version = route.params.version as string
+  // Dynamic goes back to the namespace last picked, if this version has dynamic docs in it.
+  const bankId =
+    value === 'dynamic' && savedNamespace.value && getDynamicNamespaces(version, resourceDocs).includes(savedNamespace.value)
+      ? savedNamespace.value
+      : undefined
+  return {
+    name: 'api',
+    params: { version },
+    query: value === 'all' ? {} : { content: value, bank_id: bankId }
+  }
+}
+
+// In Dynamic mode the docs can be narrowed further to one namespace: a bank, or SYS.
+const ALL_NAMESPACES = 'All'
+const resourceDocs = inject(obpResourceDocsKey, {})
+// The namespace last picked, remembered in this browser only. Storage can be unavailable (e.g.
+// blocked site data), in which case nothing is remembered.
+const NAMESPACE_STORAGE_KEY = 'obp-dynamic-namespace'
+const readSavedNamespace = (): string | undefined => {
+  try {
+    return localStorage.getItem(NAMESPACE_STORAGE_KEY) || undefined
+  } catch {
+    return undefined
+  }
+}
+const savedNamespace = ref(readSavedNamespace())
+const saveNamespace = (namespace: string | undefined) => {
+  savedNamespace.value = namespace
+  try {
+    if (namespace) localStorage.setItem(NAMESPACE_STORAGE_KEY, namespace)
+    else localStorage.removeItem(NAMESPACE_STORAGE_KEY)
+  } catch {
+    // Not remembered, which only costs a click next time.
+  }
+}
+const namespaces = computed(() =>
+  isResourceDocsPage.value && activeContentFilter.value === 'dynamic'
+    ? [ALL_NAMESPACES, ...getDynamicNamespaces(route.params.version as string, resourceDocs)]
+    : []
+)
+const namespaceLabel = computed(
+  () => `Namespace: ${typeof route.query.bank_id === 'string' && route.query.bank_id ? route.query.bank_id : ALL_NAMESPACES}`
+)
+const selectNamespace = (namespace: string) => {
+  saveNamespace(namespace === ALL_NAMESPACES ? undefined : namespace)
+  router.push({
+    name: 'api',
+    params: { version: route.params.version },
+    query: namespace === ALL_NAMESPACES ? { content: 'dynamic' } : { content: 'dynamic', bank_id: namespace }
+  })
+}
 
 // Help menu items (includes debug pages)
 const helpMenuRoutes: Record<string, string> = {
@@ -335,7 +400,26 @@ const getCurrentPath = () => {
       <a v-bind:href="obpApiHybridPost" class="router-link" id="header-nav-home">
         {{ $t('header.portal_home') }}
       </a>
-      <RouterLink class="router-link" id="header-nav-tags" :to="'/resource-docs/' + OBP_API_DEFAULT_RESOURCE_DOC_VERSION">{{
+      <span v-if="isResourceDocsPage" class="content-filter">
+        <RouterLink
+          v-for="filter in contentFilters"
+          :key="filter.value"
+          class="router-link"
+          :class="{ 'content-filter-active': activeContentFilter === filter.value }"
+          :to="contentFilterLink(filter.value)"
+          >{{ filter.label }}</RouterLink
+        >
+        <SvelteDropdown
+          v-if="namespaces.length > 0"
+          id="header-nav-namespace"
+          :label="namespaceLabel"
+          :items="namespaces"
+          :hover-color="headerLinksHoverColor"
+          :background-color="headerLinksBackgroundColor"
+          @select="selectNamespace"
+        />
+      </span>
+      <RouterLink v-else class="router-link" id="header-nav-tags" :to="'/resource-docs/' + OBP_API_DEFAULT_RESOURCE_DOC_VERSION">{{
         $t('header.api_explorer') }}</RouterLink>
       <RouterLink class="router-link" id="header-nav-glossary" to="/glossary">{{
         $t('header.glossary')
@@ -546,6 +630,11 @@ nav {
   color: v-bind(headerLinksHoverColor) !important;
 }
 
+.router-link.content-filter-active {
+  background-color: v-bind(headerLinksBackgroundColor);
+  color: v-bind(HEADER_LINKS_COLOR);
+}
+
 .logo {
   height: 40px;
   position: absolute;
@@ -596,6 +685,7 @@ button.theme-toggle {
 
 /* Custom dropdown containers */
 #header-nav-versions,
+#header-nav-namespace,
 #header-nav-message-docs,
 #header-nav-help {
   display: inline-block;

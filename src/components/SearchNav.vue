@@ -32,8 +32,14 @@ import { Search } from '@element-plus/icons-vue'
 import { inject, onBeforeMount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { OBP_API_DEFAULT_RESOURCE_DOC_VERSION, getMyAPICollections, getMyAPICollectionsEndpoint } from '../obp'
-import { getGroupedResourceDocs, getFilteredGroupedResourceDocs } from '../obp/resource-docs'
+import {
+  getGroupedResourceDocs,
+  getFilteredGroupedResourceDocs,
+  resourceDocsFilterFromQuery,
+  resourceDocsFilterQuery
+} from '../obp/resource-docs'
 import { SEARCH_LINKS_COLOR as searchLinksColorSetting } from '../obp/style-setting'
+import { escapeHtml } from '../obp/common-functions'
 const operationIdTitle = {}
 const resourceDocs = ref({})
 const docs = ref({})
@@ -83,12 +89,20 @@ export const initializeAPICollections = async () => {
 const route = useRoute()
 let selectedVersion = route.params.version ? route.params.version : `${OBP_API_DEFAULT_RESOURCE_DOC_VERSION}`
 let selectedTags = route.query.tags ? route.query.tags : 'NONE'
+let selectedFilter = resourceDocsFilterFromQuery(route.query)
+
+// The version, plus which docs the ?content= and ?bank_id= filters show, e.g. OBPv7.0.0 · Dynamic · ogcr
+const versionLabel = () => {
+  const { content, bankId } = selectedFilter
+  const kind = content === 'dynamic' ? ' · Dynamic' : content === 'static' ? ' · Static' : ''
+  return `${selectedVersion}${kind}${bankId ? ` · ${bankId}` : ''}`
+}
 onBeforeMount(async () => {
   resourceDocs.value = inject(obpResourceDocsKey)!
   if(selectedTags === 'NONE') {
-    docs.value = getGroupedResourceDocs(selectedVersion, resourceDocs.value)
+    docs.value = getGroupedResourceDocs(selectedVersion, resourceDocs.value, selectedFilter)
   } else {
-    docs.value = getFilteredGroupedResourceDocs(selectedVersion, selectedTags, resourceDocs.value)
+    docs.value = getFilteredGroupedResourceDocs(selectedVersion, selectedTags, resourceDocs.value, selectedFilter)
   }
   groups.value = JSON.parse(JSON.stringify(docs.value))
   activeKeys.value = Object.keys(groups.value)
@@ -99,9 +113,9 @@ onBeforeMount(async () => {
   if (element !== null) {
     const totalRows = Object.values(groups.value).reduce((acc, currentValue) => acc + currentValue.length, 0)
     if(selectedTags === 'NONE') {
-      element.textContent = `${selectedVersion} ( ${totalRows} APIs )`;
+      element.textContent = `${versionLabel()} ( ${totalRows} APIs )`;
     } else {
-      element.innerHTML = `${selectedVersion} ( ${totalRows} APIs filtered by tags: <a href="#" class="filter-tag-link" style="color: var(--el-color-primary); text-decoration: none; cursor: pointer; transition: color 0.2s ease;">${selectedTags}</a>)`;
+      element.innerHTML = `${escapeHtml(versionLabel())} ( ${totalRows} APIs filtered by tags: <a href="#" class="filter-tag-link" style="color: var(--el-color-primary); text-decoration: none; cursor: pointer; transition: color 0.2s ease;">${escapeHtml(String(selectedTags))}</a>)`;
 
       // Add hover effect
       const tagLinkEl = element.querySelector('.filter-tag-link') as HTMLElement
@@ -135,10 +149,11 @@ watch(
     console.log('SearchNav: version changed to:', version)
     selectedVersion = version
     selectedTags = route.query.tags ? route.query.tags : 'NONE'
+    selectedFilter = resourceDocsFilterFromQuery(route.query)
     if(selectedTags === 'NONE') {
-      docs.value = getGroupedResourceDocs(version, resourceDocs.value)
+      docs.value = getGroupedResourceDocs(version, resourceDocs.value, selectedFilter)
     } else {
-      docs.value = getFilteredGroupedResourceDocs(version, selectedTags, resourceDocs.value)
+      docs.value = getFilteredGroupedResourceDocs(version, selectedTags, resourceDocs.value, selectedFilter)
     }
     groups.value = JSON.parse(JSON.stringify(docs.value))
     activeKeys.value = Object.keys(groups.value)
@@ -158,14 +173,15 @@ watch(
 )
 
 watch(
-  () => route.query.tags,
-  async (tags) => {
-    console.log('SearchNav: tags changed to:', tags)
+  [() => route.query.tags, () => route.query.content, () => route.query.bank_id],
+  async ([tags, content, bankId]) => {
+    console.log('SearchNav: tags/content/bank_id changed to:', tags, content, bankId)
     selectedTags = tags ? tags : 'NONE'
+    selectedFilter = resourceDocsFilterFromQuery(route.query)
     if(selectedTags === 'NONE') {
-      docs.value = getGroupedResourceDocs(selectedVersion, resourceDocs.value)
+      docs.value = getGroupedResourceDocs(selectedVersion, resourceDocs.value, selectedFilter)
     } else {
-      docs.value = getFilteredGroupedResourceDocs(selectedVersion, selectedTags, resourceDocs.value)
+      docs.value = getFilteredGroupedResourceDocs(selectedVersion, selectedTags, resourceDocs.value, selectedFilter)
     }
     groups.value = JSON.parse(JSON.stringify(docs.value))
     activeKeys.value = Object.keys(groups.value)
@@ -178,9 +194,9 @@ watch(
     if (element !== null) {
       const totalRows = Object.values(groups.value).reduce((acc, currentValue) => acc + currentValue.length, 0)
       if(selectedTags === 'NONE') {
-        element.textContent = `${selectedVersion} ( ${totalRows} APIs )`;
+        element.textContent = `${versionLabel()} ( ${totalRows} APIs )`;
       } else {
-        element.innerHTML = `${selectedVersion} ( ${totalRows} APIs filtered by tags: <a href="#" class="filter-tag-link" style="color: var(--el-color-primary); text-decoration: none; cursor: pointer; transition: color 0.2s ease;">${selectedTags}</a>)`;
+        element.innerHTML = `${escapeHtml(versionLabel())} ( ${totalRows} APIs filtered by tags: <a href="#" class="filter-tag-link" style="color: var(--el-color-primary); text-decoration: none; cursor: pointer; transition: color 0.2s ease;">${escapeHtml(String(selectedTags))}</a>)`;
 
         // Add hover effect
         const tagLinkEl = element.querySelector('.filter-tag-link') as HTMLElement
@@ -207,7 +223,7 @@ const countApis = () => {
   let element = document.getElementById("selected-api-version")
   if (element !== null) {
     const totalRows = Object.values(groups.value).reduce((acc, currentValue) => acc + currentValue.length, 0)
-    element.textContent = `${selectedVersion} ( ${totalRows} APIs )`;
+    element.textContent = `${versionLabel()} ( ${totalRows} APIs )`;
   }
 }
 
@@ -308,7 +324,7 @@ const searchEvent = (value) => {
             <div class="el-tabs--right">
               <div v-for="(value, key) of apiCollectionsEndpoint[api.api_collection_name]" :key="key" class="api-router-tab"
                 @click="setActive">
-                <RouterLink :to="{ name: 'api', params: { version: selectedVersion }, query: { operationid: value } }" :id="value"
+                <RouterLink :to="{ name: 'api', params: { version: selectedVersion }, query: { operationid: value, ...resourceDocsFilterQuery(selectedFilter) } }" :id="value"
                   active-class="active-api-router-link" class="api-router-link">{{ operationIdTitle[value] }}</RouterLink>
               </div>
             </div>
@@ -318,7 +334,7 @@ const searchEvent = (value) => {
           <div class="el-tabs--right">
             <div v-for="(value, key) of sortLinks(groups[key])" :key="value" class="api-router-tab" @click="setActive">
               <RouterLink active-class="active-api-router-link" class="api-router-link" :id="value"
-                :to="{ name: 'api', params: { version: selectedVersion }, query: { operationid: value } }">{{ key }}</RouterLink>
+                :to="{ name: 'api', params: { version: selectedVersion }, query: { operationid: value, ...resourceDocsFilterQuery(selectedFilter) } }">{{ key }}</RouterLink>
             </div>
           </div>
         </el-collapse-item>
