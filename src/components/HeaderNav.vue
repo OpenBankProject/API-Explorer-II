@@ -72,15 +72,43 @@ const contentFilters = [
 const activeContentFilter = computed(() =>
   route.query.content === 'static' || route.query.content === 'dynamic' ? route.query.content : 'all'
 )
-const contentFilterLink = (value: string) => ({
-  name: 'api',
-  params: { version: route.params.version },
-  query: value === 'all' ? {} : { content: value }
-})
+const contentFilterLink = (value: string) => {
+  const version = route.params.version as string
+  // Dynamic goes back to the namespace last picked, if this version has dynamic docs in it.
+  const bankId =
+    value === 'dynamic' && savedNamespace.value && getDynamicNamespaces(version, resourceDocs).includes(savedNamespace.value)
+      ? savedNamespace.value
+      : undefined
+  return {
+    name: 'api',
+    params: { version },
+    query: value === 'all' ? {} : { content: value, bank_id: bankId }
+  }
+}
 
 // In Dynamic mode the docs can be narrowed further to one namespace: a bank, or SYS.
 const ALL_NAMESPACES = 'All'
 const resourceDocs = inject(obpResourceDocsKey, {})
+// The namespace last picked, remembered in this browser only. Storage can be unavailable (e.g.
+// blocked site data), in which case nothing is remembered.
+const NAMESPACE_STORAGE_KEY = 'obp-dynamic-namespace'
+const readSavedNamespace = (): string | undefined => {
+  try {
+    return localStorage.getItem(NAMESPACE_STORAGE_KEY) || undefined
+  } catch {
+    return undefined
+  }
+}
+const savedNamespace = ref(readSavedNamespace())
+const saveNamespace = (namespace: string | undefined) => {
+  savedNamespace.value = namespace
+  try {
+    if (namespace) localStorage.setItem(NAMESPACE_STORAGE_KEY, namespace)
+    else localStorage.removeItem(NAMESPACE_STORAGE_KEY)
+  } catch {
+    // Not remembered, which only costs a click next time.
+  }
+}
 const namespaces = computed(() =>
   isResourceDocsPage.value && activeContentFilter.value === 'dynamic'
     ? [ALL_NAMESPACES, ...getDynamicNamespaces(route.params.version as string, resourceDocs)]
@@ -90,6 +118,7 @@ const namespaceLabel = computed(
   () => `Namespace: ${typeof route.query.bank_id === 'string' && route.query.bank_id ? route.query.bank_id : ALL_NAMESPACES}`
 )
 const selectNamespace = (namespace: string) => {
+  saveNamespace(namespace === ALL_NAMESPACES ? undefined : namespace)
   router.push({
     name: 'api',
     params: { version: route.params.version },
