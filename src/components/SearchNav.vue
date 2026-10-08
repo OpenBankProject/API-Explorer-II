@@ -32,7 +32,12 @@ import { Search } from '@element-plus/icons-vue'
 import { inject, onBeforeMount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { OBP_API_DEFAULT_RESOURCE_DOC_VERSION, getMyAPICollections, getMyAPICollectionsEndpoint } from '../obp'
-import { getGroupedResourceDocs, getFilteredGroupedResourceDocs } from '../obp/resource-docs'
+import {
+  getGroupedResourceDocs,
+  getFilteredGroupedResourceDocs,
+  resourceDocsFilterFromQuery,
+  resourceDocsFilterQuery
+} from '../obp/resource-docs'
 import { SEARCH_LINKS_COLOR as searchLinksColorSetting } from '../obp/style-setting'
 const operationIdTitle = {}
 const resourceDocs = ref({})
@@ -83,13 +88,13 @@ export const initializeAPICollections = async () => {
 const route = useRoute()
 let selectedVersion = route.params.version ? route.params.version : `${OBP_API_DEFAULT_RESOURCE_DOC_VERSION}`
 let selectedTags = route.query.tags ? route.query.tags : 'NONE'
-let selectedContent = route.query.content as string | undefined
+let selectedFilter = resourceDocsFilterFromQuery(route.query)
 onBeforeMount(async () => {
   resourceDocs.value = inject(obpResourceDocsKey)!
   if(selectedTags === 'NONE') {
-    docs.value = getGroupedResourceDocs(selectedVersion, resourceDocs.value, selectedContent)
+    docs.value = getGroupedResourceDocs(selectedVersion, resourceDocs.value, selectedFilter)
   } else {
-    docs.value = getFilteredGroupedResourceDocs(selectedVersion, selectedTags, resourceDocs.value, selectedContent)
+    docs.value = getFilteredGroupedResourceDocs(selectedVersion, selectedTags, resourceDocs.value, selectedFilter)
   }
   groups.value = JSON.parse(JSON.stringify(docs.value))
   activeKeys.value = Object.keys(groups.value)
@@ -136,11 +141,11 @@ watch(
     console.log('SearchNav: version changed to:', version)
     selectedVersion = version
     selectedTags = route.query.tags ? route.query.tags : 'NONE'
-    selectedContent = route.query.content as string | undefined
+    selectedFilter = resourceDocsFilterFromQuery(route.query)
     if(selectedTags === 'NONE') {
-      docs.value = getGroupedResourceDocs(version, resourceDocs.value, selectedContent)
+      docs.value = getGroupedResourceDocs(version, resourceDocs.value, selectedFilter)
     } else {
-      docs.value = getFilteredGroupedResourceDocs(version, selectedTags, resourceDocs.value, selectedContent)
+      docs.value = getFilteredGroupedResourceDocs(version, selectedTags, resourceDocs.value, selectedFilter)
     }
     groups.value = JSON.parse(JSON.stringify(docs.value))
     activeKeys.value = Object.keys(groups.value)
@@ -160,15 +165,15 @@ watch(
 )
 
 watch(
-  [() => route.query.tags, () => route.query.content],
-  async ([tags, content]) => {
-    console.log('SearchNav: tags/content changed to:', tags, content)
+  [() => route.query.tags, () => route.query.content, () => route.query.bank_id],
+  async ([tags, content, bankId]) => {
+    console.log('SearchNav: tags/content/bank_id changed to:', tags, content, bankId)
     selectedTags = tags ? tags : 'NONE'
-    selectedContent = content as string | undefined
+    selectedFilter = resourceDocsFilterFromQuery(route.query)
     if(selectedTags === 'NONE') {
-      docs.value = getGroupedResourceDocs(selectedVersion, resourceDocs.value, selectedContent)
+      docs.value = getGroupedResourceDocs(selectedVersion, resourceDocs.value, selectedFilter)
     } else {
-      docs.value = getFilteredGroupedResourceDocs(selectedVersion, selectedTags, resourceDocs.value, selectedContent)
+      docs.value = getFilteredGroupedResourceDocs(selectedVersion, selectedTags, resourceDocs.value, selectedFilter)
     }
     groups.value = JSON.parse(JSON.stringify(docs.value))
     activeKeys.value = Object.keys(groups.value)
@@ -311,7 +316,7 @@ const searchEvent = (value) => {
             <div class="el-tabs--right">
               <div v-for="(value, key) of apiCollectionsEndpoint[api.api_collection_name]" :key="key" class="api-router-tab"
                 @click="setActive">
-                <RouterLink :to="{ name: 'api', params: { version: selectedVersion }, query: { operationid: value, content: selectedContent } }" :id="value"
+                <RouterLink :to="{ name: 'api', params: { version: selectedVersion }, query: { operationid: value, ...resourceDocsFilterQuery(selectedFilter) } }" :id="value"
                   active-class="active-api-router-link" class="api-router-link">{{ operationIdTitle[value] }}</RouterLink>
               </div>
             </div>
@@ -321,7 +326,7 @@ const searchEvent = (value) => {
           <div class="el-tabs--right">
             <div v-for="(value, key) of sortLinks(groups[key])" :key="value" class="api-router-tab" @click="setActive">
               <RouterLink active-class="active-api-router-link" class="api-router-link" :id="value"
-                :to="{ name: 'api', params: { version: selectedVersion }, query: { operationid: value, content: selectedContent } }">{{ key }}</RouterLink>
+                :to="{ name: 'api', params: { version: selectedVersion }, query: { operationid: value, ...resourceDocsFilterQuery(selectedFilter) } }">{{ key }}</RouterLink>
             </div>
           </div>
         </el-collapse-item>

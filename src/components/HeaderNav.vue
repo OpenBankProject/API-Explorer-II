@@ -36,7 +36,8 @@ import {
   HEADER_LINKS_HOVER_COLOR as headerLinksHoverColorSetting,
   HEADER_LINKS_BACKGROUND_COLOR as headerLinksBackgroundColorSetting
 } from '../obp/style-setting'
-import { obpApiActiveVersionsKey, obpGroupedMessageDocsKey, obpGroupedMessageDocsJsonSchemaKey, obpMyCollectionsEndpointKey } from '@/obp/keys'
+import { obpApiActiveVersionsKey, obpGroupedMessageDocsKey, obpGroupedMessageDocsJsonSchemaKey, obpMyCollectionsEndpointKey, obpResourceDocsKey } from '@/obp/keys'
+import { getDynamicNamespaces } from '../obp/resource-docs'
 import SvelteDropdown from './SvelteDropdown.vue'
 import { theme, toggleTheme } from '../obp/theme'
 
@@ -76,6 +77,25 @@ const contentFilterLink = (value: string) => ({
   params: { version: route.params.version },
   query: value === 'all' ? {} : { content: value }
 })
+
+// In Dynamic mode the docs can be narrowed further to one namespace: a bank, or SYS.
+const ALL_NAMESPACES = 'All'
+const resourceDocs = inject(obpResourceDocsKey, {})
+const namespaces = computed(() =>
+  isResourceDocsPage.value && activeContentFilter.value === 'dynamic'
+    ? [ALL_NAMESPACES, ...getDynamicNamespaces(route.params.version as string, resourceDocs)]
+    : []
+)
+const namespaceLabel = computed(
+  () => `Namespace: ${typeof route.query.bank_id === 'string' && route.query.bank_id ? route.query.bank_id : ALL_NAMESPACES}`
+)
+const selectNamespace = (namespace: string) => {
+  router.push({
+    name: 'api',
+    params: { version: route.params.version },
+    query: namespace === ALL_NAMESPACES ? { content: 'dynamic' } : { content: 'dynamic', bank_id: namespace }
+  })
+}
 
 // Help menu items (includes debug pages)
 const helpMenuRoutes: Record<string, string> = {
@@ -360,6 +380,15 @@ const getCurrentPath = () => {
           :to="contentFilterLink(filter.value)"
           >{{ filter.label }}</RouterLink
         >
+        <SvelteDropdown
+          v-if="namespaces.length > 0"
+          id="header-nav-namespace"
+          :label="namespaceLabel"
+          :items="namespaces"
+          :hover-color="headerLinksHoverColor"
+          :background-color="headerLinksBackgroundColor"
+          @select="selectNamespace"
+        />
       </span>
       <RouterLink v-else class="router-link" id="header-nav-tags" :to="'/resource-docs/' + OBP_API_DEFAULT_RESOURCE_DOC_VERSION">{{
         $t('header.api_explorer') }}</RouterLink>
@@ -627,6 +656,7 @@ button.theme-toggle {
 
 /* Custom dropdown containers */
 #header-nav-versions,
+#header-nav-namespace,
 #header-nav-message-docs,
 #header-nav-help {
   display: inline-block;

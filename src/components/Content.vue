@@ -38,7 +38,13 @@ createMyAPICollectionEndpoint,
 deleteMyAPICollectionEndpoint,
 getCurrentUser
 } from '../obp'
-import { getOperationDetails, getVersionResourceDocs } from '../obp/resource-docs'
+import {
+  getOperationDetails,
+  getVersionResourceDocs,
+  resourceDocsFilterFromQuery,
+  resourceDocsFilterQuery,
+  type ResourceDocsFilter
+} from '../obp/resource-docs'
 import { SUMMARY_PAGER_LINKS_COLOR as summaryPagerLinksColorSetting } from '../obp/style-setting'
 import { initializeAPICollections, setTabActive } from './SearchNav.vue'
 
@@ -61,7 +67,7 @@ const placeholderVersion = ref('')
 const totalEndpoints = ref(0)
 let routeId = ''
 let version = obpVersion
-let content: string | undefined
+let filter: ResourceDocsFilter = {}
 let isFavorite = false
 let apiCollectionsEndpoint = inject(obpMyCollectionsEndpointKey)!
 
@@ -112,7 +118,7 @@ const filterByTag = (tag: string) => {
   router.push({
     name: 'api',
     params: { version: version },
-    query: { tags: tag, content }
+    query: { tags: tag, ...resourceDocsFilterQuery(filter) }
   })
 }
 
@@ -120,7 +126,7 @@ const clearTagFilter = () => {
   router.push({
     name: 'api',
     params: { version: version },
-    query: { content }
+    query: resourceDocsFilterQuery(filter)
   })
 }
 
@@ -202,7 +208,7 @@ const showNotification = (message: string, type: string): void => {
 }
 
 const getAllTags = (version: string) => {
-  const docs = getVersionResourceDocs(version, resourceDocs, content)
+  const docs = getVersionResourceDocs(version, resourceDocs, filter)
   const tagSet = new Set<string>()
   docs.forEach((doc: any) => {
     if (doc.tags && Array.isArray(doc.tags)) {
@@ -215,13 +221,13 @@ const getAllTags = (version: string) => {
 onMounted(async () => {
   routeId = route.query.operationid
   version = route.params.version ? route.params.version : obpVersion
-  content = route.query.content as string | undefined
+  filter = resourceDocsFilterFromQuery(route.query)
 
   if (!routeId) {
     // No operation selected, show placeholder
     showPlaceholder.value = true
     placeholderVersion.value = version
-    totalEndpoints.value = getVersionResourceDocs(version, resourceDocs, content).length
+    totalEndpoints.value = getVersionResourceDocs(version, resourceDocs, filter).length
     allTags.value = getAllTags(version)
     clearHeaderTags()
   } else {
@@ -234,13 +240,13 @@ onMounted(async () => {
 onBeforeRouteUpdate(async (to) => {
   routeId = to.query.operationid
   version = to.params.version ? to.params.version : obpVersion
-  content = to.query.content as string | undefined
+  filter = resourceDocsFilterFromQuery(to.query)
 
   if (!routeId) {
     // Version changed but no endpoint selected
     showPlaceholder.value = true
     placeholderVersion.value = version
-    totalEndpoints.value = getVersionResourceDocs(version, resourceDocs, content).length
+    totalEndpoints.value = getVersionResourceDocs(version, resourceDocs, filter).length
     allTags.value = getAllTags(version)
     clearHeaderTags()
   } else {
@@ -327,12 +333,12 @@ onBeforeRouteUpdate(async (to) => {
               <ArrowLeftBold />
             </el-icon>
             <RouterLink v-if="displayPrev" class="pager-router-link"
-              :to="{ name: 'api', params: { version: prev.version }, query: { operationid: prev.id, content } }">{{ prev.title }}
+              :to="{ name: 'api', params: { version: prev.version }, query: { operationid: prev.id, ...resourceDocsFilterQuery(filter) } }">{{ prev.title }}
             </RouterLink>
           </el-col>
           <el-col :span="12" class="pager-right">
             <RouterLink v-if="displayNext" class="pager-router-link"
-              :to="{ name: 'api', params: { version: next.version }, query: { operationid: next.id, content } }">{{ next.title }}
+              :to="{ name: 'api', params: { version: next.version }, query: { operationid: next.id, ...resourceDocsFilterQuery(filter) } }">{{ next.title }}
             </RouterLink>
             <el-icon v-if="displayNext">
               <ArrowRightBold />

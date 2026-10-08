@@ -78,35 +78,79 @@ export async function getOBPDynamicResourceDocs(apiStandardAndVersion: string): 
 // Dynamic Endpoint and Dynamic Resource Doc.
 export const DYNAMIC_DOCS_VERSION = 'OBPdynamic-entity'
 
-// A version's resource docs, narrowed by the ?content= query param (static, dynamic, or all).
-// A versioned listing already includes the dynamic docs, at that version's URLs, so they are picked
-// out by implementing function: those names are the same in every version, unlike operation ids.
+// The namespace OBP-API files system level dynamic docs under, rather than under a bank.
+export const SYSTEM_NAMESPACE = 'SYS'
+
+// How the API Explorer page narrows a version's docs: ?content= (static, dynamic, or all) and, for
+// dynamic docs only, ?bank_id= (a bank id, or SYS).
+export interface ResourceDocsFilter {
+  content?: string
+  bankId?: string
+}
+
+export function resourceDocsFilterFromQuery(query: any): ResourceDocsFilter {
+  const content = typeof query?.content === 'string' ? query.content : undefined
+  const bankId = typeof query?.bank_id === 'string' && query.bank_id ? query.bank_id : undefined
+  return { content, bankId: content === 'dynamic' ? bankId : undefined }
+}
+
+// The query params that carry a filter onto a link; undefined params are left out of the URL.
+export function resourceDocsFilterQuery(filter: ResourceDocsFilter): Record<string, string | undefined> {
+  return { content: filter.content, bank_id: filter.bankId }
+}
+
+// The bank a dynamic doc belongs to. Bank level dynamic docs live under /banks/BANK_ID/, and so
+// do system level ones (as /banks/SYS/) except some that have no bank in their URL at all, which
+// OBP-API also treats as system level.
+export function dynamicDocBankId(doc: any): string {
+  const match = (doc.request_url || '').match(/^\/banks\/([^/]+)/)
+  return match ? match[1] : SYSTEM_NAMESPACE
+}
+
+// A version's resource docs, narrowed by filter. A versioned listing already includes the dynamic
+// docs, at that version's URLs, so they are picked out by implementing function: those names are
+// the same in every version, unlike operation ids.
 export function getVersionResourceDocs(
   apiStandardAndVersion: string,
   docs: any,
-  content?: string
+  filter: ResourceDocsFilter = {}
 ): any[] {
+  const { content, bankId } = filter
   const versionDocs = docs?.[apiStandardAndVersion]?.resource_docs || []
   if (content !== 'dynamic' && content !== 'static') return versionDocs
+  let filtered: any[]
   if (apiStandardAndVersion === DYNAMIC_DOCS_VERSION) {
-    return content === 'dynamic' ? versionDocs : []
+    filtered = content === 'dynamic' ? versionDocs : []
+  } else {
+    const dynamicDocs = docs?.[DYNAMIC_DOCS_VERSION]?.resource_docs
+    if (!dynamicDocs) {
+      console.warn(`No ${DYNAMIC_DOCS_VERSION} docs cached, cannot filter by content=${content}`)
+      return content === 'dynamic' ? [] : versionDocs
+    }
+    const dynamicFunctions = new Set(dynamicDocs.map((doc: any) => doc.implemented_by?.function))
+    filtered = versionDocs.filter(
+      (doc: any) => dynamicFunctions.has(doc.implemented_by?.function) === (content === 'dynamic')
+    )
   }
-  const dynamicDocs = docs?.[DYNAMIC_DOCS_VERSION]?.resource_docs
-  if (!dynamicDocs) {
-    console.warn(`No ${DYNAMIC_DOCS_VERSION} docs cached, cannot filter by content=${content}`)
-    return content === 'dynamic' ? [] : versionDocs
-  }
-  const dynamicFunctions = new Set(dynamicDocs.map((doc: any) => doc.implemented_by?.function))
-  return versionDocs.filter(
-    (doc: any) => dynamicFunctions.has(doc.implemented_by?.function) === (content === 'dynamic')
+  return content === 'dynamic' && bankId
+    ? filtered.filter((doc: any) => dynamicDocBankId(doc) === bankId)
+    : filtered
+}
+
+// The namespaces of a version's dynamic docs, SYS first and then the banks in order.
+export function getDynamicNamespaces(apiStandardAndVersion: string, docs: any): string[] {
+  const bankIds = new Set(
+    getVersionResourceDocs(apiStandardAndVersion, docs, { content: 'dynamic' }).map(dynamicDocBankId)
   )
+  const banks = [...bankIds].filter((bankId) => bankId !== SYSTEM_NAMESPACE).sort()
+  return bankIds.has(SYSTEM_NAMESPACE) ? [SYSTEM_NAMESPACE, ...banks] : banks
 }
 
 export function getFilteredGroupedResourceDocs(
   apiStandardAndVersion: string,
   tags: any,
   docs: any,
-  content?: string
+  filter?: ResourceDocsFilter
 ): Promise<any> {
   console.log(docs)
   if (
@@ -116,7 +160,7 @@ export function getFilteredGroupedResourceDocs(
   )
     return Promise.resolve<any>({})
   let list = tags.split(',')
-  return getVersionResourceDocs(apiStandardAndVersion, docs, content)
+  return getVersionResourceDocs(apiStandardAndVersion, docs, filter)
     .filter((subArray: any) => subArray.tags.some((value: string) => list.includes(value))) // Filter by tags
     .reduce((values: any, doc: any) => {
       const tag = doc.tags[0] // Group by the first tag at resorce doc
@@ -128,7 +172,7 @@ export function getFilteredGroupedResourceDocs(
 export function getGroupedResourceDocs(
   apiStandardAndVersion: string,
   docs: any,
-  content?: string
+  filter?: ResourceDocsFilter
 ): Promise<any> {
   if (apiStandardAndVersion === undefined || docs === undefined) return Promise.resolve<any>({})
 
@@ -138,7 +182,7 @@ export function getGroupedResourceDocs(
     return Promise.resolve<any>({})
   }
 
-  return getVersionResourceDocs(apiStandardAndVersion, docs, content).reduce((values: any, doc: any) => {
+  return getVersionResourceDocs(apiStandardAndVersion, docs, filter).reduce((values: any, doc: any) => {
     const tag = doc.tags[0] // Group by the first tag at resorce doc
     ;(values[tag] = values[tag] || []).push(doc)
     return values
