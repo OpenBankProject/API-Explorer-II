@@ -74,10 +74,39 @@ export async function getOBPDynamicResourceDocs(apiStandardAndVersion: string): 
   }
 }
 
+// The pseudo version whose docs cacheDoc fetches with ?content=dynamic, i.e. every Dynamic Entity,
+// Dynamic Endpoint and Dynamic Resource Doc.
+export const DYNAMIC_DOCS_VERSION = 'OBPdynamic-entity'
+
+// A version's resource docs, narrowed by the ?content= query param (static, dynamic, or all).
+// A versioned listing already includes the dynamic docs, at that version's URLs, so they are picked
+// out by implementing function: those names are the same in every version, unlike operation ids.
+export function getVersionResourceDocs(
+  apiStandardAndVersion: string,
+  docs: any,
+  content?: string
+): any[] {
+  const versionDocs = docs?.[apiStandardAndVersion]?.resource_docs || []
+  if (content !== 'dynamic' && content !== 'static') return versionDocs
+  if (apiStandardAndVersion === DYNAMIC_DOCS_VERSION) {
+    return content === 'dynamic' ? versionDocs : []
+  }
+  const dynamicDocs = docs?.[DYNAMIC_DOCS_VERSION]?.resource_docs
+  if (!dynamicDocs) {
+    console.warn(`No ${DYNAMIC_DOCS_VERSION} docs cached, cannot filter by content=${content}`)
+    return content === 'dynamic' ? [] : versionDocs
+  }
+  const dynamicFunctions = new Set(dynamicDocs.map((doc: any) => doc.implemented_by?.function))
+  return versionDocs.filter(
+    (doc: any) => dynamicFunctions.has(doc.implemented_by?.function) === (content === 'dynamic')
+  )
+}
+
 export function getFilteredGroupedResourceDocs(
   apiStandardAndVersion: string,
   tags: any,
-  docs: any
+  docs: any,
+  content?: string
 ): Promise<any> {
   console.log(docs)
   if (
@@ -87,7 +116,7 @@ export function getFilteredGroupedResourceDocs(
   )
     return Promise.resolve<any>({})
   let list = tags.split(',')
-  return docs[apiStandardAndVersion].resource_docs
+  return getVersionResourceDocs(apiStandardAndVersion, docs, content)
     .filter((subArray: any) => subArray.tags.some((value: string) => list.includes(value))) // Filter by tags
     .reduce((values: any, doc: any) => {
       const tag = doc.tags[0] // Group by the first tag at resorce doc
@@ -96,7 +125,11 @@ export function getFilteredGroupedResourceDocs(
     }, {})
 }
 
-export function getGroupedResourceDocs(apiStandardAndVersion: string, docs: any): Promise<any> {
+export function getGroupedResourceDocs(
+  apiStandardAndVersion: string,
+  docs: any,
+  content?: string
+): Promise<any> {
   if (apiStandardAndVersion === undefined || docs === undefined) return Promise.resolve<any>({})
 
   // Check if the specific version exists in docs
@@ -105,7 +138,7 @@ export function getGroupedResourceDocs(apiStandardAndVersion: string, docs: any)
     return Promise.resolve<any>({})
   }
 
-  return docs[apiStandardAndVersion].resource_docs.reduce((values: any, doc: any) => {
+  return getVersionResourceDocs(apiStandardAndVersion, docs, content).reduce((values: any, doc: any) => {
     const tag = doc.tags[0] // Group by the first tag at resorce doc
     ;(values[tag] = values[tag] || []).push(doc)
     return values

@@ -61,6 +61,22 @@ const combinedMessageDocs = computed(() => {
   return [...regularDocs, ...jsonSchemaDocs]
 })
 
+// On the API Explorer page the header filters its docs by ?content= instead of linking to it.
+const isResourceDocsPage = computed(() => route.name === 'api')
+const contentFilters = [
+  { value: 'static', label: 'Static' },
+  { value: 'dynamic', label: 'Dynamic' },
+  { value: 'all', label: 'All' }
+]
+const activeContentFilter = computed(() =>
+  route.query.content === 'static' || route.query.content === 'dynamic' ? route.query.content : 'all'
+)
+const contentFilterLink = (value: string) => ({
+  name: 'api',
+  params: { version: route.params.version },
+  query: value === 'all' ? {} : { content: value }
+})
+
 // Help menu items (includes debug pages)
 const helpMenuRoutes: Record<string, string> = {
   'Help': '/help',
@@ -335,7 +351,17 @@ const getCurrentPath = () => {
       <a v-bind:href="obpApiHybridPost" class="router-link" id="header-nav-home">
         {{ $t('header.portal_home') }}
       </a>
-      <RouterLink class="router-link" id="header-nav-tags" :to="'/resource-docs/' + OBP_API_DEFAULT_RESOURCE_DOC_VERSION">{{
+      <span v-if="isResourceDocsPage" class="content-filter">
+        <RouterLink
+          v-for="filter in contentFilters"
+          :key="filter.value"
+          class="router-link"
+          :class="{ 'content-filter-active': activeContentFilter === filter.value }"
+          :to="contentFilterLink(filter.value)"
+          >{{ filter.label }}</RouterLink
+        >
+      </span>
+      <RouterLink v-else class="router-link" id="header-nav-tags" :to="'/resource-docs/' + OBP_API_DEFAULT_RESOURCE_DOC_VERSION">{{
         $t('header.api_explorer') }}</RouterLink>
       <RouterLink class="router-link" id="header-nav-glossary" to="/glossary">{{
         $t('header.glossary')
@@ -544,6 +570,11 @@ nav {
 .router-link:hover {
   background-color: v-bind(headerLinksBackgroundColor) !important;
   color: v-bind(headerLinksHoverColor) !important;
+}
+
+.router-link.content-filter-active {
+  background-color: v-bind(headerLinksBackgroundColor);
+  color: v-bind(HEADER_LINKS_COLOR);
 }
 
 .logo {
