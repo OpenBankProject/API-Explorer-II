@@ -36,7 +36,7 @@ import {
   HEADER_LINKS_HOVER_COLOR as headerLinksHoverColorSetting,
   HEADER_LINKS_BACKGROUND_COLOR as headerLinksBackgroundColorSetting
 } from '../obp/style-setting'
-import { obpApiActiveVersionsKey, obpGroupedMessageDocsKey, obpGroupedMessageDocsJsonSchemaKey, obpMyCollectionsEndpointKey, obpResourceDocsKey } from '@/obp/keys'
+import { obpApiActiveVersionsKey, obpMyCollectionsEndpointKey, obpResourceDocsKey } from '@/obp/keys'
 import { getDynamicNamespaces } from '../obp/resource-docs'
 import SvelteDropdown from './SvelteDropdown.vue'
 import { theme, toggleTheme } from '../obp/theme'
@@ -52,15 +52,6 @@ const showObpApiManagerButton = computed(() => import.meta.env.VITE_SHOW_API_MAN
 const loginUsername = ref('')
 const logoffurl = ref('')
 const obpApiVersions = ref(inject(obpApiActiveVersionsKey) || [])
-const obpMessageDocs = ref(Object.keys(inject(obpGroupedMessageDocsKey) || {}))
-const obpMessageDocsJsonSchema = ref(Object.keys(inject(obpGroupedMessageDocsJsonSchemaKey) || {}))
-
-// Combine message docs with JSON Schema items (with "J Schema" postfix)
-const combinedMessageDocs = computed(() => {
-  const regularDocs = obpMessageDocs.value || []
-  const jsonSchemaDocs = (obpMessageDocsJsonSchema.value || []).map(connector => `${connector} J Schema`)
-  return [...regularDocs, ...jsonSchemaDocs]
-})
 
 // On the API Explorer page the header filters its docs by ?content= instead of linking to it.
 const isResourceDocsPage = computed(() => route.name === 'api')
@@ -138,7 +129,8 @@ const GRPC_SERVICES_ITEM = 'gRPC Services'
 const helpMenuItems = ref(Object.keys(helpMenuRoutes))
 
 // Split versions into main and other.
-// Main = most recent versions per standard (newest first), then dynamic endpoints/entities.
+// Main = most recent versions per standard (newest first).
+// The dynamic pseudo versions are left out: Static / Dynamic / All on any version shows their docs.
 const DYNAMIC_ITEMS = ['dynamic-endpoints', 'dynamic-entities', 'OBPdynamic-endpoint', 'OBPdynamic-entity']
 
 const versionNumbers = (v: string): number[] =>
@@ -161,13 +153,12 @@ const mostRecent = (all: string[], standard: string, count: number): string[] =>
     .slice(0, count)
 
 const sortedVersions = computed(() => {
-  const all = obpApiVersions.value || []
+  const all = (obpApiVersions.value || []).filter((v) => !DYNAMIC_ITEMS.includes(v))
   console.log('All available versions:', all)
   const main = [
     ...mostRecent(all, 'OBP', 3),
     ...mostRecent(all, 'BG', 2),
-    ...mostRecent(all, 'UK', 2),
-    ...DYNAMIC_ITEMS.filter((v) => all.includes(v))
+    ...mostRecent(all, 'UK', 2)
   ]
   console.log('Main versions found:', main)
   const others = all.filter(v => !main.includes(v)).sort()
@@ -371,14 +362,12 @@ onUnmounted(() => {
 
 watchEffect(() => {
   const routeName = typeof route.name === 'string' ? route.name : null
-  if (routeName && route.params && !route.params.id) {
+  if (routeName?.startsWith('message-docs')) {
+    setActive(document.getElementById('header-nav-message-docs'))
+  } else if (routeName && route.params && !route.params.id) {
     setActive(document.getElementById(`header-nav-${routeName}`))
   } else {
-    if (routeName === 'message-docs') {
-      clearActiveTab()
-    } else {
-      setActive(document.getElementById('header-nav-tags'))
-    }
+    setActive(document.getElementById('header-nav-tags'))
   }
 })
 
@@ -445,15 +434,7 @@ const getCurrentPath = () => {
         :background-color="headerLinksBackgroundColor"
         @select="handleMore"
       />
-      <SvelteDropdown
-        class="menu-right"
-        id="header-nav-message-docs"
-        label="Message Docs"
-        :items="combinedMessageDocs"
-        :hover-color="headerLinksHoverColor"
-        :background-color="headerLinksBackgroundColor"
-        @select="handleMore"
-      />
+      <RouterLink class="router-link" id="header-nav-message-docs" to="/message-docs">Message Docs</RouterLink>
       <!--<span class="el-dropdown-link">
         <RouterLink class="router-link" id="header-nav-spaces" to="/spaces">{{
           $t('header.spaces')
@@ -686,7 +667,6 @@ button.theme-toggle {
 /* Custom dropdown containers */
 #header-nav-versions,
 #header-nav-namespace,
-#header-nav-message-docs,
 #header-nav-help {
   display: inline-block;
   vertical-align: middle;

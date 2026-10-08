@@ -36,10 +36,12 @@ import {
   getGroupedResourceDocs,
   getFilteredGroupedResourceDocs,
   resourceDocsFilterFromQuery,
-  resourceDocsFilterQuery
+  resourceDocsFilterQuery,
+  tagDisplayName,
+  byTagDisplayName,
+  summaryDisplayName
 } from '../obp/resource-docs'
 import { SEARCH_LINKS_COLOR as searchLinksColorSetting } from '../obp/style-setting'
-import { escapeHtml } from '../obp/common-functions'
 const operationIdTitle = {}
 const resourceDocs = ref({})
 const docs = ref({})
@@ -92,6 +94,13 @@ let selectedTags = route.query.tags ? route.query.tags : 'NONE'
 let selectedFilter = resourceDocsFilterFromQuery(route.query)
 
 // The version, plus which docs the ?content= and ?bank_id= filters show, e.g. OBPv7.0.0 · Dynamic · ogcr
+// The tags the docs are filtered by, as they are shown
+const selectedTagsLabel = () =>
+  String(selectedTags)
+    .split(',')
+    .map((tag) => tagDisplayName(tag, selectedFilter.bankId))
+    .join(',')
+
 const versionLabel = () => {
   const { content, bankId } = selectedFilter
   const kind = content === 'dynamic' ? ' · Dynamic' : content === 'static' ? ' · Static' : ''
@@ -106,33 +115,10 @@ onBeforeMount(async () => {
   }
   groups.value = JSON.parse(JSON.stringify(docs.value))
   activeKeys.value = Object.keys(groups.value)
-  sortedKeys.value = activeKeys.value.sort()
+  sortedKeys.value = activeKeys.value.sort(byTagDisplayName(selectedFilter.bankId))
   await initializeAPICollections()
   setTabActive(route.query.operationid)
-  let element = document.getElementById("selected-api-version")
-  if (element !== null) {
-    const totalRows = Object.values(groups.value).reduce((acc, currentValue) => acc + currentValue.length, 0)
-    if(selectedTags === 'NONE') {
-      element.textContent = `${versionLabel()} ( ${totalRows} APIs )`;
-    } else {
-      element.innerHTML = `${escapeHtml(versionLabel())} ( ${totalRows} APIs filtered by tags: <a href="#" class="filter-tag-link" style="color: var(--el-color-primary); text-decoration: none; cursor: pointer; transition: color 0.2s ease;">${escapeHtml(String(selectedTags))}</a>)`;
-
-      // Add hover effect
-      const tagLinkEl = element.querySelector('.filter-tag-link') as HTMLElement
-      if (tagLinkEl) {
-        tagLinkEl.addEventListener('mouseenter', () => {
-          tagLinkEl.style.color = '#66b1ff'
-          tagLinkEl.style.textDecoration = 'underline'
-        })
-        tagLinkEl.addEventListener('mouseleave', () => {
-          tagLinkEl.style.color = 'var(--el-color-primary)'
-          tagLinkEl.style.textDecoration = 'none'
-        })
-      }
-
-
-    }
-  }
+  countApis()
 })
 
 onMounted(async () => {
@@ -157,7 +143,7 @@ watch(
     }
     groups.value = JSON.parse(JSON.stringify(docs.value))
     activeKeys.value = Object.keys(groups.value)
-    sortedKeys.value = activeKeys.value.sort()
+    sortedKeys.value = activeKeys.value.sort(byTagDisplayName(selectedFilter.bankId))
     console.log('SearchNav: groups loaded, total groups:', activeKeys.value.length)
     await initializeAPICollections()
     await nextTick()
@@ -185,45 +171,23 @@ watch(
     }
     groups.value = JSON.parse(JSON.stringify(docs.value))
     activeKeys.value = Object.keys(groups.value)
-    sortedKeys.value = activeKeys.value.sort()
+    sortedKeys.value = activeKeys.value.sort(byTagDisplayName(selectedFilter.bankId))
     await initializeAPICollections()
     await nextTick()
     countApis()
-    // Update the version display text
-    let element = document.getElementById("selected-api-version")
-    if (element !== null) {
-      const totalRows = Object.values(groups.value).reduce((acc, currentValue) => acc + currentValue.length, 0)
-      if(selectedTags === 'NONE') {
-        element.textContent = `${versionLabel()} ( ${totalRows} APIs )`;
-      } else {
-        element.innerHTML = `${escapeHtml(versionLabel())} ( ${totalRows} APIs filtered by tags: <a href="#" class="filter-tag-link" style="color: var(--el-color-primary); text-decoration: none; cursor: pointer; transition: color 0.2s ease;">${escapeHtml(String(selectedTags))}</a>)`;
-
-        // Add hover effect
-        const tagLinkEl = element.querySelector('.filter-tag-link') as HTMLElement
-        if (tagLinkEl) {
-          tagLinkEl.addEventListener('mouseenter', () => {
-            tagLinkEl.style.color = '#66b1ff'
-            tagLinkEl.style.textDecoration = 'underline'
-          })
-          tagLinkEl.addEventListener('mouseleave', () => {
-            tagLinkEl.style.color = 'var(--el-color-primary)'
-            tagLinkEl.style.textDecoration = 'none'
-          })
-        }
-
-
-      }
-    }
   }
 )
 
 
 
+// The label above the panel, e.g. OBPv7.0.0 · Dynamic · ogcr · Certification Scheme (8)
 const countApis = () => {
-  let element = document.getElementById("selected-api-version")
+  const element = document.getElementById('selected-api-version')
   if (element !== null) {
     const totalRows = Object.values(groups.value).reduce((acc, currentValue) => acc + currentValue.length, 0)
-    element.textContent = `${versionLabel()} ( ${totalRows} APIs )`;
+    const tags = selectedTags === 'NONE' ? '' : ` · ${selectedTagsLabel()}`
+    element.textContent = `${versionLabel()}${tags} (${totalRows})`
+    element.title = element.textContent
   }
 }
 
@@ -255,10 +219,10 @@ const routeToFirstAPI = () => {
 
 const sortLinks = (items: any) => {
   const uniqueLinks = {}
-  for (const { summary, operation_id } of items) {
-    if (!Object.keys(uniqueLinks).includes(summary.trim()))
-      uniqueLinks[summary.trim()] = operation_id
-    operationIdTitle[operation_id] = summary.trim()
+  for (const item of items) {
+    const summary = summaryDisplayName(item)
+    if (!Object.keys(uniqueLinks).includes(summary)) uniqueLinks[summary] = item.operation_id
+    operationIdTitle[item.operation_id] = summary
   }
   const sortResult = Object.fromEntries(
     Object.entries(uniqueLinks).sort((a, b) => {
@@ -295,6 +259,15 @@ const filterKeys = (keys, key) => {
   })
 }
 
+// Releasing the mouse after selecting text in the panel (to copy it) is not a click, so it
+// neither opens the endpoint nor opens or closes the group.
+const ignoreClickAfterSelection = (event: MouseEvent) => {
+  if (window.getSelection()?.toString()) {
+    event.stopPropagation()
+    event.preventDefault()
+  }
+}
+
 const searchEvent = (value) => {
   if (value) {
     if (activeKeys.value && Array.isArray(activeKeys.value)) {
@@ -304,7 +277,7 @@ const searchEvent = (value) => {
     }
   } else {
     groups.value = JSON.parse(JSON.stringify(docs.value))
-    sortedKeys.value = Object.keys(groups.value).sort()
+    sortedKeys.value = Object.keys(groups.value).sort(byTagDisplayName(selectedFilter.bankId))
   }
 }
 </script>
@@ -317,23 +290,23 @@ const searchEvent = (value) => {
       </el-col>
     </el-header>
     <el-main>
-      <el-collapse v-model="activeKeys" class="search-nav-collapse">
+      <el-collapse v-model="activeKeys" class="search-nav-collapse" @click.capture="ignoreClickAfterSelection">
         <el-collapse-item title="My Collections" v-show="showMyCollections" name="my-collections">
           <el-collapse-item v-for="(api, key) of apiCollections" :key="key" :title="api.api_collection_name"
             :name="api.api_collection_name" class="child-collapse">
             <div class="el-tabs--right">
               <div v-for="(value, key) of apiCollectionsEndpoint[api.api_collection_name]" :key="key" class="api-router-tab"
                 @click="setActive">
-                <RouterLink :to="{ name: 'api', params: { version: selectedVersion }, query: { operationid: value, ...resourceDocsFilterQuery(selectedFilter) } }" :id="value"
+                <RouterLink :to="{ name: 'api', params: { version: selectedVersion }, query: { operationid: value, ...resourceDocsFilterQuery(selectedFilter) } }" :id="value" draggable="false"
                   active-class="active-api-router-link" class="api-router-link">{{ operationIdTitle[value] }}</RouterLink>
               </div>
             </div>
           </el-collapse-item>
         </el-collapse-item>
-        <el-collapse-item v-for="key in sortedKeys" :title="key" :key="key" :name="key">
+        <el-collapse-item v-for="key in sortedKeys" :title="tagDisplayName(key, selectedFilter.bankId)" :key="key" :name="key">
           <div class="el-tabs--right">
             <div v-for="(value, key) of sortLinks(groups[key])" :key="value" class="api-router-tab" @click="setActive">
-              <RouterLink active-class="active-api-router-link" class="api-router-link" :id="value"
+              <RouterLink active-class="active-api-router-link" class="api-router-link" :id="value" draggable="false"
                 :to="{ name: 'api', params: { version: selectedVersion }, query: { operationid: value, ...resourceDocsFilterQuery(selectedFilter) } }">{{ key }}</RouterLink>
             </div>
           </div>
@@ -372,6 +345,7 @@ const searchEvent = (value) => {
 }
 .api-router-link {
   width: 100%;
+  -webkit-user-drag: none;
   margin-left: 15px;
   font-family: 'Roboto';
   text-decoration: none;
@@ -383,12 +357,10 @@ const searchEvent = (value) => {
   border-left: 2px solid var(--el-menu-border-color);
 }
 
-.api-router-tab:hover,
 .active-api-router-tab {
   border-left: 2px solid v-bind(searchLinksColor);
 }
 
-.api-router-tab:hover .api-router-link,
 .active-api-router-link {
   color: v-bind(searchLinksColor);
 }

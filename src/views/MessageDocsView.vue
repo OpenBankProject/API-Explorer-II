@@ -32,6 +32,7 @@ import SearchNav from '../components/MessageDocsSearchNav.vue'
 import { obpGroupedMessageDocsKey } from '@/obp/keys';
 import MessageDocsSearchNav from '../components/MessageDocsSearchNav.vue';
 import CodeBlock from '../components/CodeBlock.vue';
+import MessageDocsConnectorSelect from '../components/MessageDocsConnectorSelect.vue'
 
 const route = useRoute()
 const groupedMessageDocs = ref(inject(obpGroupedMessageDocsKey) || {})
@@ -78,7 +79,10 @@ function showDependentEndpoints(value: any) {
       <el-scrollbar>
         <el-backtop :right="100" :bottom="100" />
         <div class="message-docs-header">
-          <h1>{{ connector }}</h1>
+          <div class="title-row">
+            <h1>{{ connector }}</h1>
+            <MessageDocsConnectorSelect />
+          </div>
           <p class="connector-subtitle">Message Docs</p>
         </div>
         <div v-for="(group, key) of messageDocs" :key="key">
@@ -272,5 +276,35 @@ div {
   font-size: 1rem;
   color: var(--el-text-color-secondary);
   margin: 0;
+}
+/* The title, with the connector picker to its right (below it when there is no room). */
+.title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 24px;
+  margin-bottom: 0.5rem;
+}
+
+.title-row h1 {
+  margin: 0;
+}
+/* Each message: its name, description and the titles of its sections. */
+.message-docs-content h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+  color: var(--el-text-color-primary);
+}
+
+.message-docs-content h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 1.25rem 0 0.5rem;
+  color: var(--el-text-color-regular);
+}
+
+.message-docs-content p {
+  line-height: 1.6;
 }
 </style>

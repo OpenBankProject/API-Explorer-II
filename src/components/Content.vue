@@ -43,6 +43,9 @@ import {
   getVersionResourceDocs,
   resourceDocsFilterFromQuery,
   resourceDocsFilterQuery,
+  tagDisplayName,
+  byTagDisplayName,
+  summaryDisplayName,
   type ResourceDocsFilter
 } from '../obp/resource-docs'
 import { SUMMARY_PAGER_LINKS_COLOR as summaryPagerLinksColorSetting } from '../obp/style-setting'
@@ -77,7 +80,7 @@ const setOperationDetails = (id: string, version: string): void => {
   console.log('Operation details:', operation)
   console.log('Tags from operation:', operation?.tags)
   description.value = operation?.description
-  summary.value = operation?.summary
+  summary.value = summaryDisplayName(operation)
   tags.value = operation?.tags || []
   console.log('Tags ref value:', tags.value)
   updateHeaderTags(tags.value)
@@ -88,7 +91,7 @@ const updateHeaderTags = (tagsList: string[]) => {
   if (element) {
     if (tagsList.length > 0) {
       const tagsHTML = tagsList.map(tag =>
-        `<a class="tag-link" data-tag="${escapeHtml(tag)}" href="#">${escapeHtml(tag)}</a>`
+        `<a class="tag-link" data-tag="${escapeHtml(tag)}" href="#">${escapeHtml(tagDisplayName(tag, filter.bankId))}</a>`
       ).join(', ')
       element.innerHTML = `Tags: ${tagsHTML}`
 
@@ -216,7 +219,7 @@ const getAllTags = (version: string) => {
       doc.tags.forEach((tag: string) => tagSet.add(tag))
     }
   })
-  return Array.from(tagSet).sort()
+  return Array.from(tagSet).sort(byTagDisplayName(filter.bankId))
 }
 
 // Says what the version overview is showing: which docs (static, dynamic, or all), from which
@@ -304,7 +307,7 @@ onBeforeRouteUpdate(async (to) => {
                 :class="{ 'tag-link-active': route.query.tags === tag }"
                 @click.prevent="filterByTag(tag)"
               >
-                {{ tag }}
+                {{ tagDisplayName(tag, filter.bankId) }}
               </a>
             </div>
           </div>
@@ -336,7 +339,7 @@ onBeforeRouteUpdate(async (to) => {
               :class="{ 'tag-link-active': route.query.tags === tag }"
               @click.prevent="filterByTag(tag)"
             >
-              {{ tag }}
+              {{ tagDisplayName(tag, filter.bankId) }}
             </a>
             <span v-if="tags.length === 0" style="color: var(--el-text-color-secondary); font-size: 12px;">No tags available</span>
           </div>
@@ -349,12 +352,12 @@ onBeforeRouteUpdate(async (to) => {
             <el-icon v-if="displayPrev">
               <ArrowLeftBold />
             </el-icon>
-            <RouterLink v-if="displayPrev" class="pager-router-link"
+            <RouterLink v-if="displayPrev" class="pager-router-link" :title="prev.title"
               :to="{ name: 'api', params: { version: prev.version }, query: { operationid: prev.id, ...resourceDocsFilterQuery(filter) } }">{{ prev.title }}
             </RouterLink>
           </el-col>
           <el-col :span="12" class="pager-right">
-            <RouterLink v-if="displayNext" class="pager-router-link"
+            <RouterLink v-if="displayNext" class="pager-router-link" :title="next.title"
               :to="{ name: 'api', params: { version: next.version }, query: { operationid: next.id, ...resourceDocsFilterQuery(filter) } }">{{ next.title }}
             </RouterLink>
             <el-icon v-if="displayNext">
@@ -515,12 +518,21 @@ div {
   display: flex;
   justify-content: left;
   align-items: center;
+  min-width: 0;
+  padding-right: 10px;
 }
 
 .pager-right {
   display: flex;
   justify-content: right;
   align-items: center;
+  min-width: 0;
+  padding-left: 10px;
+}
+
+.pager-left .el-icon,
+.pager-right .el-icon {
+  flex-shrink: 0;
 }
 
 .footer {
@@ -535,6 +547,11 @@ div {
   font-family: 'Roboto';
   text-decoration: none;
   color: var(--obp-text-strong);
+  /* Long endpoint titles are cut short on one line; the full title shows on hover. */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .pager-router-link:hover,

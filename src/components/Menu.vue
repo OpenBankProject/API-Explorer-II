@@ -149,6 +149,13 @@ a:hover {
   color: #7787a6;
 }
 
+/* Stays on one line, cut short if it does not fit; the full text shows on hover. */
+.menu-left {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .server-is-online {
   color: v-bind(searchLinksColor);
 }
