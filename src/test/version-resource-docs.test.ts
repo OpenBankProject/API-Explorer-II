@@ -3,7 +3,10 @@ import {
   DYNAMIC_DOCS_VERSION,
   getDynamicNamespaces,
   getVersionResourceDocs,
-  resourceDocsFilterFromQuery
+  resourceDocsFilterFromQuery,
+  tagDisplayName,
+  byTagDisplayName,
+  summaryDisplayName
 } from '@/obp/resource-docs'
 
 const doc = (operationId: string, fn: string, requestUrl = '/banks') => ({
@@ -103,5 +106,60 @@ describe('resourceDocsFilterFromQuery', () => {
       bankId: undefined
     })
     expect(resourceDocsFilterFromQuery({ bank_id: 'ogcr' })).toEqual({ content: undefined, bankId: undefined })
+  })
+})
+
+describe('tagDisplayName', () => {
+  const tag = '_User_certification_scheme_relationship(ogcr)'
+
+  it('shows dynamic entity tags in Proper Case, without the underscores', () => {
+    expect(tagDisplayName(tag)).toBe('User Certification Scheme Relationship (ogcr)')
+    expect(tagDisplayName('__Customer')).toBe('Customer')
+    expect(tagDisplayName('_Carbon_credit_batch_on_chain_')).toBe('Carbon Credit Batch On Chain')
+    expect(tagDisplayName('_Csem-case')).toBe('Csem Case')
+  })
+
+  it('drops the bank suffix only when the docs are narrowed to that bank', () => {
+    expect(tagDisplayName(tag, 'ogcr')).toBe('User Certification Scheme Relationship')
+    expect(tagDisplayName(tag, 'gh.29.uk')).toBe('User Certification Scheme Relationship (ogcr)')
+  })
+
+  it('leaves static tags alone', () => {
+    expect(tagDisplayName('Account', 'ogcr')).toBe('Account')
+    expect(tagDisplayName('Account-Access')).toBe('Account-Access')
+    expect(tagDisplayName('Dynamic-Entity')).toBe('Dynamic-Entity')
+  })
+
+  it('sorts by the shown name', () => {
+    expect(['Customer', '_Activity(ogcr)', 'Bank'].sort(byTagDisplayName('ogcr'))).toEqual([
+      '_Activity(ogcr)',
+      'Bank',
+      'Customer'
+    ])
+  })
+})
+
+describe('summaryDisplayName', () => {
+  const entityDoc = (summary: string) => ({
+    summary,
+    implemented_by: { function: 'dynamicEntity_getactivity_mediaList_ogcr' }
+  })
+
+  it('shows the entity name in dynamic entity summaries in Proper Case', () => {
+    expect(summaryDisplayName(entityDoc('Get activity_media List'))).toBe('Get Activity Media List')
+    expect(summaryDisplayName(entityDoc('Create new activity_media'))).toBe('Create new Activity Media')
+    expect(summaryDisplayName(entityDoc('Partially update activity_media'))).toBe(
+      'Partially update Activity Media'
+    )
+    expect(summaryDisplayName(entityDoc('Delete My activity_media by id'))).toBe('Delete My Activity Media by id')
+    expect(summaryDisplayName(entityDoc('Get Public country by id'))).toBe('Get Public Country by id')
+  })
+
+  it('leaves other summaries alone', () => {
+    expect(summaryDisplayName({ summary: 'Get Banks', implemented_by: { function: 'getBanks' } })).toBe('Get Banks')
+    expect(
+      summaryDisplayName({ summary: 'Get user_auth_context', implemented_by: { function: 'getUserAuthContext' } })
+    ).toBe('Get user_auth_context')
+    expect(summaryDisplayName(entityDoc('Something else entirely'))).toBe('Something else entirely')
   })
 })

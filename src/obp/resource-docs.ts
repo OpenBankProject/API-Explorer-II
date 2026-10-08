@@ -137,6 +137,48 @@ export function getVersionResourceDocs(
     : filtered
 }
 
+// How a tag is shown, not what it is: OBP-API prefixes dynamic entity tags with "_" (more than one
+// if needed to avoid a clash) and suffixes bank level ones with "(BANK_ID)", e.g.
+// _User_certification_scheme_relationship(ogcr). Those are shown in Proper Case, as
+// "User Certification Scheme Relationship (ogcr)", and without the bank suffix when the docs are
+// already narrowed to that bank. Other tags are shown as they are.
+export function tagDisplayName(tag: string, bankId?: string): string {
+  const entityTag = tag.match(/^_+(.+?)(?:\(([^()]+)\))?$/)
+  if (!entityTag) return tag
+  const [, entityName, tagBankId] = entityTag
+  const name = properCase(entityName)
+  return tagBankId && tagBankId !== bankId ? `${name} (${tagBankId})` : name
+}
+
+// "user_certification_scheme_relationship" -> "User Certification Scheme Relationship"
+function properCase(name: string): string {
+  const words = name
+    .split(/[_\-\s]+/)
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+  return words.length > 0 ? words.join(' ') : name
+}
+
+// How a doc's summary is shown, not what it is: OBP-API names the entity in dynamic entity
+// summaries as it was defined, e.g. "Get activity_media List", which is shown in Proper Case as
+// "Get Activity Media List". Other summaries are shown as they are.
+export function summaryDisplayName(doc: any): string {
+  const summary = (doc?.summary || '').trim()
+  if (!doc?.implemented_by?.function?.startsWith('dynamicEntity_')) return summary
+  const match = summary.match(/^(Create new|Delete|Get|Partially update|Update)( My| Public)? (\S+)( by id| List)?$/)
+  if (!match) return summary
+  const [, action, scope = '', entityName, suffix = ''] = match
+  return `${action}${scope} ${properCase(entityName)}${suffix}`
+}
+
+// Orders tags by how they are shown.
+export function byTagDisplayName(bankId?: string): (a: string, b: string) => number {
+  return (a, b) => {
+    const [x, y] = [tagDisplayName(a, bankId), tagDisplayName(b, bankId)]
+    return x < y ? -1 : x > y ? 1 : 0
+  }
+}
+
 // The namespaces of a version's dynamic docs, SYS first and then the banks in order.
 export function getDynamicNamespaces(apiStandardAndVersion: string, docs: any): string[] {
   const bankIds = new Set(
