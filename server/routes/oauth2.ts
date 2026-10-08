@@ -30,6 +30,7 @@ import type { Request, Response } from 'express'
 import { Container } from 'typedi'
 import { OAuth2ProviderManager } from '../services/OAuth2ProviderManager.js'
 import { PKCEUtils } from '../utils/pkce.js'
+import { safeRedirectPath } from '../utils/safeRedirect.js'
 import type { UserInfo } from '../types/oauth2.js'
 
 const router = Router()
@@ -70,7 +71,7 @@ router.get('/oauth2/providers', async (req: Request, res: Response) => {
 router.get('/oauth2/connect', async (req: Request, res: Response) => {
   try {
     const provider = req.query.provider as string | undefined
-    const redirect = (req.query.redirect as string) || '/'
+    const redirect = safeRedirectPath(req.query.redirect) || '/'
     const session = req.session as any
 
     console.log('OAuth2 Connect: Starting authentication flow')
@@ -162,7 +163,7 @@ router.get('/oauth2/callback', async (req: Request, res: Response) => {
     const state = req.query.state as string
     const error = req.query.error as string
     const errorDescription = req.query.error_description as string
-    const session = req.session as any
+    let session = req.session as any
 
     console.log('OAuth2 Callback: Processing callback')
 
@@ -234,6 +235,15 @@ router.get('/oauth2/callback', async (req: Request, res: Response) => {
 
     const userInfo = (await userInfoResponse.json()) as UserInfo
 
+    // Log the user in on a new session id, so an id planted in the browser before login (session
+    // fixation) never becomes a logged-in session. Only what is still needed is carried over.
+    const redirectUrl = session.oauth2_redirect_page || '/'
+    await new Promise<void>((resolve, reject) =>
+      req.session.regenerate((err: any) => (err ? reject(err) : resolve()))
+    )
+    session = req.session as any
+    session.oauth2_provider = provider
+
     // Store tokens in session
     session.oauth2_access_token = tokens.accessToken
     session.oauth2_refresh_token = tokens.refreshToken
@@ -279,14 +289,7 @@ router.get('/oauth2/callback', async (req: Request, res: Response) => {
       `OAuth2 Callback: User authenticated: ${session.oauth2_user.username} via ${session.oauth2_user.provider}`
     )
 
-    // Clean up temporary session data
-    delete session.oauth2_code_verifier
-    delete session.oauth2_state
-
-    // Redirect to original page
-    const redirectUrl = session.oauth2_redirect_page || '/'
-    delete session.oauth2_redirect_page
-
+    // Redirect to original page (the login's temporary state went with the old session)
     console.log(`OAuth2 Callback: Authentication successful, redirecting to: ${redirectUrl}`)
     res.redirect(redirectUrl)
   } catch (error) {

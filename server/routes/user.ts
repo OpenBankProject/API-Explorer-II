@@ -32,6 +32,7 @@ import OBPClientService from '../services/OBPClientService.js'
 import { OAuth2ProviderManager } from '../services/OAuth2ProviderManager.js'
 import { DEFAULT_OBP_API_VERSION } from '../../src/shared-constants.js'
 import { callerAddressOf } from '../utils/clientIp.js'
+import { safeRedirectPath } from '../utils/safeRedirect.js'
 
 const router = Router()
 
@@ -227,7 +228,7 @@ router.get('/user/logoff', (req: Request, res: Response) => {
       return res.redirect(endSessionUrl)
     }
 
-    const redirectPage = (req.query.redirect as string) || obpExplorerHome || '/'
+    const redirectPage = safeRedirectPath(req.query.redirect) || obpExplorerHome || '/'
     console.log(`User: Local logout (mode=${logoutMode}), redirecting to:`, redirectPage)
     res.redirect(redirectPage)
   })

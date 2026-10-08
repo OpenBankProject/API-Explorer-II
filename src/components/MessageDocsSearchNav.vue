@@ -69,6 +69,15 @@ const filterKeys = (keys, key) => {
   })
 }
 
+// Releasing the mouse after selecting text in the list (to copy it) is not a click, so it neither
+// jumps to the message nor opens or closes the group.
+const ignoreClickAfterSelection = (event: MouseEvent) => {
+  if (window.getSelection()?.toString()) {
+    event.stopPropagation()
+    event.preventDefault()
+  }
+}
+
 const searchEvent = (value) => {
   if (value) {
     messageDocKeys.value = filterKeys(activeKeys.value, value)
@@ -106,11 +115,11 @@ const setDocs = () => {
       />
     </el-col>
   </el-row>
-  <el-collapse v-model="activeKeys">
+  <el-collapse v-model="activeKeys" @click.capture="ignoreClickAfterSelection">
     <el-collapse-item v-for="key in messageDocKeys" :title="key" :key="key" :name="key">
       <div class="el-tabs--right">
         <div v-for="(value, key) of groups[key]" :key="value" class="message-docs-router-tab">
-          <a class="message-docs-router-link" :id="`${value}-quick-nav`" v-bind:href="`#${value}`">
+          <a class="message-docs-router-link" draggable="false" :id="`${value}-quick-nav`" v-bind:href="`#${value}`">
             {{ value }}
           </a>
         </div>
@@ -140,12 +149,10 @@ const setDocs = () => {
   word-break: break-word;
 }
 
-.api-router-tab:hover,
 .active-api-router-tab {
   border-left: 2px solid v-bind(searchLinksColor);
 }
 
-.api-router-tab:hover .api-router-link,
 .active-api-router-link {
   color: v-bind(searchLinksColor);
 }
@@ -161,6 +168,7 @@ const setDocs = () => {
   overflow-wrap: break-word;
   word-break: break-word;
   max-width: 100%;
+  -webkit-user-drag: none;
 }
 
 .message-docs-router-tab {
@@ -171,12 +179,7 @@ const setDocs = () => {
   word-break: break-word;
 }
 
-.message-docs-router-tab:hover,
 .active-message-docs-router-tab {
   border-left: 2px solid v-bind(searchLinksColor);
-}
-
-.message-docs-router-tab:hover .message-docs-router-link {
-  color: v-bind(searchLinksColor);
 }
 </style>

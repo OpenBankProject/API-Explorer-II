@@ -29,6 +29,7 @@
 import { reactive, ref, onBeforeMount, onMounted, inject, computed } from 'vue'
 import SearchNav from '../components/GlossarySearchNav.vue'
 import { obpGlossaryKey } from '@/obp/keys';
+import { safeHtml } from '@/obp/safe-html'
 
 const allGlossaryItems = ref(inject(obpGlossaryKey)!.glossary_items)
 
@@ -56,6 +57,11 @@ const glossary = computed(() => {
     return true
   })
 })
+
+// Each item's HTML, cleaned once rather than on every render (there are hundreds of items).
+const safeDescriptions = computed(
+  () => new Map(glossary.value.map((item: any) => [item, safeHtml(item.description?.html)]))
+)
 </script>
 
 <template>
@@ -74,7 +80,7 @@ const glossary = computed(() => {
               {{ value.title }}
             </a>
           </span>
-          <div v-html="value.description.html" class="content"></div>
+          <div v-html="safeDescriptions.get(value)" class="content"></div>
         </div>
       </el-scrollbar>
     </el-main>

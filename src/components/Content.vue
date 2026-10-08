@@ -50,6 +50,7 @@ import {
 } from '../obp/resource-docs'
 import { SUMMARY_PAGER_LINKS_COLOR as summaryPagerLinksColorSetting } from '../obp/style-setting'
 import { escapeHtml } from '../obp/common-functions'
+import { safeHtml } from '../obp/safe-html'
 import { initializeAPICollections, setTabActive } from './SearchNav.vue'
 
 const route = useRoute()
@@ -79,7 +80,7 @@ const setOperationDetails = (id: string, version: string): void => {
   const operation = getOperationDetails(version, id, resourceDocs)
   console.log('Operation details:', operation)
   console.log('Tags from operation:', operation?.tags)
-  description.value = operation?.description
+  description.value = safeHtml(operation?.description)
   summary.value = summaryDisplayName(operation)
   tags.value = operation?.tags || []
   console.log('Tags ref value:', tags.value)

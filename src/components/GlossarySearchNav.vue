@@ -90,6 +90,15 @@ const filterKeys = (keys: string[], key: string) => {
   })
 }
 
+// Releasing the mouse after selecting text in the list (to copy it) is not a click, so it does not
+// jump to the item.
+const ignoreClickAfterSelection = (event: MouseEvent) => {
+  if (window.getSelection()?.toString()) {
+    event.stopPropagation()
+    event.preventDefault()
+  }
+}
+
 const searchEvent = (event: string) => {
   if (event) {
     glossaryKeys.value = filterKeys(activeKeys.value, event).sort()
@@ -101,10 +110,10 @@ const searchEvent = (event: string) => {
 
 <template>
   <el-input v-model="form.search" class="w-50 m-1" placeholder="Search" :prefix-icon="Search" @input="searchEvent" />
-  <div class="tab-items">
+  <div class="tab-items" @click.capture="ignoreClickAfterSelection">
     <div class="el-tabs--right">
       <div v-for="value of glossaryKeys" :key="value" class="glossary-router-tab">
-        <a class="glossary-router-link" :id="`${value.charAt(0).toLowerCase()}-quick-nav`" v-bind:href="`#${value}`">
+        <a class="glossary-router-link" draggable="false" :id="`${value.charAt(0).toLowerCase()}-quick-nav`" v-bind:href="`#${value}`">
           {{ value }}
         </a>
       </div>
@@ -124,6 +133,7 @@ const searchEvent = (event: string) => {
   overflow-wrap: break-word;
   word-break: break-word;
   max-width: 100%;
+  -webkit-user-drag: none;
 }
 
 .glossary-router-tab {
@@ -134,12 +144,10 @@ const searchEvent = (event: string) => {
   word-break: break-word;
 }
 
-.glossary-router-tab:hover,
 .active-glossary-router-tab {
   border-left: 2px solid v-bind(searchLinksColor);
 }
 
-.glossary-router-tab:hover .glossary-router-link,
 .active-glossary-router-link {
   color: v-bind(searchLinksColor);
 }
