@@ -25,6 +25,7 @@
  *
  */
 
+import './logCapture.js'
 import 'reflect-metadata'
 import 'dotenv/config'
 import session from 'express-session'
@@ -38,6 +39,7 @@ import { execSync } from 'child_process'
 import { OAuth2ProviderManager } from './services/OAuth2ProviderManager.js'
 import { BerlinGroupSignatureService } from './services/BerlinGroupSignatureService.js'
 import { parseTrustProxy } from './utils/clientIp.js'
+import { instrumentObpApiCalls, requestTelemetry } from './utils/telemetry.js'
 import { fileURLToPath } from 'url'
 import { dirname } from 'path'
 
@@ -49,6 +51,7 @@ import userRoutes from './routes/user.js'
 import statusRoutes from './routes/status.js'
 import obpRoutes from './routes/obp.js'
 import grpcRoutes from './routes/grpc.js'
+import monitoringRoutes from './routes/monitoring.js'
 
 // ES module equivalent of __dirname
 const __filename = fileURLToPath(import.meta.url)
@@ -120,6 +123,8 @@ console.info(
   `Session maxAge configured: ${sessionMaxAgeSeconds} seconds (${sessionMaxAgeSeconds / 60} minutes)`
 )
 app.use(express.json())
+app.use(requestTelemetry)
+instrumentObpApiCalls(process.env.VITE_OBP_API_HOST)
 let sessionObject = {
   store: redisStore,
   name: 'obp-api-explorer-ii.sid', // CRITICAL: Unique cookie name to prevent conflicts with other apps on localhost
@@ -199,6 +204,7 @@ let instance: any
   app.use(routePrefix, statusRoutes)
   app.use(routePrefix, obpRoutes)
   app.use(routePrefix, grpcRoutes)
+  app.use(routePrefix, monitoringRoutes)
   console.log('OAuth2 routes registered (plain Express)')
   console.log('User routes registered (plain Express)')
   console.log('Status routes registered (plain Express)')
