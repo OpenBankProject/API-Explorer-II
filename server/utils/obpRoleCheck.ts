@@ -78,12 +78,16 @@ export async function tokenMayUseAnyRole(
   return result
 }
 
-/** Express guard: a Bearer token from OBP-API's OIDC provider that may use any of the Roles. */
+/**
+ * Express guard: an OBP-API token that may use any of the Roles. The token is a Bearer header (a monitor
+ * such as OBP-Sentinel) or, without one, the logged-in User's token from this app's session (a browser).
+ */
 export function requireAnyObpRole(roles: string[]) {
   return async (req: Request, res: Response, next: NextFunction) => {
     const header = req.headers.authorization ?? ''
-    const token = header.startsWith('Bearer ') ? header.slice('Bearer '.length).trim() : ''
-    if (!token) return res.status(401).json({ error: 'A Bearer token from OBP-API is required' })
+    const bearer = header.startsWith('Bearer ') ? header.slice('Bearer '.length).trim() : ''
+    const token = bearer || (req.session as any)?.oauth2_access_token || ''
+    if (!token) return res.status(401).json({ error: 'Log in, or send a Bearer token from OBP-API' })
     const obpApiHost = process.env.VITE_OBP_API_HOST
     if (!obpApiHost) return res.status(503).json({ error: 'VITE_OBP_API_HOST is not set' })
     try {

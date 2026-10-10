@@ -59,6 +59,16 @@ const coreChecks = computed<Record<string, boolean>>(() =>
 )
 
 const oauthProviders = computed<OIDCProviderHealth[]>(() => status.value.oauthProviders ?? [])
+
+// This server's /api/monitoring endpoints (log cache and Telemetry, for OBP-Sentinel) and the OBP Roles each needs.
+const monitoringEndpoints = [
+  ...['trace', 'debug', 'info', 'warning', 'error'].map((level) => ({
+    path: `/api/monitoring/log-cache/${level}`,
+    roles: `CanGetSystemLogCache${level.charAt(0).toUpperCase()}${level.slice(1)} or CanGetSystemLogCacheAll`
+  })),
+  { path: '/api/monitoring/log-cache/all', roles: 'CanGetSystemLogCacheAll' },
+  { path: '/api/monitoring/telemetry', roles: 'CanGetTelemetry' }
+]
 </script>
 
 <template>
@@ -129,6 +139,13 @@ const oauthProviders = computed<OIDCProviderHealth[]>(() => status.value.oauthPr
               consumer: {{ provider.details.consumer }}
             </div>
           </template>
+        </div>
+      </div>
+
+      <div class="providers-section" data-testid="monitoring-endpoints">
+        <span class="providers-title">Monitoring (GET, Bearer token)</span>
+        <div v-for="endpoint in monitoringEndpoints" :key="endpoint.path" class="provider-detail">
+          <a :href="endpoint.path" class="provider-link">{{ endpoint.path }}</a>: {{ endpoint.roles }}
         </div>
       </div>
     </div>

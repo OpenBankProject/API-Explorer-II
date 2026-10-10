@@ -119,11 +119,19 @@ describe('monitoring endpoints', () => {
     return new Response(JSON.stringify({ allowed_for_auth_modes: tokens[token][role] ?? [] }), { status: 200 })
   })
 
-  const app = express().use('/api', monitoringRoutes)
+  // Stands in for the session middleware: a header X-Test-Session-Token puts that token in the session.
+  const app = express()
+    .use((req: any, _res, next) => {
+      req.session = { oauth2_access_token: req.headers['x-test-session-token'] }
+      next()
+    })
+    .use('/api', monitoringRoutes)
   const get = (path: string, token?: string) => {
     const req = request(app).get(path)
     return token ? req.set('Authorization', `Bearer ${token}`) : req
   }
+  const getAsLoggedIn = (path: string, sessionToken: string) =>
+    request(app).get(path).set('X-Test-Session-Token', sessionToken)
 
   beforeEach(() => {
     clearRoleCheckCache()
@@ -190,6 +198,18 @@ describe('monitoring endpoints', () => {
         expect(res.body.meters).toBeUndefined()
       }
     }
+  })
+
+  it('uses the logged-in User\'s session token when there is no Bearer header, with the same Roles', async () => {
+    const ok = await getAsLoggedIn('/api/monitoring/log-cache/all', 'all-reader')
+    expect(ok.status).toBe(200)
+    expect(ok.body.entries).toHaveLength(5)
+    const refused = await getAsLoggedIn('/api/monitoring/telemetry', 'all-reader')
+    expect(refused.status).toBe(403)
+    expect(refused.body.meters).toBeUndefined()
+    const expired = await getAsLoggedIn('/api/monitoring/log-cache/error', 'unknown-token')
+    expect(expired.status).toBe(401)
+    expect(expired.body.entries).toBeUndefined()
   })
 
   it('refuses with 503 when OBP-API cannot be asked', async () => {
