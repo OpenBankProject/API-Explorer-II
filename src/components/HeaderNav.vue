@@ -38,6 +38,7 @@ import {
 } from '../obp/style-setting'
 import { obpApiActiveVersionsKey, obpMyCollectionsEndpointKey, obpResourceDocsKey } from '@/obp/keys'
 import { getDynamicNamespaces } from '../obp/resource-docs'
+import { domainApiMenuItems } from '../obp/domain-apis'
 import SvelteDropdown from './SvelteDropdown.vue'
 import { theme, toggleTheme } from '../obp/theme'
 
@@ -178,6 +179,13 @@ const sortedVersions = computed(() => {
   return items
 })
 
+// The publicly discoverable Domain APIs, by menu label, listed after the versions.
+const domainApis = computed(() => domainApiMenuItems(resourceDocs))
+const versionsMenu = computed(() => {
+  const labels = Object.keys(domainApis.value).sort()
+  return labels.length > 0 ? [...sortedVersions.value, '---', ...labels] : sortedVersions.value
+})
+
 const isShowLoginButton = ref(true)
 const isShowLogOffButton = ref(false)
 const oauth2Available = ref(true) // Assume available initially
@@ -305,6 +313,11 @@ const handleMore = (command: string, source?: string) => {
     element.textContent = command;
   }
 
+  if (command in domainApis.value) {
+    router.push(`/resource-docs/${domainApis.value[command]}`)
+    return
+  }
+
   if (command === GRPC_SERVICES_ITEM) {
     console.log('Navigating to gRPC services')
     router.push('/grpc-services')
@@ -429,7 +442,7 @@ const getCurrentPath = () => {
         class="menu-right"
         id="header-nav-versions"
         label="Versions"
-        :items="sortedVersions"
+        :items="versionsMenu"
         :hover-color="headerLinksHoverColor"
         :background-color="headerLinksBackgroundColor"
         @select="handleMore"

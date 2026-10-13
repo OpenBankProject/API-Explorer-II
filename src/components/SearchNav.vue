@@ -41,6 +41,7 @@ import {
   byTagDisplayName,
   summaryDisplayName
 } from '../obp/resource-docs'
+import { versionDisplayName } from '../obp/domain-apis'
 import { SEARCH_LINKS_COLOR as searchLinksColorSetting } from '../obp/style-setting'
 const operationIdTitle = {}
 const resourceDocs = ref({})
@@ -104,7 +105,7 @@ const selectedTagsLabel = () =>
 const versionLabel = () => {
   const { content, bankId } = selectedFilter
   const kind = content === 'dynamic' ? ' · Dynamic' : content === 'static' ? ' · Static' : ''
-  return `${selectedVersion}${kind}${bankId ? ` · ${bankId}` : ''}`
+  return `${versionDisplayName(selectedVersion as string, resourceDocs.value)}${kind}${bankId ? ` · ${bankId}` : ''}`
 }
 onBeforeMount(async () => {
   resourceDocs.value = inject(obpResourceDocsKey)!
