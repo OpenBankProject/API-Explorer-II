@@ -32,6 +32,18 @@ describe('normalizeDocsPath', () => {
     expect(normalizeDocsPath('obp/v6.0.0/api/versions')).toBeDefined()
     expect(normalizeDocsPath('obp/v6.0.0/api/glossary')).toBeDefined()
     expect(normalizeDocsPath('obp/v6.0.0/message-docs/rest_vMar2019/json-schema')).toBeDefined()
+    expect(normalizeDocsPath('/obp/v7.0.0/domain-apis')).toBeDefined()
+    expect(
+      normalizeDocsPath('/obp/v7.0.0/banks/ogcr/domain-apis/resource-docs?base_path=crcf/ogcr/v1')
+    ).toBeDefined()
+  })
+
+  it('rejects Domain API docs requests with anything but a base path', () => {
+    const docs = '/obp/v7.0.0/banks/ogcr/domain-apis/resource-docs'
+    expect(normalizeDocsPath(docs)).toBeUndefined()
+    expect(normalizeDocsPath(`${docs}?base_path=crcf/ogcr/v1&x=1`)).toBeUndefined()
+    expect(normalizeDocsPath(`${docs}?base_path=crcf/../users/v1`)).toBeUndefined()
+    expect(normalizeDocsPath(`${docs}?base_path=CRCF/ogcr/v1`)).toBeUndefined()
   })
 
   it('rejects anything else', () => {

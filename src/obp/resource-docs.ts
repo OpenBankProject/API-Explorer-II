@@ -28,6 +28,7 @@
 import { get, isServerUp, OBP_API_DEFAULT_RESOURCE_DOC_VERSION } from '../obp'
 import { getOBPAPIVersions } from '../obp/api-version'
 import { runWithConcurrency, updateLoadingInfoMessage } from './common-functions'
+import { getDomainApiResourceDocs, isDomainApiVersion } from './domain-apis'
 import {
   documentationCacheAgeMs,
   putDocumentationCache,
@@ -117,6 +118,8 @@ export function getVersionResourceDocs(
 ): any[] {
   const { content, bankId } = filter
   const versionDocs = docs?.[apiStandardAndVersion]?.resource_docs || []
+  // A Domain API's docs are all of one space and at its own paths, so the filters do not apply.
+  if (isDomainApiVersion(apiStandardAndVersion)) return versionDocs
   if (content !== 'dynamic' && content !== 'static') return versionDocs
   let filtered: any[]
   if (apiStandardAndVersion === DYNAMIC_DOCS_VERSION) {
@@ -319,6 +322,13 @@ export async function cacheDoc(cacheStorageOfResourceDocs: any): Promise<any> {
     }
 
     await runWithConcurrency(activeVersions, RESOURCE_DOCS_CONCURRENCY, cacheOneVersion)
+
+    // The publicly discoverable Domain APIs, each as a pseudo version of its own.
+    try {
+      Object.assign(resourceDocsMapping, await getDomainApiResourceDocs())
+    } catch (error: any) {
+      console.warn('[CACHE] WARNING: Could not load the Domain APIs:', error?.message || error)
+    }
 
     // Keep the previous copy of any active version that failed this time rather than drop it. The
     // entry is still marked incomplete (failed > 0), so the failed versions are retried sooner.

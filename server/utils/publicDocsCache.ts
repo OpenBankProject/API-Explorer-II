@@ -41,7 +41,11 @@ const PUBLIC_DOCS_PATHS = [
   /^obp\/v\d+\.\d+\.\d+\/api\/versions$/,
   /^obp\/v\d+\.\d+\.\d+\/api\/glossary$/,
   /^obp\/v\d+\.\d+\.\d+\/message-docs\/[A-Za-z0-9._-]+(\/json-schema)?$/,
-  /^obp\/v\d+\.\d+\.\d+\/system\/connectors$/
+  /^obp\/v\d+\.\d+\.\d+\/system\/connectors$/,
+  // The publicly discoverable Domain APIs, and one Domain API's docs (a base path's segments are
+  // lowercase letters, digits, hyphens and dots, starting with a letter or digit).
+  /^obp\/v\d+\.\d+\.\d+\/domain-apis$/,
+  /^obp\/v\d+\.\d+\.\d+\/banks\/[A-Za-z0-9._-]+\/domain-apis\/resource-docs\?base_path=[a-z0-9][a-z0-9.-]*(\/[a-z0-9][a-z0-9.-]*)+$/
 ]
 
 export const PUBLIC_DOCS_TTL_MS = 60 * 60 * 1000
