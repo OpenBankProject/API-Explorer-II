@@ -49,6 +49,7 @@ import {
   type ResourceDocsFilter
 } from '../obp/resource-docs'
 import { SUMMARY_PAGER_LINKS_COLOR as summaryPagerLinksColorSetting } from '../obp/style-setting'
+import { domainApiOf, isFilterTag, tagBankId, type DomainApi } from '../obp/domain-apis'
 import { escapeHtml } from '../obp/common-functions'
 import { safeHtml } from '../obp/safe-html'
 import { initializeAPICollections, setTabActive } from './SearchNav.vue'
@@ -70,6 +71,7 @@ const summaryPagerLinksColor = ref(summaryPagerLinksColorSetting)
 const showPlaceholder = ref(false)
 const placeholderTitle = ref('')
 const placeholderSubtitle = ref('')
+const domainApi = ref<DomainApi | undefined>()
 let routeId = ''
 let version = obpVersion
 let filter: ResourceDocsFilter = {}
@@ -92,7 +94,7 @@ const updateHeaderTags = (tagsList: string[]) => {
   if (element) {
     if (tagsList.length > 0) {
       const tagsHTML = tagsList.map(tag =>
-        `<a class="tag-link" data-tag="${escapeHtml(tag)}" href="#">${escapeHtml(tagDisplayName(tag, filter.bankId))}</a>`
+        `<a class="tag-link" data-tag="${escapeHtml(tag)}" href="#">${escapeHtml(tagDisplayName(tag, namingBankId()))}</a>`
       ).join(', ')
       element.innerHTML = `Tags: ${tagsHTML}`
 
@@ -212,6 +214,9 @@ const showNotification = (message: string, type: string): void => {
   })
 }
 
+// The bank whose suffix tags are shown without
+const namingBankId = () => tagBankId(version, resourceDocs, filter.bankId)
+
 const getAllTags = (version: string) => {
   const docs = getVersionResourceDocs(version, resourceDocs, filter)
   const tagSet = new Set<string>()
@@ -220,7 +225,9 @@ const getAllTags = (version: string) => {
       doc.tags.forEach((tag: string) => tagSet.add(tag))
     }
   })
-  return Array.from(tagSet).sort(byTagDisplayName(filter.bankId))
+  return Array.from(tagSet)
+    .filter((tag) => isFilterTag(tag, version))
+    .sort(byTagDisplayName(namingBankId()))
 }
 
 // Says what the version overview is showing: which docs (static, dynamic, or all), from which
@@ -231,6 +238,14 @@ const describePlaceholder = (tags: string | undefined) => {
   const docs = getVersionResourceDocs(version, resourceDocs, filter).filter(
     (doc: any) => tagList.length === 0 || doc.tags?.some((tag: string) => tagList.includes(tag))
   )
+
+  // A Domain API by its title and description, with how many endpoints show
+  domainApi.value = domainApiOf(version, resourceDocs)
+  if (domainApi.value) {
+    placeholderTitle.value = `${domainApi.value.title} (${docs.length})`
+    placeholderSubtitle.value = domainApi.value.description
+    return
+  }
 
   // The version, the namespace if one is picked, and how many endpoints show, e.g. OBPv7.0.0 SYS (457)
   placeholderTitle.value = `${version}${bankId ? ` ${bankId}` : ''} (${docs.length})`
@@ -288,6 +303,16 @@ onBeforeRouteUpdate(async (to) => {
           <div class="version-header">
             <h1>{{ placeholderTitle }}</h1>
             <p class="version-subtitle">{{ placeholderSubtitle }}</p>
+            <dl v-if="domainApi" class="domain-api-facts">
+              <dt>Base URL</dt>
+              <dd><code>{{ domainApi.url }}</code></dd>
+              <dt>Version</dt>
+              <dd>{{ domainApi.version }}</dd>
+              <template v-if="domainApi.openapi_url">
+                <dt>OpenAPI</dt>
+                <dd><a :href="domainApi.openapi_url" target="_blank" rel="noopener">{{ domainApi.openapi_url }}</a></dd>
+              </template>
+            </dl>
           </div>
           <p class="version-instructions">Please click an endpoint on the left or browse by tags below.</p>
 
@@ -308,7 +333,7 @@ onBeforeRouteUpdate(async (to) => {
                 :class="{ 'tag-link-active': route.query.tags === tag }"
                 @click.prevent="filterByTag(tag)"
               >
-                {{ tagDisplayName(tag, filter.bankId) }}
+                {{ tagDisplayName(tag, namingBankId()) }}
               </a>
             </div>
           </div>
@@ -340,7 +365,7 @@ onBeforeRouteUpdate(async (to) => {
               :class="{ 'tag-link-active': route.query.tags === tag }"
               @click.prevent="filterByTag(tag)"
             >
-              {{ tagDisplayName(tag, filter.bankId) }}
+              {{ tagDisplayName(tag, namingBankId()) }}
             </a>
             <span v-if="tags.length === 0" style="color: var(--el-text-color-secondary); font-size: 12px;">No tags available</span>
           </div>
@@ -463,6 +488,29 @@ span {
   font-size: 1rem;
   color: var(--el-text-color-secondary);
   margin: 0;
+}
+
+.domain-api-facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 16px;
+  margin: 16px 0 0;
+  font-size: 14px;
+}
+
+.domain-api-facts dt {
+  font-weight: 600;
+  color: var(--el-text-color-secondary);
+}
+
+.domain-api-facts dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.domain-api-facts a {
+  color: var(--el-color-primary);
 }
 
 .version-instructions {

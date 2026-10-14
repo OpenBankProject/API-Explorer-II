@@ -38,7 +38,7 @@ import {
 } from '../obp/style-setting'
 import { obpApiActiveVersionsKey, obpMyCollectionsEndpointKey, obpResourceDocsKey } from '@/obp/keys'
 import { getDynamicNamespaces } from '../obp/resource-docs'
-import { domainApiMenuItems } from '../obp/domain-apis'
+import { domainApiMenuItems, isDomainApiVersion } from '../obp/domain-apis'
 import SvelteDropdown from './SvelteDropdown.vue'
 import { theme, toggleTheme } from '../obp/theme'
 
@@ -56,6 +56,10 @@ const obpApiVersions = ref(inject(obpApiActiveVersionsKey) || [])
 
 // On the API Explorer page the header filters its docs by ?content= instead of linking to it.
 const isResourceDocsPage = computed(() => route.name === 'api')
+// A Domain API's docs are all of one space, so the Static / Dynamic / All filters do not apply to them.
+const showContentFilters = computed(
+  () => isResourceDocsPage.value && !isDomainApiVersion(route.params.version as string)
+)
 const contentFilters = [
   { value: 'static', label: 'Static' },
   { value: 'dynamic', label: 'Dynamic' },
@@ -402,7 +406,7 @@ const getCurrentPath = () => {
       <a v-bind:href="obpApiHybridPost" class="router-link" id="header-nav-home">
         {{ $t('header.portal_home') }}
       </a>
-      <span v-if="isResourceDocsPage" class="content-filter">
+      <span v-if="showContentFilters" class="content-filter">
         <RouterLink
           v-for="filter in contentFilters"
           :key="filter.value"

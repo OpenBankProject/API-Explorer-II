@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import {
   domainApiMenuItems,
+  domainApiOf,
   domainApiVersion,
   isDomainApiVersion,
+  isFilterTag,
+  tagBankId,
   versionDisplayName
 } from '@/obp/domain-apis'
 import { getVersionResourceDocs } from '@/obp/resource-docs'
@@ -50,5 +53,19 @@ describe('Domain API versions', () => {
     const version = domainApiVersion(api.base_path)
     expect(getVersionResourceDocs(version, docs, { content: 'static' })).toEqual([publicActivity])
     expect(getVersionResourceDocs(version, docs, { content: 'dynamic', bankId: 'ogcr' })).toEqual([publicActivity])
+  })
+
+  it('finds the Domain API a version is of, and names its tags without its bank', () => {
+    expect(domainApiOf('DomainAPI~crcf~ogcr~v1', docs)).toEqual(api)
+    expect(domainApiOf('OBPv7.0.0', docs)).toBeUndefined()
+    expect(tagBankId('DomainAPI~crcf~ogcr~v1', docs)).toBe('ogcr')
+    expect(tagBankId('OBPv7.0.0', docs, 'bank1')).toBe('bank1')
+    expect(tagBankId('OBPv7.0.0', docs)).toBeUndefined()
+  })
+
+  it('offers no implementation tags as filters in a Domain API', () => {
+    expect(isFilterTag('Dynamic-Entity', 'DomainAPI~crcf~ogcr~v1')).toBe(false)
+    expect(isFilterTag('_Activity(ogcr)', 'DomainAPI~crcf~ogcr~v1')).toBe(true)
+    expect(isFilterTag('Dynamic-Entity', 'OBPv7.0.0')).toBe(true)
   })
 })
