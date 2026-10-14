@@ -41,7 +41,7 @@ import {
   byTagDisplayName,
   summaryDisplayName
 } from '../obp/resource-docs'
-import { versionDisplayName } from '../obp/domain-apis'
+import { tagBankId, versionDisplayName } from '../obp/domain-apis'
 import { SEARCH_LINKS_COLOR as searchLinksColorSetting } from '../obp/style-setting'
 const operationIdTitle = {}
 const resourceDocs = ref({})
@@ -96,10 +96,12 @@ let selectedFilter = resourceDocsFilterFromQuery(route.query)
 
 // The version, plus which docs the ?content= and ?bank_id= filters show, e.g. OBPv7.0.0 · Dynamic · ogcr
 // The tags the docs are filtered by, as they are shown
+// The bank whose suffix tags are shown without
+const namingBankId = () => tagBankId(selectedVersion as string, resourceDocs.value, selectedFilter.bankId)
 const selectedTagsLabel = () =>
   String(selectedTags)
     .split(',')
-    .map((tag) => tagDisplayName(tag, selectedFilter.bankId))
+    .map((tag) => tagDisplayName(tag, namingBankId()))
     .join(',')
 
 const versionLabel = () => {
@@ -116,7 +118,7 @@ onBeforeMount(async () => {
   }
   groups.value = JSON.parse(JSON.stringify(docs.value))
   activeKeys.value = Object.keys(groups.value)
-  sortedKeys.value = activeKeys.value.sort(byTagDisplayName(selectedFilter.bankId))
+  sortedKeys.value = activeKeys.value.sort(byTagDisplayName(namingBankId()))
   await initializeAPICollections()
   setTabActive(route.query.operationid)
   countApis()
@@ -144,7 +146,7 @@ watch(
     }
     groups.value = JSON.parse(JSON.stringify(docs.value))
     activeKeys.value = Object.keys(groups.value)
-    sortedKeys.value = activeKeys.value.sort(byTagDisplayName(selectedFilter.bankId))
+    sortedKeys.value = activeKeys.value.sort(byTagDisplayName(namingBankId()))
     console.log('SearchNav: groups loaded, total groups:', activeKeys.value.length)
     await initializeAPICollections()
     await nextTick()
@@ -172,7 +174,7 @@ watch(
     }
     groups.value = JSON.parse(JSON.stringify(docs.value))
     activeKeys.value = Object.keys(groups.value)
-    sortedKeys.value = activeKeys.value.sort(byTagDisplayName(selectedFilter.bankId))
+    sortedKeys.value = activeKeys.value.sort(byTagDisplayName(namingBankId()))
     await initializeAPICollections()
     await nextTick()
     countApis()
@@ -278,7 +280,7 @@ const searchEvent = (value) => {
     }
   } else {
     groups.value = JSON.parse(JSON.stringify(docs.value))
-    sortedKeys.value = Object.keys(groups.value).sort(byTagDisplayName(selectedFilter.bankId))
+    sortedKeys.value = Object.keys(groups.value).sort(byTagDisplayName(namingBankId()))
   }
 }
 </script>
@@ -304,7 +306,7 @@ const searchEvent = (value) => {
             </div>
           </el-collapse-item>
         </el-collapse-item>
-        <el-collapse-item v-for="key in sortedKeys" :title="tagDisplayName(key, selectedFilter.bankId)" :key="key" :name="key">
+        <el-collapse-item v-for="key in sortedKeys" :title="tagDisplayName(key, namingBankId())" :key="key" :name="key">
           <div class="el-tabs--right">
             <div v-for="(value, key) of sortLinks(groups[key])" :key="value" class="api-router-tab" @click="setActive">
               <RouterLink active-class="active-api-router-link" class="api-router-link" :id="value" draggable="false"

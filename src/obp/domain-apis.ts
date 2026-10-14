@@ -57,6 +57,26 @@ export function isDomainApiVersion(version: string | undefined): boolean {
   return typeof version === 'string' && version.startsWith(DOMAIN_API_VERSION_PREFIX)
 }
 
+// The Domain API a version's docs are of, if they are of one.
+export function domainApiOf(version: string | undefined, docs: any): DomainApi | undefined {
+  return isDomainApiVersion(version) ? docs?.[version as string]?.domain_api : undefined
+}
+
+// The bank whose suffix tags are shown without: a Domain API's own bank, as all its docs are of that
+// bank, or else the bank the docs are narrowed to, if any.
+export function tagBankId(version: string | undefined, docs: any, bankId?: string): string | undefined {
+  return domainApiOf(version, docs)?.bank_id ?? bankId
+}
+
+// Tags that say how OBP-API implements a doc rather than what it is about. In a Domain API they only
+// tell its Dynamic Entities from its Dynamic Resource Docs, so they are not offered as filters.
+const IMPLEMENTATION_TAGS = new Set(['Dynamic', 'Dynamic-Entity', 'Dynamic-Endpoint', 'Dynamic-Resource-Doc'])
+
+// Whether a tag is offered as a filter on a version's docs.
+export function isFilterTag(tag: string, version: string | undefined): boolean {
+  return !(isDomainApiVersion(version) && IMPLEMENTATION_TAGS.has(tag))
+}
+
 // How a Domain API is named in the Versions menu and above the docs.
 export function domainApiLabel(api: DomainApi): string {
   return `${api.title} (/${api.base_path})`
