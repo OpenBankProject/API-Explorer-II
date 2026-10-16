@@ -528,10 +528,6 @@ h2 {
   transition: transform 0.2s;
 }
 
-.provider-card:hover {
-  transform: translateY(-2px);
-}
-
 .provider-healthy {
   border-left: 4px solid var(--el-color-success);
 }

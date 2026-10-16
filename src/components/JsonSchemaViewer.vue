@@ -285,12 +285,6 @@ const jsonElements = computed(() => {
   transition: all 0.2s ease;
 }
 
-.ref-link:hover {
-  color: #84c5ff;
-  text-decoration-style: solid;
-  background-color: rgba(97, 175, 239, 0.1);
-}
-
 /* Custom scrollbar */
 .schema-container::-webkit-scrollbar {
   width: 8px;

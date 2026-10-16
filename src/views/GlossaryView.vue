@@ -76,7 +76,7 @@ const safeDescriptions = computed(
         <el-backtop :right="100" :bottom="100" />
         <div v-for="(value, key) of glossary" :key="value">
           <span>
-            <a v-bind:href="`#${value.title}`" :id="value.title">
+            <a v-bind:href="`#${value.title}`" :id="value.title" draggable="false">
               {{ value.title }}
             </a>
           </span>
@@ -156,24 +156,19 @@ span > a {
   text-decoration: none;
   color: var(--obp-text-strong);
   display: block;
+  -webkit-user-drag: none;
   margin-top: 30px;
   padding-top: 10px;
 }
 span:first-child > a {
   margin-top: 0;
 }
+/* No hover effects on this page: they get in the way of selecting text to copy. */
 .content :deep(a) {
   text-decoration: underline;
   font-family: 'Roboto';
   font-size: 14px;
-  border-radius: 3px;
-  padding: 1px;
-}
-.content :deep(a):hover {
-  background-color: #a4b2ce;
-}
-:global(html.dark) .content :deep(a):hover {
-  background-color: #4c4d4f;
+  -webkit-user-drag: none;
 }
 
 /* Make Scala code blocks readable */
