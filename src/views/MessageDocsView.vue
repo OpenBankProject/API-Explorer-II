@@ -253,10 +253,6 @@ div {
   padding: 1px;
 } */
 
-.content :deep(a):hover {
-  background-color: #39455f;
-}
-
 .message-docs-header {
   padding: 20px 0;
   border-bottom: 2px solid var(--el-border-color-light);

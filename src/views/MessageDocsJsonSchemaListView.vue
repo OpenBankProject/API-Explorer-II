@@ -102,11 +102,6 @@ h1 {
   display: block;
 }
 
-.message-doc-link:hover {
-  background-color: var(--el-color-primary-light-9);
-  color: var(--el-color-primary-dark-2);
-}
-
 .empty-message {
   color: var(--el-text-color-secondary);
   font-style: italic;

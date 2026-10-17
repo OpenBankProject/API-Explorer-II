@@ -154,11 +154,6 @@ const clearCacheStorage = () => {
   text-decoration: none;
 }
 
-.about-table a:hover {
-  color: #66b1ff;
-  text-decoration: underline;
-}
-
 .clear-cache-button {
   padding: 6px 16px;
   background-color: #32b9ce;

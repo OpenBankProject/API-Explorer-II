@@ -219,11 +219,6 @@ const hasContent = computed(() => helpContent.value !== null)
   padding: 1px;
 }
 
-.content :deep(a):hover {
-  background-color: var(--el-color-primary-light-9);
-  color: #66b1ff;
-}
-
 .content :deep(blockquote) {
   border-left: 4px solid var(--el-border-color);
   padding-left: 16px;

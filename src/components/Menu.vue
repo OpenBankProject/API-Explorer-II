@@ -134,10 +134,6 @@ a {
   text-decoration: none;
 }
 
-a:hover {
-  color: v-bind(searchLinksColor);
-}
-
 .host {
   font-size: 14px;
   font-family: 'Roboto';
@@ -179,11 +175,6 @@ a:hover {
   text-decoration: none;
   cursor: pointer;
   transition: color 0.2s ease;
-}
-
-.endpoint-tags :deep(.tag-link:hover) {
-  color: #66b1ff;
-  text-decoration: underline;
 }
 
 .api-host-label {

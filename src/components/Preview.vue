@@ -1061,9 +1061,6 @@ li:last-child {
   color: inherit;
   text-decoration: underline;
 }
-#resolved-request-url:hover {
-  color: var(--el-color-primary);
-}
 .divider {
   border-top: 1px var(--obp-panel-dark-raised) solid;
   margin-left: -25px;

@@ -172,7 +172,7 @@ onMounted(async () => {
             <el-collapse-item v-for="key in sortedKeys" :title="key" :key="key" :name="key">
               <div class="el-tabs--right">
                 <div v-for="(value, k) of sortLinks(groups[key])" :key="value" class="api-router-tab" @click="setActive">
-                  <RouterLink active-class="active-api-router-link" class="api-router-link" :id="value"
+                  <RouterLink active-class="active-api-router-link" class="api-router-link" :id="value" draggable="false"
                     :to="{ name: 'collection-api', params: { id: collectionId }, query: { operationid: value } }">{{ k }}</RouterLink>
                 </div>
               </div>
@@ -281,11 +281,9 @@ onMounted(async () => {
 .api-router-tab {
   border-left: 2px solid var(--el-menu-border-color);
 }
-.api-router-tab:hover,
 .active-api-router-tab {
   border-left: 2px solid v-bind(searchLinksColor);
 }
-.api-router-tab:hover .api-router-link,
 .active-api-router-link {
   color: v-bind(searchLinksColor);
 }

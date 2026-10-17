@@ -434,22 +434,11 @@ span {
   text-decoration: none;
 }
 
-.tag-link:hover {
-  background-color: var(--el-color-primary);
-  color: white;
-  border-color: var(--el-color-primary);
-}
-
 .tag-link-all {
   background-color: var(--el-color-success);
   border-color: var(--el-color-success-light-5);
   color: white;
   font-weight: 600;
-}
-
-.tag-link-all:hover {
-  background-color: #85ce61;
-  border-color: #85ce61;
 }
 
 .tag-link-active {
@@ -601,12 +590,6 @@ div {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.pager-router-link:hover,
-.pager-left:hover,
-.pager-right:hover {
-  color: v-bind(summaryPagerLinksColor);
 }
 
 .favorite {

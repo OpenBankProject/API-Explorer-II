@@ -332,10 +332,6 @@ div {
   font-family: 'Roboto';
 }
 
-.content :deep(a):hover {
-  background-color: #39455f;
-}
-
 .message-docs-header {
   padding: 20px 0;
   border-bottom: 2px solid var(--el-border-color-light);
@@ -395,11 +391,6 @@ div {
   transition: all 0.2s ease;
 }
 
-.definition-item:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border-color: var(--el-color-primary);
-}
-
 .definition-item h3 {
   color: var(--el-color-primary);
   margin-top: 0;
@@ -413,10 +404,6 @@ div {
 
 .definition-item a {
   text-decoration: none;
-}
-
-.definition-item a:hover h3 {
-  text-decoration: underline;
 }
 
 .no-definitions {
