@@ -12,6 +12,10 @@ RUN npm run build-server
 # CMD npm run -d start
 FROM  node:lts-slim
 
+# The commit the image is built from (the image has no .git), reported in Telemetry and on the status page
+ARG GIT_COMMIT=unknown
+ENV GIT_COMMIT=$GIT_COMMIT
+
 COPY --from=builder /home/node/app/dist-server /home/node/app
 RUN mkdir /home/node/node_modules
 COPY --from=builder /home/node/app/node_modules /home/node/node_modules
