@@ -72,15 +72,20 @@ describe('obpRoleCheck', () => {
   const answer = (status: number, modes: string[] = []) =>
     Promise.resolve(new Response(JSON.stringify({ allowed_for_auth_modes: modes }), { status }))
 
-  it('allows a token OBP-API allows for UserOrApplication, asking at SYS', async () => {
-    fetchMock.mockReturnValueOnce(answer(200, ['ApplicationOnly', 'UserOrApplication']))
+  it('allows a token OBP-API allows for UserXORApplication, asking at SYS', async () => {
+    fetchMock.mockReturnValueOnce(answer(200, ['ApplicationOnly', 'UserXORApplication']))
     expect(await tokenMayUseAnyRole('http://obp', 't', ['CanGetTelemetry'])).toBe('allowed')
     expect(fetchMock.mock.calls[0][0]).toBe('http://obp/obp/v7.0.0/banks/SYS/my/roles/CanGetTelemetry')
     expect(fetchMock.mock.calls[0][1].headers.Authorization).toBe('Bearer t')
   })
 
+  it('refuses a token OBP-API allows only for ApplicationOnly', async () => {
+    fetchMock.mockReturnValueOnce(answer(200, ['ApplicationOnly']))
+    expect(await tokenMayUseAnyRole('http://obp', 't', ['CanGetTelemetry'])).toBe('forbidden')
+  })
+
   it('tries the next Role when one is not allowed', async () => {
-    fetchMock.mockReturnValueOnce(answer(200, ['UserOnly'])).mockReturnValueOnce(answer(200, ['UserOrApplication']))
+    fetchMock.mockReturnValueOnce(answer(200, ['UserOnly'])).mockReturnValueOnce(answer(200, ['UserXORApplication']))
     expect(await tokenMayUseAnyRole('http://obp', 't', ['CanGetSystemLogCacheError', 'CanGetSystemLogCacheAll'])).toBe('allowed')
     expect(fetchMock).toHaveBeenCalledTimes(2)
   })
@@ -93,7 +98,7 @@ describe('obpRoleCheck', () => {
   })
 
   it('reuses an answer for a minute', async () => {
-    fetchMock.mockImplementation(() => answer(200, ['UserOrApplication']))
+    fetchMock.mockImplementation(() => answer(200, ['UserXORApplication']))
     await tokenMayUseAnyRole('http://obp', 't', ['A'], 0)
     await tokenMayUseAnyRole('http://obp', 't', ['A'], 59_999)
     expect(fetchMock).toHaveBeenCalledTimes(1)
@@ -105,9 +110,9 @@ describe('obpRoleCheck', () => {
 describe('monitoring endpoints', () => {
   // A fake OBP-API: what each token may do, as GET /banks/SYS/my/roles/ROLE answers it.
   const tokens: Record<string, Record<string, string[]>> = {
-    'error-reader': { CanGetSystemLogCacheError: ['UserOrApplication'] },
-    'all-reader': { CanGetSystemLogCacheAll: ['UserOrApplication'] },
-    'telemetry-reader': { CanGetTelemetry: ['UserOrApplication'] },
+    'error-reader': { CanGetSystemLogCacheError: ['UserXORApplication'] },
+    'all-reader': { CanGetSystemLogCacheAll: ['UserXORApplication'] },
+    'telemetry-reader': { CanGetTelemetry: ['UserXORApplication'] },
     'user-only': { CanGetSystemLogCacheAll: ['UserOnly'], CanGetTelemetry: ['UserOnly'] },
     'no-roles': {}
   }
@@ -151,7 +156,7 @@ describe('monitoring endpoints', () => {
   const capitalised = (level: string) => level.charAt(0).toUpperCase() + level.slice(1)
 
   it.each(levels)('returns the %s log cache to a token allowed its level Role or the All Role', async (level) => {
-    tokens[`${level}-only`] = { [`CanGetSystemLogCache${capitalised(level)}`]: ['UserOrApplication'] }
+    tokens[`${level}-only`] = { [`CanGetSystemLogCache${capitalised(level)}`]: ['UserXORApplication'] }
     for (const token of [`${level}-only`, 'all-reader']) {
       const res = await get(`/api/monitoring/log-cache/${level}`, token)
       expect(res.status).toBe(200)
@@ -161,7 +166,7 @@ describe('monitoring endpoints', () => {
 
   it.each(levels)('refuses the %s log cache to tokens without its Roles, returning no lines', async (level) => {
     for (const token of ['no-roles', 'telemetry-reader', 'user-only', level === 'error' ? 'all-but-error' : 'error-reader']) {
-      tokens['all-but-error'] = { CanGetSystemLogCacheInfo: ['UserOrApplication'] }
+      tokens['all-but-error'] = { CanGetSystemLogCacheInfo: ['UserXORApplication'] }
       const res = await get(`/api/monitoring/log-cache/${level}`, token)
       expect(res.status).toBe(403)
       expect(res.body.entries).toBeUndefined()
