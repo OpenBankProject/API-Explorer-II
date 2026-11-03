@@ -218,10 +218,13 @@ let instance: any
     `Backend is running. You can check a status at http://localhost:${port}${routePrefix}/status`
   )
 
-  // Get commit ID
+  // Get commit ID: from GIT_COMMIT, set when the Docker image is built, else from the git checkout
   try {
     // Try to get the commit ID
-    commitId = execSync('git rev-parse HEAD', { encoding: 'utf-8' }).trim()
+    commitId =
+      process.env.GIT_COMMIT && process.env.GIT_COMMIT !== 'unknown'
+        ? process.env.GIT_COMMIT
+        : execSync('git rev-parse HEAD', { encoding: 'utf-8' }).trim()
     console.log('Current Commit ID:', commitId)
   } catch (error: any) {
     // Log the error but do not terminate the process
