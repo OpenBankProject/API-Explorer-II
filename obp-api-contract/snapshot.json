@@ -1,0 +1,466 @@
+{
+ "about": "Written by obp-api-contract/snapshot.py; do not edit by hand.",
+ "obp_api": {
+  "https://k8s.openbankproject.com": {
+   "version": "v7.0.0",
+   "git_commit": "474d4bcc554f1d8e9516e12d85be121d92410aa5"
+  }
+ },
+ "taken_at": "2026-11-12T23:23:32Z",
+ "endpoints": [
+  {
+   "verb": "GET",
+   "path": "/obp/v5.1.0/ui/suggested-session-timeout",
+   "docs_from": "https://k8s.openbankproject.com",
+   "operation_id": "OBPv5.1.0-suggestedSessionTimeout",
+   "documented_path": "/obp/v5.1.0/ui/suggested-session-timeout",
+   "fields": [
+    "timeout_in_seconds"
+   ]
+  },
+  {
+   "verb": "GET",
+   "path": "/obp/v5.1.0/users/USER_ID/entitlements",
+   "docs_from": "https://k8s.openbankproject.com",
+   "operation_id": "OBPv4.0.0-getEntitlements",
+   "documented_path": "/obp/v5.1.0/users/USER_ID/entitlements",
+   "fields": [
+    "list",
+    "list[]",
+    "list[].bank_id",
+    "list[].entitlement_id",
+    "list[].role_name",
+    "list[].user_id"
+   ]
+  },
+  {
+   "verb": "POST",
+   "path": "/obp/v5.1.0/users/USER_ID/entitlements",
+   "docs_from": "https://k8s.openbankproject.com",
+   "operation_id": "OBPv2.0.0-addEntitlement",
+   "documented_path": "/obp/v5.1.0/users/USER_ID/entitlements",
+   "fields": [
+    "bank_id",
+    "entitlement_id",
+    "role_name"
+   ]
+  },
+  {
+   "verb": "POST",
+   "path": "/obp/v5.1.0/my/api-collections",
+   "docs_from": "https://k8s.openbankproject.com",
+   "operation_id": "OBPv4.0.0-createMyApiCollection",
+   "documented_path": "/obp/v5.1.0/my/api-collections",
+   "fields": [
+    "api_collection_id",
+    "api_collection_name",
+    "description",
+    "is_sharable",
+    "user_id"
+   ]
+  },
+  {
+   "verb": "GET",
+   "path": "/obp/v5.1.0/my/api-collections",
+   "docs_from": "https://k8s.openbankproject.com",
+   "operation_id": "OBPv4.0.0-getMyApiCollections",
+   "documented_path": "/obp/v5.1.0/my/api-collections",
+   "fields": [
+    "api_collections",
+    "api_collections[]",
+    "api_collections[].api_collection_id",
+    "api_collections[].api_collection_name",
+    "api_collections[].description",
+    "api_collections[].is_sharable",
+    "api_collections[].user_id"
+   ]
+  },
+  {
+   "verb": "POST",
+   "path": "/obp/v5.1.0/my/api-collections/API_COLLECTION_NAME/api-collection-endpoints",
+   "docs_from": "https://k8s.openbankproject.com",
+   "operation_id": "OBPv4.0.0-createMyApiCollectionEndpoint",
+   "documented_path": "/obp/v5.1.0/my/api-collections/API_COLLECTION_NAME/api-collection-endpoints",
+   "fields": [
+    "api_collection_endpoint_id",
+    "api_collection_id",
+    "operation_id"
+   ]
+  },
+  {
+   "verb": "DELETE",
+   "path": "/obp/v5.1.0/my/api-collections/API_COLLECTION_NAME/api-collection-endpoints/OPERATION_ID",
+   "docs_from": "https://k8s.openbankproject.com",
+   "operation_id": "OBPv4.0.0-deleteMyApiCollectionEndpoint",
+   "documented_path": "/obp/v5.1.0/my/api-collections/API_COLLECTION_NAME/api-collection-endpoints/OPERATION_ID",
+   "fields": [
+    "value"
+   ]
+  },
+  {
+   "verb": "GET",
+   "path": "/obp/v5.1.0/my/api-collections/API_COLLECTION_NAME/api-collection-endpoints",
+   "docs_from": "https://k8s.openbankproject.com",
+   "operation_id": "OBPv4.0.0-getMyApiCollectionEndpoints",
+   "documented_path": "/obp/v5.1.0/my/api-collections/API_COLLECTION_NAME/api-collection-endpoints",
+   "fields": [
+    "api_collection_endpoints",
+    "api_collection_endpoints[]",
+    "api_collection_endpoints[].api_collection_endpoint_id",
+    "api_collection_endpoints[].api_collection_id",
+    "api_collection_endpoints[].operation_id"
+   ]
+  },
+  {
+   "verb": "GET",
+   "path": "/obp/v6.0.0/api-collections/API_COLLECTION_ID/api-collection-endpoints",
+   "docs_from": "https://k8s.openbankproject.com",
+   "operation_id": "OBPv4.0.0-getApiCollectionEndpoints",
+   "documented_path": "/obp/v6.0.0/api-collections/API_COLLECTION_ID/api-collection-endpoints",
+   "fields": [
+    "api_collection_endpoints",
+    "api_collection_endpoints[]",
+    "api_collection_endpoints[].api_collection_endpoint_id",
+    "api_collection_endpoints[].api_collection_id",
+    "api_collection_endpoints[].operation_id"
+   ]
+  },
+  {
+   "verb": "GET",
+   "path": "/obp/v6.0.0/banks",
+   "docs_from": "https://k8s.openbankproject.com",
+   "operation_id": "OBPv6.0.0-getBanks",
+   "documented_path": "/obp/v6.0.0/banks",
+   "fields": [
+    "banks",
+    "banks[]",
+    "banks[].attributes",
+    "banks[].attributes[]",
+    "banks[].attributes[].name",
+    "banks[].attributes[].value",
+    "banks[].bank_code",
+    "banks[].bank_id",
+    "banks[].bank_routings",
+    "banks[].bank_routings[]",
+    "banks[].bank_routings[].address",
+    "banks[].bank_routings[].scheme",
+    "banks[].full_name",
+    "banks[].logo",
+    "banks[].website"
+   ]
+  },
+  {
+   "verb": "GET",
+   "path": "/obp/v7.0.0/api/versions",
+   "docs_from": "https://k8s.openbankproject.com",
+   "operation_id": "OBPv6.0.0-getScannedApiVersions",
+   "documented_path": "/obp/v7.0.0/api/versions",
+   "fields": [
+    "scanned_api_versions",
+    "scanned_api_versions[]",
+    "scanned_api_versions[].api_short_version",
+    "scanned_api_versions[].api_standard",
+    "scanned_api_versions[].fully_qualified_version",
+    "scanned_api_versions[].is_active",
+    "scanned_api_versions[].url_prefix"
+   ]
+  },
+  {
+   "verb": "GET",
+   "path": "/obp/v7.0.0/resource-docs/API_VERSION/obp",
+   "docs_from": "https://k8s.openbankproject.com",
+   "operation_id": "OBPv1.4.0-getResourceDocsObp",
+   "documented_path": "/obp/v7.0.0/resource-docs/API_VERSION/obp",
+   "fields": []
+  },
+  {
+   "verb": "GET",
+   "path": "/obp/v7.0.0/domain-apis",
+   "docs_from": "https://k8s.openbankproject.com",
+   "operation_id": "OBPv7.0.0-getPubliclyDiscoverableDomainApisInEverySpace",
+   "documented_path": "/obp/v7.0.0/domain-apis",
+   "fields": [
+    "domain_apis",
+    "domain_apis[]",
+    "domain_apis[].bank_id",
+    "domain_apis[].base_path",
+    "domain_apis[].description",
+    "domain_apis[].openapi_url",
+    "domain_apis[].title",
+    "domain_apis[].url",
+    "domain_apis[].version"
+   ]
+  },
+  {
+   "verb": "GET",
+   "path": "/obp/v7.0.0/banks/BANK_ID/domain-apis/resource-docs",
+   "docs_from": "https://k8s.openbankproject.com",
+   "operation_id": "OBPv7.0.0-getDomainApiResourceDocs",
+   "documented_path": "/obp/v7.0.0/banks/BANK_ID/domain-apis/resource-docs",
+   "fields": []
+  },
+  {
+   "verb": "GET",
+   "path": "/obp/v5.1.0/api/glossary",
+   "docs_from": "https://k8s.openbankproject.com",
+   "operation_id": "OBPv3.0.0-getApiGlossary",
+   "documented_path": "/obp/v5.1.0/api/glossary",
+   "fields": [
+    "glossary_items",
+    "glossary_items[]",
+    "glossary_items[].description",
+    "glossary_items[].description.html",
+    "glossary_items[].description.markdown",
+    "glossary_items[].title"
+   ]
+  },
+  {
+   "verb": "GET",
+   "path": "/obp/v6.0.0/system/connectors",
+   "docs_from": "https://k8s.openbankproject.com",
+   "operation_id": "OBPv6.0.0-getConnectors",
+   "documented_path": "/obp/v6.0.0/system/connectors",
+   "fields": [
+    "connectors",
+    "connectors[]",
+    "connectors[].connector_name",
+    "connectors[].is_available_in_method_routing"
+   ]
+  },
+  {
+   "verb": "GET",
+   "path": "/obp/v5.1.0/message-docs/CONNECTOR",
+   "docs_from": "https://k8s.openbankproject.com",
+   "operation_id": "OBPv2.2.0-getMessageDocs",
+   "documented_path": "/obp/v5.1.0/message-docs/CONNECTOR",
+   "fields": [
+    "message_docs",
+    "message_docs[]",
+    "message_docs[].adapter_implementation",
+    "message_docs[].adapter_implementation.group",
+    "message_docs[].adapter_implementation.suggested_order",
+    "message_docs[].dependent_endpoints",
+    "message_docs[].dependent_endpoints[]",
+    "message_docs[].dependent_endpoints[].name",
+    "message_docs[].dependent_endpoints[].version",
+    "message_docs[].description",
+    "message_docs[].example_inbound_message",
+    "message_docs[].example_inbound_message.jsonString",
+    "message_docs[].example_outbound_message",
+    "message_docs[].example_outbound_message.jsonString",
+    "message_docs[].inboundAvroSchema",
+    "message_docs[].inboundAvroSchema.jsonString",
+    "message_docs[].inbound_topic",
+    "message_docs[].message_format",
+    "message_docs[].outboundAvroSchema",
+    "message_docs[].outboundAvroSchema.jsonString",
+    "message_docs[].outbound_topic",
+    "message_docs[].process",
+    "message_docs[].requiredFieldInfo",
+    "message_docs[].requiredFieldInfo.data.bankId",
+    "message_docs[].requiredFieldInfo.data.bankId[]"
+   ]
+  },
+  {
+   "verb": "GET",
+   "path": "/obp/v6.0.0/message-docs/CONNECTOR/json-schema",
+   "docs_from": "https://k8s.openbankproject.com",
+   "operation_id": "OBPv6.0.0-getMessageDocsJsonSchema",
+   "documented_path": "/obp/v6.0.0/message-docs/CONNECTOR/json-schema",
+   "fields": []
+  },
+  {
+   "verb": "GET",
+   "path": "/obp/v7.0.0/resource-docs/API_VERSION/obp",
+   "docs_from": "https://k8s.openbankproject.com",
+   "operation_id": "OBPv1.4.0-getResourceDocsObp",
+   "documented_path": "/obp/v7.0.0/resource-docs/API_VERSION/obp",
+   "fields": []
+  },
+  {
+   "verb": "GET",
+   "path": "/obp/v5.1.0/message-docs/CONNECTOR",
+   "docs_from": "https://k8s.openbankproject.com",
+   "operation_id": "OBPv2.2.0-getMessageDocs",
+   "documented_path": "/obp/v5.1.0/message-docs/CONNECTOR",
+   "fields": [
+    "message_docs",
+    "message_docs[]",
+    "message_docs[].adapter_implementation",
+    "message_docs[].adapter_implementation.group",
+    "message_docs[].adapter_implementation.suggested_order",
+    "message_docs[].dependent_endpoints",
+    "message_docs[].dependent_endpoints[]",
+    "message_docs[].dependent_endpoints[].name",
+    "message_docs[].dependent_endpoints[].version",
+    "message_docs[].description",
+    "message_docs[].example_inbound_message",
+    "message_docs[].example_inbound_message.jsonString",
+    "message_docs[].example_outbound_message",
+    "message_docs[].example_outbound_message.jsonString",
+    "message_docs[].inboundAvroSchema",
+    "message_docs[].inboundAvroSchema.jsonString",
+    "message_docs[].inbound_topic",
+    "message_docs[].message_format",
+    "message_docs[].outboundAvroSchema",
+    "message_docs[].outboundAvroSchema.jsonString",
+    "message_docs[].outbound_topic",
+    "message_docs[].process",
+    "message_docs[].requiredFieldInfo",
+    "message_docs[].requiredFieldInfo.data.bankId",
+    "message_docs[].requiredFieldInfo.data.bankId[]"
+   ]
+  },
+  {
+   "verb": "GET",
+   "path": "/obp/v7.0.0/api/versions",
+   "docs_from": "https://k8s.openbankproject.com",
+   "operation_id": "OBPv6.0.0-getScannedApiVersions",
+   "documented_path": "/obp/v7.0.0/api/versions",
+   "fields": [
+    "scanned_api_versions",
+    "scanned_api_versions[]",
+    "scanned_api_versions[].api_short_version",
+    "scanned_api_versions[].api_standard",
+    "scanned_api_versions[].fully_qualified_version",
+    "scanned_api_versions[].is_active",
+    "scanned_api_versions[].url_prefix"
+   ]
+  },
+  {
+   "verb": "GET",
+   "path": "/obp/v5.1.0/users/current",
+   "docs_from": "https://k8s.openbankproject.com",
+   "operation_id": "OBPv3.0.0-getCurrentUser",
+   "documented_path": "/obp/v5.1.0/users/current",
+   "fields": [
+    "email",
+    "entitlements",
+    "entitlements.list",
+    "entitlements.list[]",
+    "entitlements.list[].bank_id",
+    "entitlements.list[].entitlement_id",
+    "entitlements.list[].role_name",
+    "provider",
+    "provider_id",
+    "user_id",
+    "username",
+    "views",
+    "views.list",
+    "views.list[]",
+    "views.list[].account_id",
+    "views.list[].bank_id",
+    "views.list[].view_id"
+   ]
+  },
+  {
+   "verb": "GET",
+   "path": "/obp/v5.1.0/well-known",
+   "docs_from": "https://k8s.openbankproject.com",
+   "operation_id": "OBPv5.1.0-getOAuth2ServerWellKnown",
+   "documented_path": "/obp/v5.1.0/well-known",
+   "fields": [
+    "jwks_uris",
+    "jwks_uris[]",
+    "jwks_uris[].jwks_uri"
+   ]
+  },
+  {
+   "verb": "GET",
+   "path": "/obp/v5.1.0/users/current",
+   "docs_from": "https://k8s.openbankproject.com",
+   "operation_id": "OBPv3.0.0-getCurrentUser",
+   "documented_path": "/obp/v5.1.0/users/current",
+   "fields": [
+    "email",
+    "entitlements",
+    "entitlements.list",
+    "entitlements.list[]",
+    "entitlements.list[].bank_id",
+    "entitlements.list[].entitlement_id",
+    "entitlements.list[].role_name",
+    "provider",
+    "provider_id",
+    "user_id",
+    "username",
+    "views",
+    "views.list",
+    "views.list[]",
+    "views.list[].account_id",
+    "views.list[].bank_id",
+    "views.list[].view_id"
+   ]
+  },
+  {
+   "verb": "GET",
+   "path": "/obp/v5.1.0/well-known",
+   "docs_from": "https://k8s.openbankproject.com",
+   "operation_id": "OBPv5.1.0-getOAuth2ServerWellKnown",
+   "documented_path": "/obp/v5.1.0/well-known",
+   "fields": [
+    "jwks_uris",
+    "jwks_uris[]",
+    "jwks_uris[].jwks_uri"
+   ]
+  },
+  {
+   "verb": "GET",
+   "path": "/obp/v5.1.0/root",
+   "docs_from": "https://k8s.openbankproject.com",
+   "operation_id": "OBPv5.1.0-root",
+   "documented_path": "/obp/v5.1.0/root",
+   "fields": [
+    "connector",
+    "energy_source",
+    "energy_source.organisation",
+    "energy_source.organisation_website",
+    "git_commit",
+    "hosted_at",
+    "hosted_at.organisation",
+    "hosted_at.organisation_website",
+    "hosted_by",
+    "hosted_by.email",
+    "hosted_by.organisation",
+    "hosted_by.organisation_website",
+    "hosted_by.phone",
+    "hostname",
+    "local_identity_provider",
+    "resource_docs_requires_role",
+    "version",
+    "version_status"
+   ]
+  },
+  {
+   "verb": "GET",
+   "path": "/obp/v7.0.0/banks/SYS/my/roles/ROLE_NAME",
+   "docs_from": "https://k8s.openbankproject.com",
+   "operation_id": "OBPv7.0.0-getMyRole",
+   "documented_path": "/obp/v7.0.0/banks/BANK_ID/my/roles/ROLE_NAME",
+   "fields": [
+    "allowed_for_auth_modes",
+    "allowed_for_auth_modes[]",
+    "bank_id",
+    "caller",
+    "caller.application_only",
+    "caller.consumer_id",
+    "caller.user_id",
+    "held_by",
+    "held_by.consumer",
+    "held_by.user",
+    "role_name",
+    "scopes_required"
+   ]
+  },
+  {
+   "verb": "GET",
+   "path": "/obp/v7.0.0/consumers/current/identity",
+   "docs_from": "https://k8s.openbankproject.com",
+   "operation_id": "OBPv7.0.0-getCurrentConsumerIdentity",
+   "documented_path": "/obp/v7.0.0/consumers/current/identity",
+   "fields": [
+    "consumer_id",
+    "consumer_name"
+   ]
+  }
+ ]
+}

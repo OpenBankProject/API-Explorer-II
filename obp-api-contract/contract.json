@@ -1,0 +1,654 @@
+{
+ "about": "Every OBP-API call API Explorer II makes from its own code: verb, path (OBP placeholders in capitals), the source file and the text that makes the call (needles), the version constants the path is built from (version_from), and the response fields the code reads. Not listed: the calls whose path the user picks while browsing the docs (Try It in Preview.vue and the generic /api/get, /api/create, /api/update and /api/delete proxy in server/routes/obp.ts, including the public docs cache), and the gRPC services page. not_calls lists the lines that name an OBP-API path without being one of the calls. server/test/obpApiContract.test.ts checks this list against the source and against snapshot.json, which obp-api-contract/snapshot.py writes from an OBP-API's resource docs.",
+ "calls": [
+  {
+   "verb": "GET",
+   "path": "/obp/v5.1.0/ui/suggested-session-timeout",
+   "source": "src/components/AutoLogout.vue",
+   "needles": [
+    "fetch(`${obpApiHost}/obp/${DEFAULT_OBP_API_VERSION}/ui/suggested-session-timeout`)"
+   ],
+   "version_from": [
+    {
+     "source": "src/shared-constants.ts",
+     "needle": "export const DEFAULT_OBP_API_VERSION = 'v5.1.0'"
+    }
+   ],
+   "reads": [
+    "timeout_in_seconds"
+   ],
+   "note": "Sent by the browser straight to VITE_OBP_API_HOST, without a token and past the Explorer server, so it also needs CORS. Without the field the Explorer logs out after 301 seconds."
+  },
+  {
+   "verb": "GET",
+   "path": "/obp/v5.1.0/users/USER_ID/entitlements",
+   "source": "src/obp/index.ts",
+   "needles": [
+    "export async function getUserEntitlements()",
+    "`/obp/${OBP_API_VERSION}/users/${userId}/entitlements`"
+   ],
+   "version_from": [
+    {
+     "source": "src/shared-constants.ts",
+     "needle": "export const DEFAULT_OBP_API_VERSION = 'v5.1.0'"
+    },
+    {
+     "source": "src/obp/index.ts",
+     "needle": "export const OBP_API_VERSION = DEFAULT_OBP_API_VERSION"
+    }
+   ],
+   "reads": [
+    "list[].role_name",
+    "list[].bank_id"
+   ],
+   "note": "Read by Preview.vue to show which of an endpoint's roles the user holds."
+  },
+  {
+   "verb": "POST",
+   "path": "/obp/v5.1.0/users/USER_ID/entitlements",
+   "source": "src/obp/index.ts",
+   "needles": [
+    "export async function createEntitlement(",
+    "`/obp/${OBP_API_VERSION}/users/${userId}/entitlements`"
+   ],
+   "version_from": [
+    {
+     "source": "src/shared-constants.ts",
+     "needle": "export const DEFAULT_OBP_API_VERSION = 'v5.1.0'"
+    },
+    {
+     "source": "src/obp/index.ts",
+     "needle": "export const OBP_API_VERSION = DEFAULT_OBP_API_VERSION"
+    }
+   ],
+   "reads": [],
+   "note": "Preview.vue reads only the code and message of an error answer."
+  },
+  {
+   "verb": "POST",
+   "path": "/obp/v5.1.0/my/api-collections",
+   "source": "src/obp/index.ts",
+   "needles": [
+    "const url = `/obp/${OBP_API_VERSION}/my/api-collections`"
+   ],
+   "version_from": [
+    {
+     "source": "src/shared-constants.ts",
+     "needle": "export const DEFAULT_OBP_API_VERSION = 'v5.1.0'"
+    },
+    {
+     "source": "src/obp/index.ts",
+     "needle": "export const OBP_API_VERSION = DEFAULT_OBP_API_VERSION"
+    }
+   ],
+   "reads": [],
+   "note": "Creates the Favourites collection; Content.vue does not read the answer."
+  },
+  {
+   "verb": "GET",
+   "path": "/obp/v5.1.0/my/api-collections",
+   "source": "src/obp/index.ts",
+   "needles": [
+    "get(`/obp/${OBP_API_VERSION}/my/api-collections`)"
+   ],
+   "version_from": [
+    {
+     "source": "src/shared-constants.ts",
+     "needle": "export const DEFAULT_OBP_API_VERSION = 'v5.1.0'"
+    },
+    {
+     "source": "src/obp/index.ts",
+     "needle": "export const OBP_API_VERSION = DEFAULT_OBP_API_VERSION"
+    }
+   ],
+   "reads": [
+    "api_collections",
+    "api_collections[].api_collection_name"
+   ],
+   "note": "main.ts checks the list is not empty; SearchNav.vue reads each collection's name."
+  },
+  {
+   "verb": "POST",
+   "path": "/obp/v5.1.0/my/api-collections/API_COLLECTION_NAME/api-collection-endpoints",
+   "source": "src/obp/index.ts",
+   "needles": [
+    "`/obp/${OBP_API_VERSION}/my/api-collections/${default_collection_name}/api-collection-endpoints`"
+   ],
+   "version_from": [
+    {
+     "source": "src/shared-constants.ts",
+     "needle": "export const DEFAULT_OBP_API_VERSION = 'v5.1.0'"
+    },
+    {
+     "source": "src/obp/index.ts",
+     "needle": "export const OBP_API_VERSION = DEFAULT_OBP_API_VERSION"
+    }
+   ],
+   "reads": [],
+   "note": "Adds an endpoint to Favourites; the answer is not read."
+  },
+  {
+   "verb": "DELETE",
+   "path": "/obp/v5.1.0/my/api-collections/API_COLLECTION_NAME/api-collection-endpoints/OPERATION_ID",
+   "source": "src/obp/index.ts",
+   "needles": [
+    "`/obp/${OBP_API_VERSION}/my/api-collections/${default_collection_name}/api-collection-endpoints/${operation_id}`"
+   ],
+   "version_from": [
+    {
+     "source": "src/shared-constants.ts",
+     "needle": "export const DEFAULT_OBP_API_VERSION = 'v5.1.0'"
+    },
+    {
+     "source": "src/obp/index.ts",
+     "needle": "export const OBP_API_VERSION = DEFAULT_OBP_API_VERSION"
+    }
+   ],
+   "reads": [],
+   "note": "Sent through /api/delete. Content.vue shows any non-empty answer as an error."
+  },
+  {
+   "verb": "GET",
+   "path": "/obp/v5.1.0/my/api-collections/API_COLLECTION_NAME/api-collection-endpoints",
+   "source": "src/obp/index.ts",
+   "needles": [
+    "`/obp/${OBP_API_VERSION}/my/api-collections/${collectionName}/api-collection-endpoints`"
+   ],
+   "version_from": [
+    {
+     "source": "src/shared-constants.ts",
+     "needle": "export const DEFAULT_OBP_API_VERSION = 'v5.1.0'"
+    },
+    {
+     "source": "src/obp/index.ts",
+     "needle": "export const OBP_API_VERSION = DEFAULT_OBP_API_VERSION"
+    }
+   ],
+   "reads": [
+    "api_collection_endpoints[].operation_id"
+   ],
+   "note": "Read by main.ts and SearchNav.vue."
+  },
+  {
+   "verb": "GET",
+   "path": "/obp/v6.0.0/api-collections/API_COLLECTION_ID/api-collection-endpoints",
+   "source": "src/obp/index.ts",
+   "needles": [
+    "`obp/${V6_0_0}/api-collections/${collectionId}/api-collection-endpoints`"
+   ],
+   "version_from": [
+    {
+     "source": "src/shared-constants.ts",
+     "needle": "export const V6_0_0 = 'v6.0.0'"
+    }
+   ],
+   "reads": [
+    "api_collection_endpoints[].operation_id"
+   ],
+   "note": "Read by CollectionView.vue."
+  },
+  {
+   "verb": "GET",
+   "path": "/obp/v6.0.0/banks",
+   "source": "src/obp/index.ts",
+   "needles": [
+    "get(`obp/${V6_0_0}/banks`)"
+   ],
+   "version_from": [
+    {
+     "source": "src/shared-constants.ts",
+     "needle": "export const V6_0_0 = 'v6.0.0'"
+    }
+   ],
+   "reads": [
+    "banks[].bank_id",
+    "banks[].full_name"
+   ],
+   "note": "Read by Menu.vue for the bank selector."
+  },
+  {
+   "verb": "GET",
+   "path": "/obp/v7.0.0/api/versions",
+   "source": "src/obp/api-version.ts",
+   "needles": [
+    "get(`obp/${API_VERSIONS_LIST_API_VERSION}/api/versions`)"
+   ],
+   "version_from": [
+    {
+     "source": "src/shared-constants.ts",
+     "needle": "export const API_VERSIONS_LIST_API_VERSION = 'v7.0.0'"
+    }
+   ],
+   "reads": [
+    "scanned_api_versions[].is_active",
+    "scanned_api_versions[].api_standard",
+    "scanned_api_versions[].api_short_version",
+    "scanned_api_versions[].fully_qualified_version"
+   ],
+   "note": "main.ts builds the version menu from is_active and fully_qualified_version; resource-docs.ts loads the docs of each active api_standard + api_short_version."
+  },
+  {
+   "verb": "GET",
+   "path": "/obp/v7.0.0/resource-docs/API_VERSION/obp",
+   "source": "src/obp/resource-docs.ts",
+   "needles": [
+    "`/obp/${RESOURCE_DOCS_API_VERSION}/resource-docs/${apiStandardAndVersion}/obp`",
+    "`/obp/${RESOURCE_DOCS_API_VERSION}/resource-docs/${apiStandardAndVersion}/obp?content=dynamic`"
+   ],
+   "version_from": [
+    {
+     "source": "src/shared-constants.ts",
+     "needle": "export const RESOURCE_DOCS_API_VERSION = 'v7.0.0'"
+    }
+   ],
+   "reads": [
+    "resource_docs",
+    "resource_docs[].operation_id",
+    "resource_docs[].summary",
+    "resource_docs[].description",
+    "resource_docs[].tags",
+    "resource_docs[].request_verb",
+    "resource_docs[].request_url",
+    "resource_docs[].specified_url",
+    "resource_docs[].example_request_body",
+    "resource_docs[].success_response_body",
+    "resource_docs[].error_response_bodies",
+    "resource_docs[].connector_methods",
+    "resource_docs[].roles[].role",
+    "resource_docs[].roles[].requires_bank_id",
+    "resource_docs[].implemented_by.version",
+    "resource_docs[].implemented_by.function"
+   ],
+   "undocumented_fields": [
+    "resource_docs",
+    "resource_docs[].operation_id",
+    "resource_docs[].summary",
+    "resource_docs[].description",
+    "resource_docs[].tags",
+    "resource_docs[].request_verb",
+    "resource_docs[].request_url",
+    "resource_docs[].specified_url",
+    "resource_docs[].example_request_body",
+    "resource_docs[].success_response_body",
+    "resource_docs[].error_response_bodies",
+    "resource_docs[].connector_methods",
+    "resource_docs[].roles[].role",
+    "resource_docs[].roles[].requires_bank_id",
+    "resource_docs[].implemented_by.version",
+    "resource_docs[].implemented_by.function"
+   ],
+   "note": "API_VERSION is each active version from api/versions (OBPv7.0.0, UKv3.1, ...). The fields are read by Preview.vue, Content.vue, SearchNav.vue, CollectionView.vue and resource-docs.ts. OBP-API documents no typed response for its resource docs, so every field the Explorer reads is listed in undocumented_fields; the test fails here once OBP-API documents one of them."
+  },
+  {
+   "verb": "GET",
+   "path": "/obp/v7.0.0/domain-apis",
+   "source": "src/obp/domain-apis.ts",
+   "needles": [
+    "get(`/obp/${RESOURCE_DOCS_API_VERSION}/domain-apis`)"
+   ],
+   "version_from": [
+    {
+     "source": "src/shared-constants.ts",
+     "needle": "export const RESOURCE_DOCS_API_VERSION = 'v7.0.0'"
+    }
+   ],
+   "reads": [
+    "domain_apis[].bank_id",
+    "domain_apis[].base_path",
+    "domain_apis[].title",
+    "domain_apis[].description",
+    "domain_apis[].url",
+    "domain_apis[].version",
+    "domain_apis[].openapi_url"
+   ],
+   "note": "Content.vue shows title, description, url, version and openapi_url."
+  },
+  {
+   "verb": "GET",
+   "path": "/obp/v7.0.0/banks/BANK_ID/domain-apis/resource-docs",
+   "source": "src/obp/domain-apis.ts",
+   "needles": [
+    "`/obp/${RESOURCE_DOCS_API_VERSION}/banks/${encodeURIComponent(api.bank_id)}/domain-apis/resource-docs?base_path=${api.base_path}`"
+   ],
+   "version_from": [
+    {
+     "source": "src/shared-constants.ts",
+     "needle": "export const RESOURCE_DOCS_API_VERSION = 'v7.0.0'"
+    }
+   ],
+   "reads": [
+    "resource_docs",
+    "resource_docs[].operation_id",
+    "resource_docs[].summary",
+    "resource_docs[].description",
+    "resource_docs[].tags",
+    "resource_docs[].request_verb",
+    "resource_docs[].request_url",
+    "resource_docs[].specified_url",
+    "resource_docs[].example_request_body",
+    "resource_docs[].success_response_body",
+    "resource_docs[].error_response_bodies",
+    "resource_docs[].connector_methods",
+    "resource_docs[].roles[].role",
+    "resource_docs[].roles[].requires_bank_id",
+    "resource_docs[].implemented_by.version",
+    "resource_docs[].implemented_by.function"
+   ],
+   "undocumented_fields": [
+    "resource_docs",
+    "resource_docs[].operation_id",
+    "resource_docs[].summary",
+    "resource_docs[].description",
+    "resource_docs[].tags",
+    "resource_docs[].request_verb",
+    "resource_docs[].request_url",
+    "resource_docs[].specified_url",
+    "resource_docs[].example_request_body",
+    "resource_docs[].success_response_body",
+    "resource_docs[].error_response_bodies",
+    "resource_docs[].connector_methods",
+    "resource_docs[].roles[].role",
+    "resource_docs[].roles[].requires_bank_id",
+    "resource_docs[].implemented_by.version",
+    "resource_docs[].implemented_by.function"
+   ],
+   "note": "Shown like any other version's resource docs. OBP-API documents no typed response for its resource docs, so every field the Explorer reads is listed in undocumented_fields; the test fails here once OBP-API documents one of them."
+  },
+  {
+   "verb": "GET",
+   "path": "/obp/v5.1.0/api/glossary",
+   "source": "src/obp/glossary.ts",
+   "needles": [
+    "get(`obp/${GLOSSARY_API_VERSION}/api/glossary`)"
+   ],
+   "version_from": [
+    {
+     "source": "src/shared-constants.ts",
+     "needle": "export const GLOSSARY_API_VERSION = 'v5.1.0'"
+    }
+   ],
+   "reads": [
+    "glossary_items[].title",
+    "glossary_items[].description.html"
+   ],
+   "note": "Read by GlossaryView.vue, GlossarySearchNav.vue, HelpView.vue and MessageDocsListView.vue."
+  },
+  {
+   "verb": "GET",
+   "path": "/obp/v6.0.0/system/connectors",
+   "source": "src/obp/message-docs.ts",
+   "needles": [
+    "get(`obp/${V6_0_0}/system/connectors`)"
+   ],
+   "version_from": [
+    {
+     "source": "src/shared-constants.ts",
+     "needle": "export const V6_0_0 = 'v6.0.0'"
+    }
+   ],
+   "reads": [
+    "connectors[].connector_name"
+   ],
+   "note": "Falls back to a fixed connector list when the call fails."
+  },
+  {
+   "verb": "GET",
+   "path": "/obp/v5.1.0/message-docs/CONNECTOR",
+   "source": "src/obp/message-docs.ts",
+   "needles": [
+    "get(`obp/${OBP_API_VERSION}/message-docs/${item}`)"
+   ],
+   "version_from": [
+    {
+     "source": "src/shared-constants.ts",
+     "needle": "export const DEFAULT_OBP_API_VERSION = 'v5.1.0'"
+    },
+    {
+     "source": "src/obp/index.ts",
+     "needle": "export const OBP_API_VERSION = DEFAULT_OBP_API_VERSION"
+    }
+   ],
+   "reads": [
+    "message_docs[].adapter_implementation.group",
+    "message_docs[].process",
+    "message_docs[].description",
+    "message_docs[].outbound_topic",
+    "message_docs[].inbound_topic",
+    "message_docs[].example_outbound_message",
+    "message_docs[].example_inbound_message",
+    "message_docs[].requiredFieldInfo",
+    "message_docs[].dependent_endpoints[].name",
+    "message_docs[].dependent_endpoints[].version"
+   ],
+   "note": "Grouped in message-docs.ts and shown by MessageDocsView.vue."
+  },
+  {
+   "verb": "GET",
+   "path": "/obp/v6.0.0/message-docs/CONNECTOR/json-schema",
+   "source": "src/obp/message-docs.ts",
+   "needles": [
+    "get(`obp/${V6_0_0}/message-docs/${item}/json-schema`)"
+   ],
+   "version_from": [
+    {
+     "source": "src/shared-constants.ts",
+     "needle": "export const V6_0_0 = 'v6.0.0'"
+    }
+   ],
+   "reads": [
+    "definitions",
+    "properties.messages.items[].process",
+    "properties.messages.items[].description",
+    "properties.messages.items[].adapter_implementation.group",
+    "properties.messages.items[].outbound_schema",
+    "properties.messages.items[].inbound_schema",
+    "properties.messages.items[].message_format"
+   ],
+   "undocumented_fields": [
+    "definitions",
+    "properties.messages.items[].process",
+    "properties.messages.items[].description",
+    "properties.messages.items[].adapter_implementation.group",
+    "properties.messages.items[].outbound_schema",
+    "properties.messages.items[].inbound_schema",
+    "properties.messages.items[].message_format"
+   ],
+   "note": "The answer is a JSON Schema document; OBP-API documents no typed response for it."
+  },
+  {
+   "verb": "GET",
+   "path": "/obp/v7.0.0/resource-docs/API_VERSION/obp",
+   "source": "server/routes/status.ts",
+   "needles": [
+    "`/obp/${RESOURCE_DOCS_API_VERSION}/resource-docs/${version}/obp`"
+   ],
+   "version_from": [
+    {
+     "source": "src/shared-constants.ts",
+     "needle": "export const RESOURCE_DOCS_API_VERSION = 'v7.0.0'"
+    }
+   ],
+   "reads": [],
+   "note": "Status check: API_VERSION is the server's own version (DEFAULT_OBP_API_VERSION); only an error code is looked at."
+  },
+  {
+   "verb": "GET",
+   "path": "/obp/v5.1.0/message-docs/CONNECTOR",
+   "source": "server/routes/status.ts",
+   "needles": [
+    "`/obp/${MESSAGE_DOCS_API_VERSION}/message-docs/${connector}`"
+   ],
+   "version_from": [
+    {
+     "source": "src/shared-constants.ts",
+     "needle": "export const MESSAGE_DOCS_API_VERSION = 'v5.1.0'"
+    }
+   ],
+   "reads": [],
+   "note": "Status check for each of four fixed connectors; only an error code is looked at."
+  },
+  {
+   "verb": "GET",
+   "path": "/obp/v7.0.0/api/versions",
+   "source": "server/routes/status.ts",
+   "needles": [
+    "`/obp/${API_VERSIONS_LIST_API_VERSION}/api/versions`"
+   ],
+   "version_from": [
+    {
+     "source": "src/shared-constants.ts",
+     "needle": "export const API_VERSIONS_LIST_API_VERSION = 'v7.0.0'"
+    }
+   ],
+   "reads": [],
+   "note": "Status check; only an error code is looked at."
+  },
+  {
+   "verb": "GET",
+   "path": "/obp/v5.1.0/users/current",
+   "source": "server/routes/status.ts",
+   "needles": [
+    "`/obp/${version}/users/current`",
+    "const version = obpClientService.getOBPVersion()"
+   ],
+   "version_from": [
+    {
+     "source": "src/shared-constants.ts",
+     "needle": "export const DEFAULT_OBP_API_VERSION = 'v5.1.0'"
+    },
+    {
+     "source": "server/services/OBPClientService.ts",
+     "needle": "version: DEFAULT_OBP_API_VERSION"
+    }
+   ],
+   "reads": [],
+   "note": "Status check for a logged-in visitor; only an error code is looked at."
+  },
+  {
+   "verb": "GET",
+   "path": "/obp/v5.1.0/well-known",
+   "source": "server/routes/status.ts",
+   "needles": [
+    "/obp/${V5_1_0}/well-known"
+   ],
+   "version_from": [
+    {
+     "source": "src/shared-constants.ts",
+     "needle": "export const V5_1_0 = 'v5.1.0'"
+    }
+   ],
+   "reads": [
+    "well_known_uris",
+    "well_known_uris[].provider",
+    "well_known_uris[].url"
+   ],
+   "undocumented_fields": [
+    "well_known_uris",
+    "well_known_uris[].provider",
+    "well_known_uris[].url"
+   ],
+   "note": "OIDC debug page. OBP-API answers with WellKnownUrisJsonV510 (well_known_uris: provider, url; see code/api/v5_1_0/Http4s510.scala getOAuth2ServerWellKnown) but its resource doc shows jwks_uris only, in v5.1.0, v6.0.0 and v7.0.0."
+  },
+  {
+   "verb": "GET",
+   "path": "/obp/v5.1.0/users/current",
+   "source": "server/routes/user.ts",
+   "needles": [
+    "`/obp/${version}/users/current`",
+    "const version = DEFAULT_OBP_API_VERSION"
+   ],
+   "version_from": [
+    {
+     "source": "src/shared-constants.ts",
+     "needle": "export const DEFAULT_OBP_API_VERSION = 'v5.1.0'"
+    }
+   ],
+   "reads": [
+    "user_id"
+   ],
+   "note": "GET /api/user/current answers with the OBP user_id, or the token's sub when this call fails."
+  },
+  {
+   "verb": "GET",
+   "path": "/obp/v5.1.0/well-known",
+   "source": "server/services/OAuth2ProviderManager.ts",
+   "needles": [
+    "/obp/${V5_1_0}/well-known"
+   ],
+   "version_from": [
+    {
+     "source": "src/shared-constants.ts",
+     "needle": "export const V5_1_0 = 'v5.1.0'"
+    }
+   ],
+   "reads": [
+    "well_known_uris",
+    "well_known_uris[].provider",
+    "well_known_uris[].url"
+   ],
+   "undocumented_fields": [
+    "well_known_uris",
+    "well_known_uris[].provider",
+    "well_known_uris[].url"
+   ],
+   "note": "The login providers the Explorer offers. OBP-API answers with WellKnownUrisJsonV510 (well_known_uris: provider, url; see code/api/v5_1_0/Http4s510.scala getOAuth2ServerWellKnown) but its resource doc shows jwks_uris only, in v5.1.0, v6.0.0 and v7.0.0."
+  },
+  {
+   "verb": "GET",
+   "path": "/obp/v5.1.0/root",
+   "source": "server/services/ObpReachability.ts",
+   "needles": [
+    "`/obp/${version}/root`"
+   ],
+   "version_from": [
+    {
+     "source": "src/shared-constants.ts",
+     "needle": "export const DEFAULT_OBP_API_VERSION = 'v5.1.0'"
+    },
+    {
+     "source": "server/services/OBPClientService.ts",
+     "needle": "version: DEFAULT_OBP_API_VERSION"
+    }
+   ],
+   "reads": [],
+   "note": "GET /api/ready; status.ts passes obpClientService.getOBPVersion(). Only an error code is looked at."
+  },
+  {
+   "verb": "GET",
+   "path": "/obp/v7.0.0/banks/SYS/my/roles/ROLE_NAME",
+   "source": "server/utils/obpRoleCheck.ts",
+   "needles": [
+    "`${obpApiHost}/obp/v7.0.0/banks/SYS/my/roles/${encodeURIComponent(role)}`"
+   ],
+   "reads": [
+    "allowed_for_auth_modes"
+   ],
+   "note": "Guards the Explorer's own monitoring routes with an OBP Role."
+  },
+  {
+   "verb": "GET",
+   "path": "/obp/v7.0.0/consumers/current/identity",
+   "source": "server/services/OIDCServiceHealth.ts",
+   "needles": [
+    "/obp/v7.0.0/consumers/current/identity"
+   ],
+   "reads": [
+    "consumer_id",
+    "consumer_name"
+   ],
+   "note": "Names the Consumer of the provider health check's client_credentials token."
+  }
+ ],
+ "not_calls": [
+  {
+   "source": "src/components/Preview.vue",
+   "needle": "operation.specified_url.replace(/\\/obp\\/v\\d+\\.\\d+\\.\\d+\\//, `/obp/${versionWithoutPrefix}/`)",
+   "reason": "Try It: the path is the chosen endpoint's documented path in the chosen version."
+  },
+  {
+   "source": "server/app.ts",
+   "needle": "'ERROR: Check that OBP API is running and returns providers from /obp/v5.1.0/well-known'",
+   "reason": "Log message about the well-known call in OAuth2ProviderManager.ts."
+  }
+ ]
+}
