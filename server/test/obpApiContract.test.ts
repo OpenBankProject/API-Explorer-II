@@ -55,24 +55,32 @@ function sourceFiles(dir: string, out: string[] = []): string[] {
     if (name === 'test' || name === 'node_modules') continue
     if (statSync(`${ROOT}/${path}`).isDirectory()) {
       sourceFiles(path, out)
-    } else if (/\.(ts|mts|js|vue)$/.test(name) && !/\.(test|spec|d)\.ts$/.test(name)) {
+    } else if (/\.(ts|mts|tsx|js|mjs|cjs|vue|svelte)$/.test(name) && !/\.(test|spec|d)\.ts$/.test(name)) {
       out.push(path)
     }
   }
   return out
 }
 
-// Lines that build an OBP-API path (a string with obp/vX or obp/${...}), skipping comments:
-// file relative to the repository root, line number, line.
+// Whether `line` builds an OBP-API path: a string holding obp/vX or obp/${...}, or a string that
+// starts or ends a path at /obp, so a path put together from pieces ('/obp/' + version,
+// '/obp' + '/v6.0.0/...') is seen too. Imports such as '../obp/keys' are not paths.
+export function buildsObpPath(line: string): boolean {
+  if (/['"`]/.test(line) && /obp\/(v\d|\$\{)/.test(line)) return true
+  return /(?<![\w.@-])\/obp(\/|['"`])/.test(line) || /(?<=['"`])obp(\/|['"`])/.test(line)
+}
+
+// Lines that build an OBP-API path, skipping comments: file relative to the repository root, line
+// number, line.
 function obpPathLines(): [string, number, string][] {
   const out: [string, number, string][] = []
-  for (const file of [...sourceFiles('src'), ...sourceFiles('server')]) {
+  for (const file of [...sourceFiles('src'), ...sourceFiles('server'), ...sourceFiles('src-svelte')]) {
     read(file)
       .split('\n')
       .forEach((line, i) => {
         const code = line.trim()
         if (/^(\/\/|\/\*|\*|<!--)/.test(code)) return
-        if (/['"`]/.test(code) && /obp\/(v\d|\$\{)/.test(code)) out.push([file, i + 1, line])
+        if (buildsObpPath(line)) out.push([file, i + 1, line])
       })
   }
   return out
@@ -167,6 +175,20 @@ describe('OBP-API contract', () => {
       }
     }
     expect(problems).toEqual([])
+  })
+
+  it('recognises the ways an OBP-API path can be written', () => {
+    expect(buildsObpPath("get(`/obp/${V6_0_0}/banks`)")).toBe(true)
+    expect(buildsObpPath("get('obp/v7.0.0/banks')")).toBe(true)
+    expect(buildsObpPath("get('/obp/' + V6_0_0 + '/banks')")).toBe(true)
+    expect(buildsObpPath("get('/obp' + '/v6.0.0/banks')")).toBe(true)
+    expect(buildsObpPath("get('obp/' + version + '/banks')")).toBe(true)
+    expect(buildsObpPath('get(`/obp/v${major}.0.0/banks`)')).toBe(true)
+    expect(buildsObpPath('fetch(`${host}/obp/${V5_1_0}/root`)')).toBe(true)
+    expect(buildsObpPath("import { x } from '../obp/keys'")).toBe(false)
+    expect(buildsObpPath("import { x } from '@/obp/keys'")).toBe(false)
+    expect(buildsObpPath("import { x } from './obp/keys'")).toBe(false)
+    expect(buildsObpPath('const obp = new Client()')).toBe(false)
   })
 
   it('reports a renamed or removed field', () => {

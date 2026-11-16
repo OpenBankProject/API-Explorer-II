@@ -22,7 +22,7 @@ const BELOW_V510: Record<string, string> = {}
 
 // Where OBP-API paths and versions are written: the front end, the server, the container and
 // script files, and the example configuration at the repository root.
-const SOURCE_ROOTS = ['src', 'server', 'Dockerfiles', 'scripts']
+const SOURCE_ROOTS = ['src', 'server', 'src-svelte', 'Dockerfiles', 'scripts']
 const ROOT_FILES = [
   '.env.example',
   '.env-docker.example',
@@ -35,10 +35,12 @@ const ROOT_FILES = [
 const EXTENSIONS = [
   'ts',
   'mts',
+  'tsx',
   'js',
   'mjs',
   'cjs',
   'vue',
+  'svelte',
   'html',
   'sh',
   'yml',
@@ -88,7 +90,7 @@ export function versionsBelowV510(line: string): string[] {
   for (const m of line.matchAll(/obp\/v(\d+)\.(\d+)\.(\d+)(?![\d.])/g)) {
     if (isBelowV510(m[1], m[2], m[3])) found.push(m[0])
   }
-  for (const m of line.matchAll(/(?<=['"`=]|:\s+)v(\d+)\.(\d+)\.(\d+)(?=['"`]|\s|$)/g)) {
+  for (const m of line.matchAll(/(?<=['"`=]\/?|:\s+)v(\d+)\.(\d+)\.(\d+)(?=['"`\/]|\s|$)/g)) {
     if (isBelowV510(m[1], m[2], m[3])) found.push(m[0])
   }
   // The prefixed form OBPvX.Y.Z names a resource docs version (a default in .env.example, a
@@ -161,6 +163,8 @@ describe('OBP-API version floor', () => {
     expect(versionsBelowV510('VITE_OBP_API_DEFAULT_RESOURCE_DOC_VERSION=OBPv3.1.0')).toEqual(['OBPv3.1.0'])
     expect(versionsBelowV510("DEFAULT ?? 'OBPv4.0.0'")).toEqual(['OBPv4.0.0'])
     expect(versionsBelowV510('  VITE_OBP_API_VERSION: v4.0.0')).toEqual(['v4.0.0'])
+    expect(versionsBelowV510("get('/obp' + '/v4.0.0/banks')")).toEqual(['v4.0.0'])
+    expect(versionsBelowV510("get('/obp' + '/v6.0.0/banks')")).toEqual([])
     expect(versionsBelowV510('get(`/obp/v5.1.0/x`)')).toEqual([])
     expect(versionsBelowV510("export const V6_0_0 = 'v6.0.0' // /obp/v7.0.0/root")).toEqual([])
     expect(versionsBelowV510('get(`/obp/dynamic-entity/x`)')).toEqual([])
