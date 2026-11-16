@@ -649,6 +649,11 @@
    "source": "server/app.ts",
    "needle": "'ERROR: Check that OBP API is running and returns providers from /obp/v5.1.0/well-known'",
    "reason": "Log message about the well-known call in OAuth2ProviderManager.ts."
+  },
+  {
+   "source": "server/routes/user.ts",
+   "needle": "console.log('User: Fetching OBP user from /obp/' + version + '/users/current')",
+   "reason": "Log message about the users/current call made on the next lines."
   }
  ]
 }
