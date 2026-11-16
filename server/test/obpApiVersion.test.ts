@@ -80,14 +80,21 @@ function isBelowV510(major: string, minor: string, patch: string): boolean {
   return a !== 5 ? a < 5 : b !== 1 ? b < 1 : c < 0
 }
 
-// Every `obp/vX.Y.Z` and every version literal ('vX.Y.Z' in quotes, or after `=`) in `line`
-// whose version is below v5.1.0, as written.
+// Every `obp/vX.Y.Z`, every version literal ('vX.Y.Z' in quotes, or after `=` or `key:`) and every
+// resource docs version OBPvX.Y.Z (not an operation id) in `line` whose version is below v5.1.0,
+// as written.
 export function versionsBelowV510(line: string): string[] {
   const found: string[] = []
   for (const m of line.matchAll(/obp\/v(\d+)\.(\d+)\.(\d+)(?![\d.])/g)) {
     if (isBelowV510(m[1], m[2], m[3])) found.push(m[0])
   }
-  for (const m of line.matchAll(/(?<=['"`=])v(\d+)\.(\d+)\.(\d+)(?=['"`]|\s|$)/g)) {
+  for (const m of line.matchAll(/(?<=['"`=]|:\s+)v(\d+)\.(\d+)\.(\d+)(?=['"`]|\s|$)/g)) {
+    if (isBelowV510(m[1], m[2], m[3])) found.push(m[0])
+  }
+  // The prefixed form OBPvX.Y.Z names a resource docs version (a default in .env.example, a
+  // Dockerfile or src/obp/index.ts, or a path segment). Followed by `-` it is an operation id
+  // such as OBPv4.0.0-getBanks, which documents a call and does not make one.
+  for (const m of line.matchAll(/OBPv(\d+)\.(\d+)\.(\d+)(?![\d.]|-)/g)) {
     if (isBelowV510(m[1], m[2], m[3])) found.push(m[0])
   }
   return found
@@ -151,9 +158,14 @@ describe('OBP-API version floor', () => {
     ])
     expect(versionsBelowV510("export const V4_0_0 = 'v4.0.0'")).toEqual(['v4.0.0'])
     expect(versionsBelowV510('VITE_OBP_API_VERSION=v4.0.0')).toEqual(['v4.0.0'])
+    expect(versionsBelowV510('VITE_OBP_API_DEFAULT_RESOURCE_DOC_VERSION=OBPv3.1.0')).toEqual(['OBPv3.1.0'])
+    expect(versionsBelowV510("DEFAULT ?? 'OBPv4.0.0'")).toEqual(['OBPv4.0.0'])
+    expect(versionsBelowV510('  VITE_OBP_API_VERSION: v4.0.0')).toEqual(['v4.0.0'])
     expect(versionsBelowV510('get(`/obp/v5.1.0/x`)')).toEqual([])
     expect(versionsBelowV510("export const V6_0_0 = 'v6.0.0' // /obp/v7.0.0/root")).toEqual([])
     expect(versionsBelowV510('get(`/obp/dynamic-entity/x`)')).toEqual([])
     expect(versionsBelowV510("doc('OBPv4.0.0-getBanks')")).toEqual([])
+    expect(versionsBelowV510('VITE_OBP_API_DEFAULT_RESOURCE_DOC_VERSION=OBPv7.0.0')).toEqual([])
+    expect(versionsBelowV510('  VITE_OBP_API_VERSION: v6.0.0')).toEqual([])
   })
 })
