@@ -26,7 +26,8 @@
   -->
 
 <script setup lang="ts">
-import { reactive, ref, onBeforeMount, onMounted, inject, computed } from 'vue'
+import { reactive, ref, onBeforeMount, onMounted, inject, computed, watch, nextTick } from 'vue'
+import { useRoute } from 'vue-router'
 import SearchNav from '../components/GlossarySearchNav.vue'
 import { obpGlossaryKey } from '@/obp/keys';
 import { safeHtml } from '@/obp/safe-html'
@@ -57,6 +58,18 @@ const glossary = computed(() => {
     return true
   })
 })
+
+// A link such as /glossary#OGCR%20Architecture opens at that item. Each item's anchor id is
+// its exact title. The browser cannot jump there by itself, because the items are drawn after
+// the page has opened, inside a scroll container, so scroll once the item is on the page.
+const route = useRoute()
+async function scrollToLinkedItem() {
+  const title = decodeURIComponent(route.hash.slice(1))
+  if (!title) return
+  await nextTick()
+  document.getElementById(title)?.scrollIntoView({ block: 'start' })
+}
+watch([() => route.hash, () => glossary.value.length], scrollToLinkedItem, { immediate: true })
 
 // Each item's HTML, cleaned once rather than on every render (there are hundreds of items).
 const safeDescriptions = computed(
