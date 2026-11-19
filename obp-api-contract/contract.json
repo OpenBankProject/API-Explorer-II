@@ -1,5 +1,6 @@
 {
  "about": "Every OBP-API call API Explorer II makes from its own code: verb, path (OBP placeholders in capitals), the source file and the text that makes the call (needles), the version constants the path is built from (version_from), and the response fields the code reads. Not listed: the calls whose path the user picks while browsing the docs (Try It in Preview.vue and the generic /api/get, /api/create, /api/update and /api/delete proxy in server/routes/obp.ts, including the public docs cache), and the gRPC services page. not_calls lists the lines that name an OBP-API path without being one of the calls. server/test/obpApiContract.test.ts checks this list against the source and against snapshot.json, which obp-api-contract/snapshot.py writes from an OBP-API's resource docs.",
+ "version_policy": "Each call writes the OBP-API version it needs in its own path. One configured version cannot serve them all, because an endpoint exists only in the versions OBP-API documents it for. The contract test checks every call against the endpoint documented for the version it names and fails on any version below v5.1.0. To move a call to a newer version, change its path and run snapshot.py again.",
  "calls": [
   {
    "verb": "GET",
