@@ -1,0 +1,21 @@
+name: tests
+
+on:
+  pull_request:
+  push:
+    branches:
+    - develop
+
+jobs:
+  tests:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+      - name: Install the dependencies from package-lock.json
+        run: npm ci
+      - name: Run all the tests, including the OBP-API contract and the v5.1.0 version floor
+        run: npx vitest --run
