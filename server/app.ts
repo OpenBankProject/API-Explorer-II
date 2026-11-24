@@ -52,6 +52,9 @@ import statusRoutes from './routes/status.js'
 import obpRoutes from './routes/obp.js'
 import grpcRoutes from './routes/grpc.js'
 import monitoringRoutes from './routes/monitoring.js'
+import { createProbeRoutes } from './routes/probes.js'
+import OBPClientService from './services/OBPClientService.js'
+import { createCachedReachability } from './services/ObpReachability.js'
 
 // ES module equivalent of __dirname
 const __filename = fileURLToPath(import.meta.url)
@@ -149,6 +152,37 @@ console.info(`Trust proxy: ${trustProxy}`)
 if (app.get('env') === 'production') {
   sessionObject.cookie.secure = true // serve secure cookies
 }
+
+// /alive, /health and /status at the root, for probes and uptime monitors. They come before the
+// session middleware so that they need no login and never read the session store in Redis.
+const probeObpClientService = Container.get(OBPClientService)
+const probeObpReachable = createCachedReachability(probeObpClientService, () =>
+  probeObpClientService.getOBPVersion()
+)
+app.use(
+  createProbeRoutes(
+    {
+      // Redis holds the sessions, so it must be connected and answer a PING within two seconds.
+      redis: async () => {
+        if (!redisClient.isReady) return false
+        const pingTimeoutMs = 2000
+        let timeoutHandle: NodeJS.Timeout | undefined
+        const timeout = new Promise<string>((resolve) => {
+          timeoutHandle = setTimeout(() => resolve('timeout'), pingTimeoutMs)
+        })
+        try {
+          return (await Promise.race([redisClient.ping(), timeout])) === 'PONG'
+        } finally {
+          clearTimeout(timeoutHandle)
+        }
+      },
+      // OBP-API must answer its root endpoint. The answer is cached for a few seconds.
+      obpApi: probeObpReachable
+    },
+    { gitCommit: () => commitId }
+  )
+)
+
 app.use(session(sessionObject))
 
 // OAuth2 Multi-Provider Setup only - no legacy fallback
@@ -218,10 +252,13 @@ let instance: any
     `Backend is running. You can check a status at http://localhost:${port}${routePrefix}/status`
   )
 
-  // Get commit ID
+  // Get commit ID: from GIT_COMMIT, set when the Docker image is built, else from the git checkout
   try {
     // Try to get the commit ID
-    commitId = execSync('git rev-parse HEAD', { encoding: 'utf-8' }).trim()
+    commitId =
+      process.env.GIT_COMMIT && process.env.GIT_COMMIT !== 'unknown'
+        ? process.env.GIT_COMMIT
+        : execSync('git rev-parse HEAD', { encoding: 'utf-8' }).trim()
     console.log('Current Commit ID:', commitId)
   } catch (error: any) {
     // Log the error but do not terminate the process
