@@ -70,3 +70,6 @@ shared-constants.js
 
 # Documentation
 untracked_docs/
+
+# Zed editor settings, which open_dev_env writes for each project
+.zed/
