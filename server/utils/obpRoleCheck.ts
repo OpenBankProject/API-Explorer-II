@@ -30,7 +30,9 @@ import type { NextFunction, Request, Response } from 'express'
 
 // Whether an OBP-API token may see what this server guards with an OBP Role. OBP-API answers, through
 // GET /obp/v7.0.0/banks/SYS/my/roles/ROLE_NAME, with the same rules its own endpoints use: the token's
-// User holds the Role, or its Consumer holds it as a Scope (auth mode UserOrApplication).
+// User holds the Role as an Entitlement, or an application acting as itself holds it as a Scope on its Consumer.
+// OBP-API v7.0.0 answers with `allowed` (true or false). An older OBP-API answered with `allowed_for_auth_modes`,
+// the endpoint auth modes that would let the caller in; that is still understood.
 
 export type RoleCheck = 'allowed' | 'unauthorized' | 'forbidden'
 
@@ -52,6 +54,7 @@ async function checkRole(obpApiHost: string, token: string, role: string): Promi
     return 'forbidden'
   }
   const body = await response.json()
+  if (typeof body.allowed === 'boolean') return body.allowed ? 'allowed' : 'forbidden'
   return body.allowed_for_auth_modes?.includes('UserOrApplication') ? 'allowed' : 'forbidden'
 }
 
